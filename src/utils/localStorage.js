@@ -87,7 +87,7 @@ export const getFromLocalStorage = (key, defaultValue = null) => {
  * @param {Date|number} [options.expiresAt] - 过期时间点（Date对象或时间戳）
  * @returns {boolean} 是否保存成功
  */
-export const saveToLocalStorage = (key, value, options = {}) => {
+export const saveToLocalStorage = (key, value, options = {expiresIn:TIME_UNITS.DAY*7}) => {
   try {
     // 检查localStorage是否可用
     if (typeof window === 'undefined' || !window.localStorage) {
@@ -252,26 +252,4 @@ export const clearLocalStorage = () => {
     console.error('Error clearing localStorage:', error);
     return false;
   }
-};
-
-/**
- * 使用示例函数
- */
-
-/**
- * 保存用户token（7天后过期）
- * @param {string} token 用户token
- */
-export const saveUserToken = (token) => {
-  return saveToLocalStorage('user_token', token, {
-    expiresIn: TIME_UNITS.DAY * 7, // 7天后过期
-  });
-};
-
-/**
- * 获取用户token（自动处理过期）
- * @returns {string|null} 用户token或null
- */
-export const getUserToken = () => {
-  return getFromLocalStorage('user_token', null);
 };

@@ -1,12 +1,12 @@
 import LoginAPI from "../api/loginAPI"
+import { useUserLogin } from "../hooks/useUser"
 
 const Login = () => {
-    const login = ()=>{
-        console.log(LoginAPI.login())
-    }
+
+    const loginMutation = useUserLogin()
 
     return <div>
-        <button onClick={login}>登录</button>
+        <button onClick={()=>loginMutation.mutate()}>登录</button>
     </div>
 }
 

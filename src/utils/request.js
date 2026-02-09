@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getFromLocalStorage, saveToLocalStorage, TIME_UNITS } from './localStorage';
 
 const API_BASE_URL = "https://www.h10eaea4e.nyat.app:48561"; // 可以根据环境变量配置
 
@@ -85,18 +86,18 @@ class Request {
 
   getToken() {
     // 假设token存储在localStorage
-    return localStorage.getItem('access_token') || 
-           sessionStorage.getItem('access_token') || 
-           null;
+    return getFromLocalStorage('access_token') 
   }
 
   hasToken(){
     return this.getToken===null
   }
 
-  // 保存token
+  // 保存token,7天
   saveToken(token) {
-    localStorage.setItem('access_token', token);
+    saveToLocalStorage('access_token', token,{
+      expiresIn:TIME_UNITS.DAY*7
+    });
   }
 
   // 错误处理

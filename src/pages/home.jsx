@@ -1,17 +1,21 @@
 import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import CenterCard from "../components/homepageCard";
+import { useUserLoginSuccess } from "../hooks/useUser";
 
 const Home = () => {
+
+    const loginSuccessMutation = useUserLoginSuccess()
 
     const [isFocused, setIsFocused] = useState(false);
     const [searchHistory, setSearchHistory] = useState(['你好','不好']);
 
     const [showOverlay, setShowOverlay] = useState(true); // 新增：遮罩层状态
 
-    // useEffect(()=>{
-    //     setVisible(true)
-    // },[])
+    useEffect(()=>{
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+    })
 
     const handleFocus = () => {
         setIsFocused(true);
@@ -19,10 +23,6 @@ const Home = () => {
 
     const handleBlur = () => {
         setIsFocused(false);
-    };
-    
-    const toggleOverlay = () => {
-        setShowOverlay(!showOverlay);
     };
 
     // 新增：关闭遮罩层

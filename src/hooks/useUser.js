@@ -1,90 +1,96 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useUserStore } from "../store/userStore"
+import { UserStore } from "../store/userStore"
 import { userKey } from "../store/querrykeys"
-import { getFromLocalStorage, LOCAL_STORAGE_KEYS } from "../utils/localStorage"
 import UserAPI from "../api/userAPI"
 import request from "../utils/request"
 import LoginAPI from "../api/loginAPI"
 
 export const useUserQuerry=()=>{
 
-    const update = useUserStore(state=>state.update)
+    const update = UserStore(state=>state.update)
+    const initUser = UserStore(state=>state.initializeFromStorage)
 
     return useQuery({
         queryKey:userKey.USER,
         queryFn: async () => {
-            const oldUserData=getFromLocalStorage(LOCAL_STORAGE_KEYS.USER)
-            if(oldUserData){
-                update(oldUserData)
-                console.log('load from localstorage')
-                return
-            }
-
+            
+            if(initUser())
             //如果本地数据过期，则尝试使用token重新请求
-            //但是token获取还不完善,先这样
 
             if(request.hasToken){ 
                 try{
 
+                    //此数据结构后面再看
                     const res= await UserAPI.getUser()
                     update(res.data) 
 
+                    return
+
                 }catch(error){
                     console.log(error)
-                    console.log('请重新登录')
                 }    
-            }else{
-                alert('请重新登录')
             }
 
+            //token已过期，重新登陆
+
+            alert('请重新登录')
+            
         },
         retry: 2, // 失败时重试2次
-        refetchOnMount: false //设定刷新是否重新请求
     })
 } 
 
+//这里只执行登录，都登陆完后从url中获取token,在主页调用useUserSet
 export const useUserLogin = () => {
-
-    const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn:()=>{
-            LoginAPI.login()//这里可以获取得到token的
-            request.saveToken('token')//先写死吧，后面处理
+            LoginAPI.login()
         },
         
         onError:()=>{
             alert('失败')
-        },
-        
-        onSuccess:()=>{
-            queryClient.invalidateQueries({queryKey:userKey.USER})
-            //将queryKey设置无效，触发对应useQuery
         }
     })
-
 }
 
-export const useUserUpdate = (userData) => {
+export const useUserLoginSuccess = () => {
 
     const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn:(token)=>{
+            if (!token) {
+                throw new Error('token是必需的');
+            }
+            request.saveToken(token)
+        },
+        onSuccess:()=>{//触发一下useQuerry请求
+            queryClient.invalidateQueries({queryKey:userKey.USER})
+        }
+    })
+}
+
+//这里还需要添加乐观更新
+export const useUserUpdate = (userData) => {
+
+    const update = UserStore(state=>state.update)
 
     return useMutation({
         mutationFn:()=>{
             if(request.hasToken){
-                UserAPI.updateUserData(userData)
+                return UserAPI.updateUserData(userData)
+                //更新后端数据
             }else{
-                throw Error
+                throw Error('未授权')
             }
         },
-        
         onError:()=>{
             alert('失败')
         },
         
         onSuccess:()=>{
-            queryClient.invalidateQueries({queryKey:userKey.USER})
-            //将queryKey设置无效，触发对应useQuery
+            update(userData)//更新UI以及localstorage
         }
     })
 }
