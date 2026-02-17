@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { UserStore } from "../store/userStore"
-import { userKey } from "../store/querrykeys"
+import { userKey } from "../store/querykeys"
 import UserAPI from "../api/userAPI"
 import request from "../utils/request"
 import LoginAPI from "../api/loginAPI"
@@ -40,11 +40,31 @@ export const useUserQuerry=()=>{
     })
 } 
 
+export const useOtherUserQuerry = (id) => {
+    return useQuery({
+        queryKey:userKey.OTHERUSER(id),
+        queryFn:async ()=>{
+            return UserAPI.getOtherUserById(id)
+        }
+    })
+}
+/**
+ *     const { 
+        data,           // 返回的数据
+        isLoading,      // 加载状态
+        error,          // 错误信息
+        isError,        // 是否错误
+        refetch         // 重新获取
+    } = useOtherUserQuery(userId); 
+*/
+
+
+
 //这里只执行登录，都登陆完后从url中获取token,在主页调用useUserSet
 export const useUserLogin = () => {
 
     return useMutation({
-        mutationFn:()=>{
+        mutationFn:async ()=>{
             LoginAPI.login()
         },
         
@@ -52,6 +72,7 @@ export const useUserLogin = () => {
             alert('失败')
         }
     })
+
 }
 
 export const useUserLoginSuccess = () => {
@@ -77,7 +98,7 @@ export const useUserUpdate = (userData) => {
     const update = UserStore(state=>state.update)
 
     return useMutation({
-        mutationFn:()=>{
+        mutationFn:async ()=>{
             if(request.hasToken){
                 return UserAPI.updateUserData(userData)
                 //更新后端数据

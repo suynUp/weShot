@@ -209,20 +209,12 @@ class Request {
   }
 
   // POST 请求
-  async post(url, data, options = {}) {
+ async post(url, data, params = {}, options = {}) {
     return this.request({
       method: 'POST',
       url,
       data,
-    }, options);
-  }
-
-  // PUT 请求
-  async put(url, data, options = {}) {
-    return this.request({
-      method: 'PUT',
-      url,
-      data,
+      params, // 添加 params 参数
     }, options);
   }
 
@@ -232,15 +224,6 @@ class Request {
       method: 'DELETE',
       url,
       params,
-    }, options);
-  }
-
-  // PATCH 请求
-  async patch(url, data, options = {}) {
-    return this.request({
-      method: 'PATCH',
-      url,
-      data,
     }, options);
   }
 

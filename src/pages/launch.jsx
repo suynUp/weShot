@@ -1,9 +1,17 @@
-import { ChevronLeft, Inbox } from "lucide-react"
+import { ChevronLeft, Inbox, Plus } from "lucide-react"
 import LaunchInput from "../components/launchInput"  
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { DraftStore } from "../store/draftStore"
+import DraftShifter from "../components/draftShifter"
+import { useDeleteDraftMutation, useGetDraft } from "../hooks/useDraft"
+import { useNavigation } from "../hooks/navigation"
 
 const Launch = () => {
 
+    //路由
+    const {goBack} = useNavigation()
+
+    //表格控制
     const [startDate,setStartDate] = useState(new Date())
     const [duration,setDuration] = useState(0)
     const [place,setPlace] = useState("")
@@ -15,6 +23,26 @@ const Launch = () => {
     const [special,setSpecial] = useState('no')
     const [grapherId,setGrapherId] = useState("")
     const [notice,setNotice] = useState("")
+
+    //视图控制
+    const [hasload,setHasLoad] = useState(false)
+    const [loadId,setLoadId] = useState(-1)
+    
+    //UI信息绑定
+    const draftList = DraftStore(state=>state.draftList)
+    const cunrrentDraft = DraftStore(state=>state.cunrrentDraft)
+
+    //hooks
+    const deleteMutation = useDeleteDraftMutation();
+    const {getDetail,getList} = useGetDraft()
+
+    // useEffect(()=>{
+    //     getList()
+    // })
+
+    // useEffect(()=>{
+    //     getDetail(loadId)
+    // },[loadId])
 
     const inputList = [
         {
@@ -77,17 +105,29 @@ const Launch = () => {
         }
     ]
 
+    const deleteDraft = (id) => {
+        deleteMutation.mutate(id)
+    }
+
     return <>
+    {deleteMutation.isError && (
+        <p className="text-red-500 mt-2">删除失败：{deleteMutation.error.message}</p>
+    )}
+    
+    {deleteMutation.isSuccess && (
+        <p className="text-green-500 mt-2">删除成功！</p>
+    )}
     <div className="fixed top-0 left-0 right-0 z-50 w-3xl bg-white/0 ">
         <div className="flex items-center justify-between px-4 py-3 bg-transparent">
-            <button className="flex items-center text-gray-700 hover:text-black">
+            <button className="flex items-center text-gray-700 hover:text-black" 
+            onClick={goBack}>
                 <ChevronLeft className="h-6 w-6" />
                 <span className="ml-1">返回</span>
             </button>
             
             <div className="flex items-center space-x-4 bg-transparent">
                 <button className="p-2 hover:bg-gray-100 rounded-full">
-                <Inbox className="h-6 w-6 text-gray-700" />
+                <Inbox onClick={()=>setHasLoad(true)} className="h-6 w-6 text-gray-700" />
                 </button>
                 
                 <button className="px-8 py-3.5 rounded-xl
@@ -117,18 +157,48 @@ const Launch = () => {
             </div>
         </div>
     </div>
-    <div className="flex flex-col justify-center">
-        {inputList.map((i)=>(i.title!=='你要预约的摄影师id'||special==='yes')&&<LaunchInput
-        key={i.title}
-        title={i.title}
-        subtitle={i.subtitle}
-        type={i.type}
-        placeholder={i.placeholder}
-        content={i.content}
-        setContent={i.setContent}
-        options={i.options}
-        necessary={i.necessary}
-        />)}
+    <div className="fixed top-20 right-0 p-5 z-51">
+        {hasload&&<button onClick={()=>setHasLoad(false)}
+                className="flex
+                px-4 py-3.5 rounded-xl
+                bg-gradient-to-b from-rose-50 to-rose-150
+                border-2 border-rose-250
+                font-medium
+                border-rose-300
+                shadow-sm
+                hover:bg-gradient-to-b hover:from-rose-100 hover:to-rose-250
+                hover:border-rose-350
+                active:scale-95
+                transition-all duration-400">
+            新建需求<Plus className="ml-[5px]"/>
+        </button>}
+
+        <div className="mt-[10px]">
+            <DraftShifter
+            draftlist={draftList}
+            setLoadId={setLoadId}
+            deleteDraft={deleteDraft}
+            hasLoaded={setHasLoad}
+            />
+        </div>
+    </div>
+    <div className="w-full mx-auto ">
+        <div className="flex flex-col w-[60%] min-w-[500px] mx-auto">
+            {inputList.map((i)=>(i.title!=='你要预约的摄影师id'||special==='yes')&&<LaunchInput
+            key={i.title}
+            title={i.title}
+            subtitle={i.subtitle}
+            type={i.type}
+            placeholder={i.placeholder}
+            content={i.content}
+            setContent={i.setContent}
+            options={i.options}
+            necessary={i.necessary}
+            />)}
+        </div>
+
+        <div>
+        </div>
     </div>
     </>;
 }

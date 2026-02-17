@@ -2,20 +2,28 @@ import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import CenterCard from "../components/homepageCard";
 import { useUserLoginSuccess } from "../hooks/useUser";
+import { useSearchParams } from "react-router-dom";
 
 const Home = () => {
 
     const loginSuccessMutation = useUserLoginSuccess()
 
+    const [searchParams] = useSearchParams();
     const [isFocused, setIsFocused] = useState(false);
     const [searchHistory, setSearchHistory] = useState(['你好','不好']);
 
     const [showOverlay, setShowOverlay] = useState(true); // 新增：遮罩层状态
 
     useEffect(()=>{
-        const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token');
-    })
+        const token = searchParams.get('token');
+            
+        if (token) {
+            loginSuccessMutation.mutate(token);
+        } else {
+            console.warn('URL 中没有找到 token');
+        }
+        
+    }, [])
 
     const handleFocus = () => {
         setIsFocused(true);
