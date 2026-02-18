@@ -56,3 +56,5 @@ class DebounceThrottle {
     };
   }
 }
+
+export default DebounceThrottle

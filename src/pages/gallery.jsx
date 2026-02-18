@@ -1,52 +1,100 @@
 import { useEffect, useState } from 'react';
-import { ChevronDown, X, ThumbsUp, ChevronLeft } from 'lucide-react';
+import { ChevronDown, X, ThumbsUp, ChevronLeft, Star, Camera, MapPin, Calendar, User } from 'lucide-react';
 import PhotoCard from '../components/photoCard';
 import FilterPanel from '../components/filterPanel';
 import { useNavigation } from '../hooks/navigation';
 
-// Mock 数据
+// Mock 数据 - 扩展为包含摄影师信息的作品数据
 const mockPhotos = [
   {
     id: '1',
     title: '城市日落',
     image_url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     likes: 234,
-    category_id: '1'
+    category_id: '1',
+    photographer: {
+      id: 'P001',
+      nickname: '光影行者',
+      avatar: 'https://images.unsplash.com/photo-1494790108777-9f8e60874d8f?w=150',
+      rating: 4.8,
+      completedOrders: 328,
+      location: '上海'
+    }
   },
   {
     id: '2',
     title: '人像摄影',
     image_url: 'https://images.unsplash.com/photo-1494790108777-766d23a7b0d7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     likes: 567,
-    category_id: '2'
+    category_id: '2',
+    photographer: {
+      id: 'P002',
+      nickname: '时光记录者',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      rating: 4.9,
+      completedOrders: 256,
+      location: '北京'
+    }
   },
   {
     id: '3',
     title: '建筑艺术',
     image_url: 'https://images.unsplash.com/photo-1488972685288-c3fd157d7c7a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     likes: 189,
-    category_id: '3'
+    category_id: '3',
+    photographer: {
+      id: 'P003',
+      nickname: '城市猎人',
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+      rating: 5.0,
+      completedOrders: 189,
+      location: '广州'
+    }
   },
   {
     id: '4',
     title: '自然风光',
     image_url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     likes: 892,
-    category_id: '1'
+    category_id: '1',
+    photographer: {
+      id: 'P004',
+      nickname: '山川影者',
+      avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150',
+      rating: 4.7,
+      completedOrders: 156,
+      location: '成都'
+    }
   },
   {
     id: '5',
     title: '街头摄影',
     image_url: 'https://images.unsplash.com/photo-1517462964-21fdcec3f25b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     likes: 345,
-    category_id: '2'
+    category_id: '2',
+    photographer: {
+      id: 'P005',
+      nickname: '街拍大师',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      rating: 4.6,
+      completedOrders: 203,
+      location: '深圳'
+    }
   },
   {
     id: '6',
     title: '夜景拍摄',
     image_url: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     likes: 678,
-    category_id: '3'
+    category_id: '3',
+    photographer: {
+      id: 'P006',
+      nickname: '夜行者',
+      avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
+      rating: 4.5,
+      completedOrders: 142,
+      location: '重庆'
+    }
   }
 ];
 
@@ -58,19 +106,15 @@ const mockCategories = [
 ];
 
 const mockTags = [
-  // 风光摄影标签
   { id: '101', name: '日出日落', category_id: '1' },
   { id: '102', name: '山川湖泊', category_id: '1' },
   { id: '103', name: '森林草原', category_id: '1' },
-  // 人像摄影标签
   { id: '201', name: '写真', category_id: '2' },
   { id: '202', name: '婚纱', category_id: '2' },
   { id: '203', name: '儿童', category_id: '2' },
-  // 建筑摄影标签
   { id: '301', name: '现代建筑', category_id: '3' },
   { id: '302', name: '古建筑', category_id: '3' },
   { id: '303', name: '室内设计', category_id: '3' },
-  // 街拍摄影标签
   { id: '401', name: '人文纪实', category_id: '4' },
   { id: '402', name: '城市光影', category_id: '4' },
   { id: '403', name: '街头人像', category_id: '4' }
@@ -94,8 +138,7 @@ function SelectedTag({ tagId, tagName, onRemove }) {
 
 // 主组件
 export function Gallery() {
-
-    const {goBack} = useNavigation()
+  const { goto } = useNavigation();
 
   const [photos, setPhotos] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -111,13 +154,11 @@ export function Gallery() {
 
   const loadData = async () => {
     try {
-      // 模拟异步加载
       await new Promise(resolve => setTimeout(resolve, 500));
 
       setPhotos(mockPhotos);
       setCategories(mockCategories);
 
-      // 按分类组织标签
       const tagsByCategory = {};
       mockTags.forEach(tag => {
         if (!tagsByCategory[tag.category_id]) {
@@ -172,14 +213,19 @@ export function Gallery() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-orange-50 to-green-50 p-4 md:p-8">
-        <div>
-            <ChevronLeft className='w-10 h-10' onClick={goBack}/>
-        </div>
-        <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">摄影作品集</h1>
+      <div className="max-w-7xl mx-auto">
+        {/* 返回按钮和标题 */}
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => goto('/')}
+            className="p-2 hover:bg-white/50 rounded-full transition-colors"
+          >
+            <ChevronLeft className="w-6 h-6 text-gray-600" />
+          </button>
+          <h1 className="text-3xl font-bold text-gray-800">摄影师作品集</h1>
         </div>
 
+        {/* 已选标签 */}
         {selectedTags.length > 0 && (
           <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
             <div className="flex flex-wrap gap-3">
@@ -198,13 +244,15 @@ export function Gallery() {
           </div>
         )}
 
+        {/* 作品网格 - 改为2列布局，卡片更大 */}
         <div className="relative">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {filteredPhotos.map(photo => (
               <PhotoCard key={photo.id} photo={photo} />
             ))}
           </div>
 
+          {/* 移动端筛选按钮 */}
           <button
             onClick={() => setFilterOpen(!filterOpen)}
             className="fixed bottom-8 right-8 bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 md:hidden"
@@ -216,6 +264,7 @@ export function Gallery() {
             />
           </button>
 
+          {/* 筛选面板 */}
           <FilterPanel
             categories={categories}
             tags={tags}
@@ -231,3 +280,5 @@ export function Gallery() {
     </div>
   );
 }
+
+export default Gallery;

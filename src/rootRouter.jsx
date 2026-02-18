@@ -6,9 +6,12 @@ import Home from './pages/home'
 import Login from './pages/login'
 import Launch from './pages/launch'
 import Profile from './pages/profile'
-import { Rankings } from './pages/ranking'
 import { RatingPage } from './pages/rating'
 import { Gallery } from './pages/gallery'
+import { Feed } from './pages/community'
+import PhotographerSignUp from './pages/signUp'
+import PhotographersPage from './pages/photographers'
+import PhotographerOrderSquare from './pages/pendingOrder'
 
 const usePathStore = create(
   persist(
@@ -82,14 +85,23 @@ export default function RootRouter() {
       path:"/profile",
       page:<Profile/>
     },{
-      path:"/ranking",
-      page:<Rankings/>
-    },{
-      path:"/rating", // 修复了路径，加了斜杠
+      path:"/rating", 
       page:<RatingPage/>
     },{
       path:"/gallery",
       page:<Gallery/>
+    },{
+      path:"/community",
+      page:<Feed/>
+    },{
+      path:'/signup',
+      page:<PhotographerSignUp/>
+    },{
+      path:'/photographers',
+      page:<PhotographersPage/>
+    },{
+      path:'/pendingorders',
+      page:<PhotographerOrderSquare/>
     }
   ]
 

@@ -1,0 +1,202 @@
+import { useEffect, useRef, useState, useCallback } from "react"
+import { Search, X } from "lucide-react";
+import DebounceThrottle from "../utils/debonceThrottle";
+
+const SearchInput = ({searchHistory,setSearchHistory,searchingSuggest,searchFn,clearAll,setData}) => {
+
+    const searchRef = useRef()
+    const [isFocused, setIsFocused] = useState(false);
+    const [value,setValue] = useState('')
+    const [suggest,setSuggest] = useState([])
+    
+    // 使用useRef保存防抖函数实例
+    const debounceRef = useRef(null);
+
+    // 初始化防抖函数
+    useEffect(() => {
+        debounceRef.current = DebounceThrottle.debounce;
+        return () => {
+            // 组件卸载时取消未执行的防抖
+            if (debounceRef.current && debounceRef.current.cancel) {
+                debounceRef.current.cancel();
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setIsFocused(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);  
+
+    const handleFocus = () => setIsFocused(true);
+
+    // 优化：使用useCallback缓存函数
+    const fetchSuggestions = useCallback(async (searchValue) => {
+        if (!searchValue.trim()) {
+            setSuggest([]); // 空输入时清空建议
+            return;
+        }
+        
+        try {
+            const data = await searchingSuggest(searchValue);
+            console.log(data);
+            setSuggest(data || []);
+        } catch(e) {
+            console.log(e);
+            setSuggest([]); // 错误时清空建议
+        }
+    }, [searchingSuggest]);
+
+    // 优化：正确处理防抖
+    const handleSuggest = (e) => {
+        const newValue = e.target.value;
+        setValue(newValue);
+
+        // 空输入时立即清空建议，不触发防抖
+        if (!newValue.trim()) {
+            setSuggest([]);
+            return;
+        }
+
+        // 使用防抖获取建议
+        if (debounceRef.current) {
+            debounceRef.current(() => fetchSuggestions(newValue), 300);
+        }
+    };
+
+    const handleSearch = async (keyword) => {
+        const searchKeyword = keyword !== null ? keyword : value;
+        
+        // 空搜索不处理
+        if (!searchKeyword.trim()) return;
+        
+        try {
+            const data = await searchFn(searchKeyword); // 假设searchFn接收关键词
+            console.log(data);
+            setData(data);
+            setIsFocused(false); // 搜索后关闭下拉框
+        } catch(e) {
+            console.log(e);
+        }
+    };
+
+    const removeHistoryItem = (item, e) => {
+        e.stopPropagation();
+        setSearchHistory(prev => prev.filter(h => h !== item));
+    };
+
+    // 处理键盘事件
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleSearch(null);
+        }
+    };
+
+    return <>
+    <div className="max-w-3xl mx-auto mb-12 relative z-20" ref={searchRef}>
+        <div className={`relative bg-white/80 backdrop-blur-sm shadow-lg transition-all duration-300 ${
+            isFocused ? 'rounded-t-2xl shadow-xl' : 'rounded-2xl hover:shadow-xl'
+        }`}>
+            <div className="flex items-center px-4 py-3">
+                <Search className="w-5 h-5 text-orange-400 mr-3" />
+                <input 
+                    onFocus={handleFocus}
+                    onKeyDown={handleKeyDown}
+                    className="w-full bg-transparent focus:outline-none text-gray-700 placeholder-gray-400"
+                    placeholder="查找摄影师、作品或灵感..."
+                    value={value}
+                    onChange={handleSuggest}
+                />
+                {/* 添加清空按钮 */}
+                {value && (
+                    <button 
+                        onClick={() => {
+                            setValue('');
+                            setSuggest([]);
+                        }}
+                        className="p-1 hover:bg-gray-100 rounded-full"
+                    >
+                        <X className="w-4 h-4 text-gray-400" />
+                    </button>
+                )}
+            </div>
+            
+            {/* 搜索下拉框 */}
+            <div className={`absolute bg-white/95 backdrop-blur-sm rounded-b-2xl w-full top-full shadow-xl transition-all duration-300 overflow-hidden z-50 ${
+                isFocused ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            }`}>
+                <div className="p-4 border-t border-orange-100">
+                    {/* 有搜索词且有建议时显示建议 */}
+                    {value.trim() && suggest.length > 0 ? (
+                        <div>
+                            <div className="flex justify-between items-center mb-3 px-2">
+                                <span className="text-sm font-medium text-orange-600">搜索建议</span>
+                            </div>
+                            <div className="space-y-1">
+                                {suggest.map((item, index) => (
+                                    <div 
+                                        key={index} 
+                                        className="flex justify-between items-center px-3 py-2.5 hover:bg-orange-50 rounded-lg transition-colors group cursor-pointer"
+                                        onClick={() => handleSearch(item)}
+                                    >
+                                        <span className="text-gray-600 text-sm">{item}</span>
+                                        <Search className="w-3.5 h-3.5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        /* 没有搜索词或没有建议时显示搜索历史 */
+                        <div>
+                            <div className="flex justify-between items-center mb-3 px-2">
+                                <span className="text-sm font-medium text-orange-600">最近搜索</span>
+                                {searchHistory.length > 0 && (
+                                    <button 
+                                        onClick={() => {
+                                            setSearchHistory([])
+                                            clearAll()
+                                        }}
+                                        className="text-xs text-gray-400 hover:text-orange-500 transition-colors"
+                                    >
+                                        清除全部
+                                    </button>
+                                )}
+                            </div>
+                            {searchHistory.length > 0 ? (
+                                <div className="space-y-1">
+                                    {searchHistory.map((history) => (
+                                        <div 
+                                            key={history} 
+                                            className="flex justify-between items-center px-3 py-2.5 hover:bg-orange-50 rounded-lg transition-colors group cursor-pointer"
+                                            onClick={() => handleSearch(history)}
+                                        >
+                                            <span className="text-gray-600 text-sm">{history}</span>
+                                            <button 
+                                                onClick={(e) => removeHistoryItem(history, e)}
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-orange-200 rounded-full"
+                                            >
+                                                <X className="w-3.5 h-3.5 text-gray-400 hover:text-orange-500" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-6 text-gray-400 text-sm">
+                                    暂无搜索历史
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    </div>
+    </>
+}
+
+export default SearchInput
