@@ -1,8 +1,11 @@
 import './App.css'
+import { useToast } from './hooks/useToast';
 import RootRouter from './rootRouter'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 function App() {
+
+  const {ToastContainer} = useToast()
 
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -18,6 +21,7 @@ function App() {
 
   return (
     <>
+            <ToastContainer/>
       <QueryClientProvider client={queryClient}>
         <RootRouter></RootRouter>
       </QueryClientProvider>

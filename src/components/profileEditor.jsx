@@ -2,7 +2,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import Cropper from 'react-easy-crop';
 import { XMarkIcon, CameraIcon } from '@heroicons/react/24/outline';
-import { Upload } from '../api/imgUpload';
+import { imgUpload } from '../api/imgUpload';
 
 function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
   // 直接用profile初始化state
@@ -163,7 +163,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
       // 如果有新上传的头像
       if (avatarUploadFile) {
         // 上传到图床
-        finalAvatarUrl = await Upload(avatarUploadFile);
+        finalAvatarUrl = await imgUpload(avatarUploadFile);
         console.log(finalAvatarUrl)
         // 清理预览URL
         if (avatarPreview && avatarPreview.startsWith('blob:')) {

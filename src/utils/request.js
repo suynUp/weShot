@@ -40,7 +40,7 @@ class Request {
         // 添加token
         const token = this.getToken();
         if (token && config.headers) {
-          config.headers.Authorization = `${token}`;
+          config.headers.Authorization = `Bearer ${token}`;
         }
 
         // 请求开始时间（用于计算请求耗时）

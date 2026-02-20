@@ -13,6 +13,7 @@ const Home = () => {
     const [searchParams] = useSearchParams();
     const [searchHistory, setSearchHistory] = useState(['人像摄影', '毕业季', '婚礼跟拍', '商业摄影']);
     const [showOverlay, setShowOverlay] = useState(false);
+    const [inputValue, setInputValue] = useState('')
 
     const closeOverlay = () => {
         setShowOverlay(false)
@@ -87,6 +88,8 @@ const Home = () => {
                    <SearchInput
                    searchHistory={searchHistory}
                    setSearchHistory={setSearchHistory}
+                   value={inputValue}
+                   setValue={setInputValue}
                    />
 
                     {/* 中部卡片区域 */}

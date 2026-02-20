@@ -2,7 +2,7 @@ import axios from "axios"
 
 const imgToken = "6|LcNsvMLdREu5sMnANiAverhmOeBm1zwR7zaqr0XD"
 
-export const Upload = async (file) => {
+export const imgUpload = async (file) => {
     try {
         
         const response = await axios.post('https://image.foofish.work/api/v1/upload', 

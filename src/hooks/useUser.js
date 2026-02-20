@@ -4,6 +4,8 @@ import { userKey } from "../store/querykeys"
 import UserAPI from "../api/userAPI"
 import request from "../utils/request"
 import LoginAPI from "../api/loginAPI"
+import postAPI from "../api/postAPI"
+import { toast } from "./useToast"
 
 export const useUserQuerry=()=>{
 
@@ -37,6 +39,7 @@ export const useUserQuerry=()=>{
             
         },
         retry: 2, // 失败时重试2次
+
     })
 } 
 
@@ -57,7 +60,28 @@ export const useOtherUserQuerry = (id) => {
         refetch         // 重新获取
     } = useOtherUserQuery(userId); 
 */
+export const useGetMyPost = () => {
+    const setMyPosts = UserStore(state => state.setMyPost)
 
+
+    return useMutation({
+        mutationFn:()=>{
+            return postAPI.getMyPosts()
+        },
+        onSuccess:(data) => {
+            console.log(data)
+            if(data.code===200){
+                setMyPosts(data.data.list)
+                toast.success('获取成功')
+            }else{
+                toast.error(data.msg||'获取失败')
+            }
+        },
+        onError:(e)=>{
+            toast.error(e.message||'获取失败')
+        }
+    })
+}
 
 
 //这里只执行登录，都登陆完后从url中获取token,在主页调用useUserSet

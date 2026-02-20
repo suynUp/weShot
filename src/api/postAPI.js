@@ -7,10 +7,10 @@ class postAPI {
      * 
      * @param {*} square 
      * {
-        "type": 2,
+        "type": "类型",
         "title": "何he意味",
         "content": "呵呵呵呵呵呵呵",
-        "images": "https://loremflickr.com/400/400?lock=850010465791641"
+        "images": ["https://loremflickr.com/400/400?lock=850010465791641"]
         }
      * @returns 
      */
@@ -22,11 +22,19 @@ class postAPI {
         return request.get('/square/posts',{type,pageNum,pageSize})
     }
 
-    static likeSquare = (postId) => {
+    static getMyPosts = (pageNum,pageSize) => {
+        return request.get('/square/my-posts',{pageNum,pageSize})
+    }
+
+    static getPostDetail = (postId) => {
+        return request.get(`/square/detail/${postId}`)
+    }
+
+    static likePost = (postId) => {
         return request.post(`/square/like/${postId}`,)
     }
 
-    static dislikeSquare = (postId) => {
+    static dislikePost = (postId) => {
         return request.post(`/square/unlike/${postId}`,)
     }
 

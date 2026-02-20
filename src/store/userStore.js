@@ -12,6 +12,9 @@ export const UserStore = create(
             contact:'110',
             outline:'祂很神秘'
         },
+
+        myPosts:[],
+        setMyPost:(myposts)=>set({myPosts:myposts}),
         
         update: (partialUser) => {
             set((state) => ({

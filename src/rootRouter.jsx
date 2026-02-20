@@ -12,6 +12,7 @@ import { Feed } from './pages/community'
 import PhotographerSignUp from './pages/signUp'
 import PhotographersPage from './pages/photographers'
 import PhotographerOrderSquare from './pages/pendingOrder'
+import PostPublish from './pages/postPblish'
 
 const usePathStore = create(
   persist(
@@ -102,6 +103,9 @@ export default function RootRouter() {
     },{
       path:'/pendingorders',
       page:<PhotographerOrderSquare/>
+    },{
+      path:'/postpublish',
+      page:<PostPublish/>
     }
   ]
 

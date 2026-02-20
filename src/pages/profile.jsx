@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ProfileHeader } from '../components/profileHeader';
 import { OrderCard } from '../components/orderCard';
 import { PostCard } from '../components/postCard';
@@ -6,7 +6,9 @@ import { Pagination } from '../components/pagination';
 import { useNavigation } from '../hooks/navigation';
 import { usePagination } from '../hooks/usePagination';
 import ProfileEditModal from '../components/profileEditor';
-import { Camera, User, Phone, MapPin, Calendar, Award, Settings, LogOut, FileText, Image, Clock, CheckCircle, XCircle, AlertCircle, Trash2, Edit } from 'lucide-react';
+import { Camera, FileText, Image, Clock, Trash2, Edit } from 'lucide-react';
+import { useGetMyPost } from '../hooks/useUser';
+import { useToast } from '../hooks/useToast';
 
 function Profile() {
   const [selectedOrders, setSelectedOrders] = useState(new Set());
@@ -15,6 +17,7 @@ function Profile() {
   const [activeTab, setActiveTab] = useState('posts'); // 'posts', 'myOrders', 'receivedOrders'
   const [orderType, setOrderType] = useState('my'); // 'my' 或 'received'，用于区分订单类型
   const { goto } = useNavigation();
+  const toast = useToast()
   
   // 模拟用户身份（实际应从后端获取）
   const [isPhotographer, setIsPhotographer] = useState(false); // 是否是摄影师
@@ -26,6 +29,11 @@ function Profile() {
     avatar_url: null
   };
 
+  const useGetPostsMutation = useGetMyPost()
+
+  useEffect(()=>{
+    useGetPostsMutation.mutate()
+  },[])
   // 用户个人信息 - 添加了用户类型和简介
   const [userProfile, setUserProfile] = useState({
     nickname: "析阳",
@@ -321,31 +329,6 @@ function Profile() {
     }
   };
 
-  // 获取当前显示的订单数据
-  const getCurrentOrders = () => {
-    if (orderType === 'my') {
-      return {
-        data: myOrdersData,
-        loading: myOrdersLoading,
-        error: myOrdersError,
-        page: myOrdersPage,
-        totalPages: myOrdersTotalPages,
-        setPage: setMyOrdersPage,
-        refresh: refreshMyOrders
-      };
-    } else {
-      return {
-        data: receivedOrdersData,
-        loading: receivedOrdersLoading,
-        error: receivedOrdersError,
-        page: receivedOrdersPage,
-        totalPages: receivedOrdersTotalPages,
-        setPage: setReceivedOrdersPage,
-        refresh: refreshReceivedOrders
-      };
-    }
-  };
-
   // const currentOrders = getCurrentOrders();
 
   // 加载状态显示
@@ -372,13 +355,13 @@ function Profile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-pink-50">
+
       {/* 装饰性背景元素 */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-orange-200/30 to-pink-200/30 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-amber-200/30 to-orange-200/30 rounded-full blur-3xl" />
         <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-gradient-to-r from-pink-200/20 to-orange-200/20 rounded-full blur-3xl" />
       </div>
-
       <div className="relative z-10">
         <ProfileHeader
           profile={mockProfile}

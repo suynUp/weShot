@@ -25,17 +25,14 @@ const MOCK_IMAGES = [
   }
 ];
 
-export function PostDetail({ post, onClose, onLike }) {
+export function PostDetail({ post, onClose, onLike,onDislike }) {
   const [images, setImages] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // 模拟已点赞的帖子ID（实际应用中应该从本地存储或后端获取）
-  const [likedPosts, setLikedPosts] = useState(() => {
-    const saved = localStorage.getItem('likedPosts');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [likedPosts, setLikedPosts] = useState(false);
 
   useEffect(() => {
     // 模拟加载图片
@@ -85,6 +82,16 @@ export function PostDetail({ post, onClose, onLike }) {
       console.error('Error liking post:', error);
     }
   };
+
+  const handleDisLike = async () => {
+    if(!isLiked) return
+
+    try{
+      const res =await onDislike
+    }catch(e){
+      console.log(e)
+    }
+  }
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % (images.length || 1));
