@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 
 // 订单卡片组件
-function OrderCard({ order }) {
+function OrderCard({ order, isVerfied ,takeOrder}) {
   // 格式化日期时间
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -179,19 +179,18 @@ function OrderCard({ order }) {
           </div>
           
           {/* 支付状态标签 */}
-          <div className="flex items-center gap-3">
-            <span className={`text-xs px-2 py-1 rounded-full ${
-              order.payment_status === 0 ? 'bg-orange-100 text-orange-700' :
-              order.payment_status === 1 ? 'bg-green-100 text-green-700' :
-              'bg-red-100 text-red-700'
-            }`}>
-              {order.payment_status === 0 ? '待支付' :
-               order.payment_status === 1 ? '已支付' : '已退款'}
-            </span>
-            
+          <div className=" flex items-center gap-3">
             {order.status === 0 && (
-              <button className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors shadow-sm hover:shadow">
-                立即接单
+              <button
+                onClick={() => isVerfied && takeOrder(order.orderId)}
+                disabled={!isVerfied}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm ${
+                  isVerfied 
+                    ? 'bg-orange-500 hover:bg-orange-600 text-white cursor-pointer hover:shadow' 
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                {isVerfied ? '立即接单' : '看看就好'}
               </button>
             )}
           </div>

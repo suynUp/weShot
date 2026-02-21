@@ -1,36 +1,48 @@
 import { useMutation } from "@tanstack/react-query"
 import postAPI from "../api/postAPI"
 import { imgUpload } from "../api/imgUpload"
-import { useToast } from "./useToast"
+import { toast, useToast } from "./useToast"
 import postStore from "../store/postStore"
 import { useCallback, useEffect, useRef } from "react"
 import DebounceThrottle from "../utils/debonceThrottle"
-
-export const squarePostConfig = {
-    pageNum:1,
-    pageSize:8
-}
 
 export const useGetPost = () => {
 
     const setTotal = postStore(state => state.setTotalPost)
     const setPostList = postStore(state => state.setPostList)
 
-    const getAllPost = async (type,pageNum,pageSize) => {
+    const getAllPost = async (type=null,pageNum,pageSize,keyword=null) => {
         try{
-            const res = await postAPI.getSquareList(type,pageNum,pageSize)
+            const res = await postAPI.getSquareList(type,pageNum,pageSize,keyword)
             if(res.code === 200){
                 setTotal(res.data.total)
-                setPostList(res.data)
+                setPostList(res.data.list)
             }
+            // return data so callers (e.g. usePagination) can extract `total`
+            return res;
         }catch(E){
             console.log(E)
+            // propagate error if needed
+            throw E;
         }
     }
 
     const getMyPost = () => {}
 
-    return {getAllPost,getMyPost}
+    const setCurresntPost = postStore(state => state.setCurrentPost)
+    const getPostDetail = async (postId) => {
+        try{
+            const res = await postAPI.getPostDetail(postId)
+            if(res.code === 200){
+                setCurresntPost(res.data)
+                return res.data;
+            }
+        }catch(E){
+            toast.error(E.message || '获取帖子详情失败')
+        }
+    }
+
+    return {getAllPost,getMyPost, getPostDetail}
 }
 
 export const usePostAction = () => {
@@ -120,7 +132,7 @@ export const useSearchHistory = () => {
 };
 
 
-export const useSearchSuggestWithDebounce = (delay = 300) => {
+export const useSearchSuggestWithDebounce = (delay = 500) => {
     const toast = useToast();
     const setSuggestions = postStore(state => state.setSuggestions);
     const debounceRef = useRef(null);
@@ -184,38 +196,6 @@ export const useSearchSuggestWithDebounce = (delay = 300) => {
         // 如果需要异步调用
         mutateAsync: suggestMutation.mutateAsync
     };
-};
-
-export const useSearch = () => {
-    const toast = useToast();
-    const setSearchResults = postStore(state => state.setSearchResults);
-
-    return useMutation({
-        mutationFn: async (keyword) => {
-            if (!keyword.trim()) {
-                throw new Error('请输入搜索关键词');
-            }
-            const response = await postAPI.search(keyword);
-            if (response.code !== 200) {
-                throw new Error(response.message || '搜索失败');
-            }
-            return response;
-        },
-        onSuccess: (data) => {
-            setSearchResults(data.data);
-            
-            if (data.data.length > 0) {
-                toast.success(`找到 ${data.data.length} 条结果`);
-            } else {
-                toast.info('没有找到相关内容');
-            }
-        },
-        onError: (error) => {
-            toast.error(error.message || '搜索失败');
-            // 错误时清空搜索结果
-            setSearchResults([]);
-        }
-    });
 };
 
 export const useGetPostDetail = () =>{

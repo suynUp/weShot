@@ -7,8 +7,11 @@ const SearchInput = ({
     searchFn,   //进行搜索
     clearAll,
     deleteOne,
+    placeholder='搜索点什么吧',
     value,
-    setValue
+    setValue,
+    initialPageNum = 1,
+    initialPageSize = 9
 }) => {
     
     const searchRef = useRef()
@@ -32,19 +35,8 @@ const SearchInput = ({
         setValue(newValue);
     };
 
-    const handleSearch = async (keyword) => {
-        const searchKeyword = keyword !== null ? keyword : value;
-        
-        // 空搜索不处理
-        if (!searchKeyword.trim()) return;
-        
-        try {
-            await searchFn.mutate(searchKeyword);
-            setIsFocused(false); // 搜索后关闭下拉框
-        } catch(e) {
-            console.log(e);
-        }
-    };
+    const handleSearch = async () => await searchFn(initialPageNum, initialPageSize);
+
 
     const removeHistoryItem = (item, e) => {
         e.stopPropagation();
@@ -58,7 +50,7 @@ const SearchInput = ({
     // 处理键盘事件
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
-            handleSearch(null);
+            handleSearch()
         }
     };
 
@@ -78,7 +70,7 @@ const SearchInput = ({
                         onFocus={handleFocus}
                         onKeyDown={handleKeyDown}
                         className="w-full bg-transparent focus:outline-none text-gray-700 placeholder-gray-400"
-                        placeholder="查找摄影师、作品或灵感..."
+                        placeholder={placeholder}
                         value={value}
                         onChange={handleSuggest}
                     />
@@ -86,11 +78,18 @@ const SearchInput = ({
                     {value && (
                         <button 
                             onClick={handleClearInput}
-                            className="p-1 hover:bg-gray-100 rounded-full"
+                            className="p-1 hover:bg-gray-100 rounded-full mr-1"
                         >
                             <X className="w-4 h-4 text-gray-400" />
                         </button>
                     )}
+                    {/* 搜索按钮 */}
+                    <button
+                        onClick={() => handleSearch()}
+                        className="ml-2 px-4 w-[70px] py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
+                    >
+                        搜索
+                    </button>
                 </div>
                 
                 {/* 搜索下拉框 */}

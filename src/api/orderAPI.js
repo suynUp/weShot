@@ -26,7 +26,7 @@ class orderAPI {
     static getLobbyList = (pageNum,pageSize) => request.get('/order/lobby',{pageNum,pageSize})
     
     //获取我的订单
-    static getMyOrderList = () => request.get('/order/list')
+    static getMyOrderList = (pageNum,pageSize) => request.get('/order/list',{pageNum,pageSize})
 
     /**
      * 

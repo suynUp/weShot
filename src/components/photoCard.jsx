@@ -1,13 +1,16 @@
-import { ThumbsUp,Camera,MapPin,User,Star } from "lucide-react";
-// 照片卡片组件
-function PhotoCard({ photo }) {
+import { ThumbsUp, Camera, MapPin, Star } from "lucide-react";
 
+// 照片卡片组件
+function PhotoCard({ photo ,onSelect }) {
+  
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:scale-[1.02] group">
+    <div
+    onClick={()=>onSelect(photo.post_id)} 
+    className="cursor-pointer bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 hover:scale-[1.02] group">
       {/* 作品图片 */}
       <div className="relative h-56 bg-orange-100 overflow-hidden">
         <img
-          src={photo.image_url}
+          src={photo.images} // 修改：从 images 字段获取
           alt={photo.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
@@ -24,50 +27,45 @@ function PhotoCard({ photo }) {
             {/* 摄影师头像 */}
             <div className="relative mt-[20px]">
               <img
-                src={photo.photographer.avatar}
-                alt={photo.photographer.nickname}
+                src={photo.avatar_url} // 修改：从 avatar_url 字段获取
+                alt={photo.nickname}
                 className="w-12 h-12 rounded-full object-cover border-3 border-orange-200"
               />
-              <div className="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white"></div>
+
             </div>
             {/* 摄影师详情 */}
             <div className="flex-1 pt-[20px] ml-[10px]">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-bold text-gray-900 text-lg">{photo.photographer.nickname}</h4>
-                  <p className="text-xs text-start text-gray-500">ID: {photo.photographer.id}</p>
+                  <h4 className="font-bold text-gray-900 text-start text-lg">{photo.nickname}</h4>
+                  <p className="text-xs text-start text-gray-500">ID: {photo.user_id}</p>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center gap-1 text-sm font-medium text-orange-600">
                     <Camera className="w-4 h-4" />
-                    <span>{photo.photographer.completedOrders}单</span>
+                    {/* 如果没有 completedOrders 字段，可以暂时隐藏或使用默认值 */}
+                    <span>0单</span>
                   </div>
                 </div>
               </div>
-            
             </div>
           </div>
 
-           {/* 地点和作品点赞 */}
-            <div className="flex items-center justify-between w-full pt-2 border-t border-gray-100">
-              <div className="flex items-center gap-1 text-xs text-gray-500">
-                <MapPin className="w-3 h-3" />
-                <span>{photo.photographer.location}</span>
-              </div>
-              {/* 星级评分 */}
-              <div className="flex text-[10px] items-center">
-                <span>用户反馈:</span><StarRating rating={photo.photographer.rating} />
-              </div>  
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-xs text-gray-500">
-                  
-                </div>
-                <div className="flex items-center gap-1 text-sm font-medium text-gray-700">
-                  <ThumbsUp className="w-4 h-4 text-orange-400" />
-                  <span>{photo.likes}</span>
-                </div>
+          {/* 地点和作品点赞 */}
+          <div className="flex items-center justify-between w-full pt-2 border-t border-gray-100">
+            <div className="flex items-center gap-1 text-xs text-gray-500">
+              <MapPin className="w-3 h-3" />
+              <span>{photo.location || '未知地点'}</span>
+            </div>
+  
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 text-xs text-gray-500"></div>
+              <div className="flex items-center gap-1 text-sm font-medium text-gray-700">
+                <ThumbsUp className={`w-4 h-4 ${photo.isLiked ? 'fill-orange-400 text-orange-400' : 'text-orange-400'}`} />
+                <span>{photo.totalLikes || 0}</span>
               </div>
             </div>
+          </div>
         </div>
       </div>
     </div>
@@ -97,9 +95,9 @@ function StarRating({ rating }) {
           return <Star key={i} className="w-4 h-4 text-gray-300" />;
         }
       })}
-      <span className="text-xs text-gray-500 ml-1">({rating})</span>
+      <span className="text-xs text-gray-500 ml-1">({rating.toFixed(1)})</span>
     </div>
   );
 }
 
-export default PhotoCard
+export default PhotoCard;

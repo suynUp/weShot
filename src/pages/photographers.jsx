@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   Star, 
@@ -12,134 +12,30 @@ import {
   MapPin,
   Calendar,
   Image as ImageIcon,
-  ChevronLeft
+  ChevronLeft,
+  X
 } from 'lucide-react';
 import { SmartTag } from '../components/tags';
-import { usePagination } from '../hooks/usePagination';
 import { Pagination } from '../components/pagination';
 import { useNavigation } from '../hooks/navigation';
-
-// Mock数据 - 摄影师列表
-const mockPhotographers = [
-  {
-    id: 'P001',
-    nickname: '光影行者',
-    avatar: 'https://images.unsplash.com/photo-1494790108777-9f8e60874d8f?w=150',
-    coverImage: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800',
-    rating: 4.9,
-    completedOrders: 328,
-    type: ['职业摄影师', '摄影工作室'],
-    style: ['人像摄影', '商业摄影', '婚礼摄影'],
-    equipment: ['索尼 A7M4', '佳能 R5'],
-    location: '上海市',
-    joinDate: '2023-01',
-    featuredWorks: [
-      'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=400',
-      'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=400',
-      'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400'
-    ]
-  },
-  {
-    id: 'P002',
-    nickname: '时光记录者',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    coverImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
-    rating: 4.8,
-    completedOrders: 256,
-    type: ['自由摄影师'],
-    style: ['风光摄影', '纪实摄影'],
-    equipment: ['尼康 Z9', '富士 X-T5'],
-    location: '北京市',
-    joinDate: '2023-03',
-    featuredWorks: [
-      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400',
-      'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400',
-      'https://images.unsplash.com/photo-1426604966841-d7cdacd1bebc?w=400'
-    ]
-  },
-  {
-    id: 'P003',
-    nickname: '城市猎人',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-    coverImage: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800',
-    rating: 5.0,
-    completedOrders: 189,
-    type: ['街拍摄影师'],
-    style: ['街拍摄影', '纪实摄影'],
-    equipment: ['徕卡 M11', '富士 X100V'],
-    location: '广州市',
-    joinDate: '2023-06',
-    featuredWorks: [
-      'https://images.unsplash.com/photo-1494522855154-9297ac14b55f?w=400',
-      'https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=400',
-      'https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=400'
-    ]
-  },
-  {
-    id: 'P004',
-    nickname: '婚礼诗人',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    coverImage: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800',
-    rating: 4.9,
-    completedOrders: 412,
-    type: ['婚礼摄影师'],
-    style: ['婚礼摄影', '人像摄影'],
-    equipment: ['佳能 R5', '索尼 A7M4'],
-    location: '杭州市',
-    joinDate: '2022-08',
-    featuredWorks: [
-      'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=400',
-      'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400',
-      'https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400'
-    ]
-  },
-  {
-    id: 'P005',
-    nickname: '山川影者',
-    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150',
-    coverImage: 'https://images.unsplash.com/photo-1682686580391-6f5b9c5b8b5a?w=800',
-    rating: 4.7,
-    completedOrders: 156,
-    type: ['风光摄影师'],
-    style: ['风光摄影', '航拍摄影'],
-    equipment: ['大疆 Mavic 3', '索尼 A7R5'],
-    location: '成都市',
-    joinDate: '2023-09',
-    featuredWorks: [
-      'https://images.unsplash.com/photo-1682686580186-b55d2a91053c?w=400',
-      'https://images.unsplash.com/photo-1682686581484-a220ece3f4b4?w=400',
-      'https://images.unsplash.com/photo-1682686581484-a220ece3f4b4?w=400'
-    ]
-  },
-  {
-    id: 'P006',
-    nickname: '商业视界',
-    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
-    coverImage: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800',
-    rating: 4.8,
-    completedOrders: 298,
-    type: ['商业摄影师'],
-    style: ['商业摄影', '产品摄影'],
-    equipment: ['哈苏 X1D II', '佳能 R5'],
-    location: '深圳市',
-    joinDate: '2022-11',
-    featuredWorks: [
-      'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=400',
-      'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=400',
-      'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=400'
-    ]
-  }
-];
-
-// 排行榜数据
-const rankingData = {
-  byOrders: [...mockPhotographers].sort((a, b) => b.completedOrders - a.completedOrders),
-  byRating: [...mockPhotographers].sort((a, b) => b.rating - a.rating)
-}
+import { usePagination } from '../hooks/usePagination';
+import photographerStore from '../store/photographerStore';
+import SearchInput from '../components/searchInput';
+import { 
+  useGetPhgList, 
+  useGetSuggestions, 
+  useGetHistory,
+  useGetOrderRanking,
+  useGetRatingRanking 
+} from '../hooks/usePhotographer';
 
 // 轮播图组件
 function PhotographerCarousel({ photographers }) {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  if (!photographers || photographers.length === 0) {
+    return null;
+  }
 
   return (
     <div className="relative w-full h-[400px] overflow-hidden rounded-2xl">
@@ -154,12 +50,13 @@ function PhotographerCarousel({ photographers }) {
       >
         {photographers.map((photographer, idx) => (
           <div
-            key={photographer.id}
+            key={photographer.cas_id || idx}
             className="relative w-full h-full flex-shrink-0"
             style={{ width: `${100 / photographers.length}%` }}
           >
+            {/* 如果没有coverImage，可以用avatar_url作为背景 */}
             <img
-              src={photographer.coverImage}
+              src={photographer.coverImage || photographer.avatar_url}
               alt={photographer.nickname}
               className="w-full h-full object-cover"
             />
@@ -169,17 +66,17 @@ function PhotographerCarousel({ photographers }) {
             <div className="absolute bottom-8 left-8 text-white">
               <div className="flex items-center gap-4">
                 <img
-                  src={photographer.avatar}
+                  src={photographer.avatar_url}
                   alt={photographer.nickname}
                   className="w-16 h-16 rounded-full border-4 border-white shadow-lg"
                 />
                 <div>
                   <h3 className="text-2xl font-bold">{photographer.nickname}</h3>
-                  <p className="text-white/90">ID: {photographer.id}</p>
+                  <p className="text-white/90">ID: {photographer.cas_id}</p>
                   <div className="flex items-center gap-1 mt-1">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-semibold">{photographer.rating}</span>
-                    <span className="text-white/70 ml-2">· {photographer.completedOrders}单</span>
+                    <span className="font-semibold">{photographer.avgScore?.toFixed(1) || '5.0'}</span>
+                    <span className="text-white/70 ml-2">· {photographer.orderCount || 0}单</span>
                   </div>
                 </div>
               </div>
@@ -203,7 +100,6 @@ function PhotographerCarousel({ photographers }) {
     </div>
   );
 }
-
 // 摄影师卡片组件
 function PhotographerCard({ photographer }) {
   return (
@@ -211,7 +107,7 @@ function PhotographerCard({ photographer }) {
       <div className="flex gap-4">
         {/* 头像 */}
         <img
-          src={photographer.avatar}
+          src={photographer.avatar_url}
           alt={photographer.nickname}
           className="w-20 h-20 rounded-full object-cover border-2 border-orange-200"
         />
@@ -221,54 +117,40 @@ function PhotographerCard({ photographer }) {
           <div className="flex items-center justify-between">
             <div>
               <h4 className="font-semibold text-gray-900">{photographer.nickname}</h4>
-              <p className="text-xs text-gray-500">ID: {photographer.id}</p>
+              <p className="text-xs text-gray-500">ID: {photographer.cas_id}</p>
             </div>
             <div className="text-right">
               <div className="flex items-center gap-1">
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                <span className="font-semibold">{photographer.rating}</span>
+                <span className="font-semibold">{photographer.avgScore?.toFixed(1) || '5.0'}</span>
               </div>
-              <p className="text-xs text-gray-500">{photographer.completedOrders}单</p>
+              <p className="text-xs text-gray-500">{photographer.orderCount || 0}单</p>
             </div>
           </div>
 
           {/* 标签区域 */}
           <div className="mt-2 space-y-1">
             <div className="flex flex-wrap gap-1">
-              {photographer.type.map((type, idx) => (
-                <SmartTag
-                key={idx}
-                tag={type}
-                ></SmartTag>
-              ))}
+              {photographer.type && (
+                <SmartTag tag={photographer.type} />
+              )}
             </div>
             <div className="flex flex-wrap gap-1">
-              {photographer.style.map((style, idx) => (
-                <SmartTag
-                key={idx}
-                tag={style}
-                />
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {photographer.equipment.map((eq, idx) => (
-                <SmartTag
-                key={idx}
-                tag={eq}
-                />
-              ))}
+              {photographer.style && (
+                <SmartTag tag={photographer.style} />
+              )}
             </div>
           </div>
 
-          {/* 地点和加入时间 */}
+          {/* 地点和加入时间 - 如果没有对应字段，暂时隐藏 */}
           <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
             <span className="flex items-center gap-1">
               <MapPin className="w-3 h-3" />
-              {photographer.location}
+              {photographer.location || '未知'}
             </span>
             <span className="flex items-center gap-1">
               <Calendar className="w-3 h-3" />
-              加入于 {photographer.joinDate}
+              加入于 {photographer.joinDate || '2024-01'}
             </span>
           </div>
         </div>
@@ -330,9 +212,9 @@ function RankingSidebar({ rankingByOrders, rankingByRating }) {
 
       {/* 排行榜列表 */}
       <div className="space-y-3">
-        {currentRanking.slice(0, 8).map((photographer, index) => (
+        {(currentRanking || []).slice(0, 8).map((photographer, index) => (
           <div
-            key={photographer.id}
+            key={photographer.cas_id}
             className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors"
           >
             {/* 排名 */}
@@ -346,7 +228,7 @@ function RankingSidebar({ rankingByOrders, rankingByRating }) {
 
             {/* 头像 */}
             <img
-              src={photographer.avatar}
+              src={photographer.avatar_url}
               alt={photographer.nickname}
               className={`${getAvatarSize(index)} rounded-full object-cover border-2 ${
                 index === 0 ? 'border-yellow-400' : 
@@ -358,7 +240,7 @@ function RankingSidebar({ rankingByOrders, rankingByRating }) {
             {/* 信息 */}
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm truncate">{photographer.nickname}</p>
-              <p className="text-xs text-gray-500 truncate">ID: {photographer.id}</p>
+              <p className="text-xs text-gray-500 truncate">ID: {photographer.cas_id}</p>
             </div>
 
             {/* 数据 */}
@@ -367,12 +249,15 @@ function RankingSidebar({ rankingByOrders, rankingByRating }) {
                 {activeTab === 'orders' ? (
                   <>
                     <Camera className="w-3 h-3 text-gray-400" />
-                    {photographer.completedOrders}
+                    {photographer.orderCount || photographer.order_count || 0}
                   </>
                 ) : (
                   <>
                     <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                    {photographer.rating}
+                    {photographer.avgScore?.toFixed(1) || '5.0'}
+                    {photographer.ratingCount && (
+                      <span className="text-xs text-gray-400 ml-1">({photographer.ratingCount})</span>
+                    )}
                   </>
                 )}
               </div>
@@ -380,111 +265,113 @@ function RankingSidebar({ rankingByOrders, rankingByRating }) {
           </div>
         ))}
       </div>
-
-      {/* 查看更多 */}
-      <button className="w-full mt-4 py-2 text-sm text-orange-500 hover:text-orange-600 flex items-center justify-center gap-1">
-        查看更多
-        <ChevronRight className="w-4 h-4" />
-      </button>
     </div>
   );
 }
 
 // 主页面组件
 export default function PhotographersPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const searchRef = useRef(null)
-  const [isFocused,setIsFocused] = useState(false)
-  const [searchHistory,setSearchHistory] = useState('')
+  const { goto } = useNavigation();
+  const [searchValue, setSearchValue] = useState('');
 
+  // 从store获取状态
+  const { 
+    phgList, 
+    phgTotal, 
+    phgSuggestions, 
+    phgSearchHistory,
+    phgOrderRanking,
+    phgRatingRanking,
+    removePhgSearchHistory 
+  } = photographerStore();
+
+  // 获取hooks
+  const getPhgList = useGetPhgList();
+  const getSuggestions = useGetSuggestions();
+  const getHistory = useGetHistory();
+  const getOrderRanking = useGetOrderRanking();
+  const getRatingRanking = useGetRatingRanking();
+
+  // 获取摄影师列表的函数
+  const fetchPhotographers = async (pageNum, pageSize) => {
+    return await getPhgList.mutateAsync({
+      pageNum,
+      pageSize,
+      keyword: searchValue
+    });
+  };
+
+  // 使用分页hook
   const {
-    paginatedData,
-    total,
-    totalPages,
     currentPage,
+    totalPages,
+    loading: paginationLoading,
     setCurrentPage
   } = usePagination({
-    data:mockPhotographers,
-    initialPage:1,
-    itemsPerPage:5
-  })
-  const {goto} = useNavigation()
+    itemsPerPage: 12,
+    fetchData: fetchPhotographers,
+    initialPage: 1,
+    total: phgTotal
+  });
 
-  const removeHistoryItem = () => {
+  // 初始化数据
+  useEffect(() => {
+    getHistory.mutateAsync();
+    getOrderRanking.mutateAsync();
+    getRatingRanking.mutateAsync();
+  }, []);
 
-  }
+  // 搜索建议
+  useEffect(() => {
+    if (searchValue.trim()) {
+      const debounceTimer = setTimeout(() => {
+        getSuggestions.mutate(searchValue);
+      }, 300);
+      return () => clearTimeout(debounceTimer);
+    }
+  }, [searchValue]);
 
-  const handleFocus = () => setIsFocused(true);
-  const handleBlur = () => setIsFocused(false)
+  // 处理搜索
+  const handleSearch = async () => {
+    if (searchValue.trim()) {
+      setCurrentPage(1);
+      await fetchPhotographers(1, 12);
+    }
+  };
+
+  // 处理清空所有历史记录
+  const handleClearAllHistory = () => {
+    photographerStore.getState().setPhgSearchHistory([]);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-5">
-        <div className='justify-between'>
-            <ChevronLeft onClick={()=>goto('/')} className=' ml-5 h-10 w-10'></ChevronLeft>
-        </div>
-      {/* 搜索栏 */}
-      <div className="max-w-5xl mx-auto py-5 relative z-20" ref={searchRef}>
-                        <div className={`relative bg-white/80 backdrop-blur-sm shadow-lg transition-all duration-300 ${
-                            isFocused ? 'rounded-t-2xl shadow-xl' : 'rounded-2xl hover:shadow-xl'
-                        }`}>
-                            <div className="flex items-center px-4 py-3">
-                                <Search className="w-5 h-5 text-orange-400 mr-3" />
-                                <input 
-                                    onFocus={handleFocus}
-                                    onBlur={handleBlur}
-                                    className="w-full bg-transparent focus:outline-none text-gray-700 placeholder-gray-400"
-                                    placeholder="查找摄影师、作品或灵感..."
-                                />
-                            </div>
-                            
-                            {/* 搜索历史下拉框 */}
-                            <div className={`absolute bg-white/95 backdrop-blur-sm rounded-b-2xl w-full top-full shadow-xl transition-all duration-300 overflow-hidden z-50 ${
-                                isFocused ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-                            }`}>
-                                <div className="p-4 border-t border-orange-100">
-                                    <div className="flex justify-between items-center mb-3 px-2">
-                                        <span className="text-sm font-medium text-orange-600">最近搜索</span>
-                                        {searchHistory.length > 0 && (
-                                            <button 
-                                                onClick={() => setSearchHistory([])}
-                                                className="text-xs text-gray-400 hover:text-orange-500 transition-colors"
-                                            >
-                                                清除全部
-                                            </button>
-                                        )}
-                                    </div>
-                                    {searchHistory.length > 0 ? (
-                                        <div className="space-y-1">
-                                            {searchHistory.map((history) => (
-                                                <div 
-                                                    key={history} 
-                                                    className="flex justify-between items-center px-3 py-2.5 hover:bg-orange-50 rounded-lg transition-colors group cursor-pointer"
-                                                    onClick={() => console.log('搜索:', history)}
-                                                >
-                                                    <span className="text-gray-600 text-sm">{history}</span>
-                                                    <button 
-                                                        onClick={(e) => removeHistoryItem(history, e)}
-                                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-orange-200 rounded-full"
-                                                    >
-                                                        <X className="w-3.5 h-3.5 text-gray-400 hover:text-orange-500" />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="text-center py-6 text-gray-400 text-sm">
-                                            暂无搜索历史
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+      <div className='flex items-center mb-4'>
+        <ChevronLeft 
+          onClick={() => goto('/')} 
+          className='ml-5 h-10 w-10 cursor-pointer hover:bg-gray-100 rounded-full p-2 transition-colors'
+        />
+        <h1 className="text-2xl font-bold text-gray-800 ml-2">摄影师社区</h1>
+      </div>
+
+      {/* 使用SearchInput组件替换原有的搜索栏 */}
+      <SearchInput
+        searchHistory={phgSearchHistory}
+        suggest={phgSuggestions}
+        searchFn={handleSearch}
+        clearAll={handleClearAllHistory}
+        deleteOne={removePhgSearchHistory}
+        placeholder="查找摄影师、作品或灵感..."
+        value={searchValue}
+        setValue={setSearchValue}
+        initialPageNum={1}
+        initialPageSize={12}
+      />
 
       {/* 主要内容区域 */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* 轮播图 */}
-        <PhotographerCarousel photographers={mockPhotographers.slice(0, 4)} />
+        {/* 轮播图 - 使用排行榜数据 */}
+        <PhotographerCarousel photographers={phgOrderRanking.slice(0, 4)} />
 
         {/* 内容网格 */}
         <div className="flex gap-6 mt-8">
@@ -492,32 +379,56 @@ export default function PhotographersPage() {
           <div className="flex-1 space-y-4">
             <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Camera className="w-5 h-5 text-orange-500" />
-              推荐摄影师 ({total})
+              推荐摄影师 ({phgTotal})
             </h2>
-            <div className="grid grid-cols-2 gap-4">
-                {total > 0 ? (
-                paginatedData.map(photographer => (
-                    <PhotographerCard key={photographer.id} photographer={photographer} />
-                ))
-                ) : (
-                <div className="text-center py-12 bg-white rounded-xl">
-                    <ImageIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">暂无匹配的摄影师</p>
+            
+            {paginationLoading ? (
+              <div className="grid grid-cols-2 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl shadow-md p-4 animate-pulse">
+                    <div className="flex gap-4">
+                      <div className="w-20 h-20 bg-gray-200 rounded-full" />
+                      <div className="flex-1 space-y-3">
+                        <div className="h-4 bg-gray-200 rounded w-3/4" />
+                        <div className="h-3 bg-gray-200 rounded w-1/2" />
+                        <div className="h-3 bg-gray-200 rounded w-2/3" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  {phgList && phgList.length > 0 ? (
+                    phgList.map(photographer => (
+                      <PhotographerCard key={photographer.cas_id} photographer={photographer} />
+                    ))
+                  ) : (
+                    <div className="col-span-2 text-center py-12 bg-white rounded-xl">
+                      <ImageIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500">暂无匹配的摄影师</p>
+                    </div>
+                  )}
                 </div>
+                
+                {/* 分页组件 */}
+                {phgTotal > 12 && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
                 )}
-            </div>
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
+              </>
+            )}
           </div>
 
           {/* 排行榜侧边栏 */}
           <div className="w-80 flex-shrink-0">
             <RankingSidebar 
-              rankingByOrders={rankingData.byOrders}
-              rankingByRating={rankingData.byRating}
+              rankingByOrders={phgOrderRanking}
+              rankingByRating={phgRatingRanking}
             />
           </div>
         </div>

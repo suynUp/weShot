@@ -1,282 +1,242 @@
 import { useEffect, useState } from 'react';
-import { ChevronDown, X, ThumbsUp, ChevronLeft, Star, Camera, MapPin, Calendar, User } from 'lucide-react';
-import PhotoCard from '../components/photoCard';
-import FilterPanel from '../components/filterPanel';
-import { useNavigation } from '../hooks/navigation';
+import { PostCard } from '../components/postCard';
+import { PostDetail } from '../components/postDetail';
+import { Camera, Sparkles, ArrowLeft } from 'lucide-react';
+import SearchInput from '../components/searchInput';
+import { Pagination } from '../components/pagination'; // 导入分页组件
+import { useGetPost, usePostAction, useSearchHistory, useSearchSuggestWithDebounce } from '../hooks/usePost';
+import postStore from '../store/postStore';
+import { usePagination } from '../hooks/usePagination';
 
-// Mock 数据 - 扩展为包含摄影师信息的作品数据
-const mockPhotos = [
-  {
-    id: '1',
-    title: '城市日落',
-    image_url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    likes: 234,
-    category_id: '1',
-    photographer: {
-      id: 'P001',
-      nickname: '光影行者',
-      avatar: 'https://images.unsplash.com/photo-1494790108777-9f8e60874d8f?w=150',
-      rating: 4.8,
-      completedOrders: 328,
-      location: '上海'
-    }
-  },
-  {
-    id: '2',
-    title: '人像摄影',
-    image_url: 'https://images.unsplash.com/photo-1494790108777-766d23a7b0d7?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    likes: 567,
-    category_id: '2',
-    photographer: {
-      id: 'P002',
-      nickname: '时光记录者',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-      rating: 4.9,
-      completedOrders: 256,
-      location: '北京'
-    }
-  },
-  {
-    id: '3',
-    title: '建筑艺术',
-    image_url: 'https://images.unsplash.com/photo-1488972685288-c3fd157d7c7a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    likes: 189,
-    category_id: '3',
-    photographer: {
-      id: 'P003',
-      nickname: '城市猎人',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-      rating: 5.0,
-      completedOrders: 189,
-      location: '广州'
-    }
-  },
-  {
-    id: '4',
-    title: '自然风光',
-    image_url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    likes: 892,
-    category_id: '1',
-    photographer: {
-      id: 'P004',
-      nickname: '山川影者',
-      avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150',
-      rating: 4.7,
-      completedOrders: 156,
-      location: '成都'
-    }
-  },
-  {
-    id: '5',
-    title: '街头摄影',
-    image_url: 'https://images.unsplash.com/photo-1517462964-21fdcec3f25b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    likes: 345,
-    category_id: '2',
-    photographer: {
-      id: 'P005',
-      nickname: '街拍大师',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-      rating: 4.6,
-      completedOrders: 203,
-      location: '深圳'
-    }
-  },
-  {
-    id: '6',
-    title: '夜景拍摄',
-    image_url: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    likes: 678,
-    category_id: '3',
-    photographer: {
-      id: 'P006',
-      nickname: '夜行者',
-      avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
-      rating: 4.5,
-      completedOrders: 142,
-      location: '重庆'
-    }
-  }
-];
-
-const mockCategories = [
-  { id: '1', label: '风光摄影' },
-  { id: '2', label: '人像摄影' },
-  { id: '3', label: '建筑摄影' },
-  { id: '4', label: '街拍摄影' }
-];
-
-const mockTags = [
-  { id: '101', name: '日出日落', category_id: '1' },
-  { id: '102', name: '山川湖泊', category_id: '1' },
-  { id: '103', name: '森林草原', category_id: '1' },
-  { id: '201', name: '写真', category_id: '2' },
-  { id: '202', name: '婚纱', category_id: '2' },
-  { id: '203', name: '儿童', category_id: '2' },
-  { id: '301', name: '现代建筑', category_id: '3' },
-  { id: '302', name: '古建筑', category_id: '3' },
-  { id: '303', name: '室内设计', category_id: '3' },
-  { id: '401', name: '人文纪实', category_id: '4' },
-  { id: '402', name: '城市光影', category_id: '4' },
-  { id: '403', name: '街头人像', category_id: '4' }
-];
-
-// 标签组件
-function SelectedTag({ tagId, tagName, onRemove }) {
-  return (
-    <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-full text-sm font-medium">
-      <span>{tagName}</span>
-      <button
-        onClick={() => onRemove(tagId)}
-        className="hover:bg-gray-700 rounded-full p-0.5 transition-colors"
-      >
-        <X className="w-4 h-4" />
-      </button>
-    </div>
-  );
-}
-
-
-// 主组件
-export function Gallery() {
-  const { goto } = useNavigation();
-
-  const [photos, setPhotos] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [tags, setTags] = useState({});
-  const [selectedTags, setSelectedTags] = useState([]);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [expandedCategories, setExpandedCategories] = useState({});
+function Gallery() {
   const [loading, setLoading] = useState(true);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [inputValue, setInputValue] = useState('');
 
+  const searchHistory = postStore(state => state.history);
+  const postList = postStore(state => state.postList);
+  const postTotal = postStore(state => state.totalposts);
+  const currentPost = postStore(state => state.currentPost);
+
+  // 获取历史
+  const searchHistoryMutation = useSearchHistory()
+
+  // 获取所有帖子
+  const { getAllPost } = useGetPost();
+
+  const {
+    fetchDebouncedSuggest,
+    suggestions
+  } = useSearchSuggestWithDebounce();
+
+  const {
+    like,
+    dislike,
+    comment,
+    getComments
+  } = usePostAction();
+
+  // 使用分页 hook
+  const {
+    currentPage,
+    totalPages,
+    loading: paginationLoading,
+    setCurrentPage
+  } = usePagination({
+    fetchData: async (page, size) => {
+      const result = await getAllPost(null, page, size, inputValue);
+      return result; // 确保返回结果以便分页组件获取总数
+    },
+    itemsPerPage: 12,
+    initialPage: 1,
+    dependencies: [inputValue], // 添加依赖，当搜索词变化时重新加载
+    total: postTotal, // 传入外部的 total
+  });
+
+  // 获取历史记录
   useEffect(() => {
-    loadData();
+    searchHistoryMutation.mutate();
   }, []);
 
-  const loadData = async () => {
-    try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      setPhotos(mockPhotos);
-      setCategories(mockCategories);
-
-      const tagsByCategory = {};
-      mockTags.forEach(tag => {
-        if (!tagsByCategory[tag.category_id]) {
-          tagsByCategory[tag.category_id] = [];
-        }
-        tagsByCategory[tag.category_id].push(tag);
-      });
-      setTags(tagsByCategory);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
-    }
+  // 处理搜索
+  const handleSearch = async (keyword) => {
+    setInputValue(keyword);
+    // 分页 hook 会自动处理搜索，因为 dependencies 包含 inputValue
+    // 并且会自动重置到第一页
   };
 
-  const toggleTag = (tagId) => {
-    setSelectedTags(prev =>
-      prev.includes(tagId) ? prev.filter(t => t !== tagId) : [...prev, tagId]
-    );
+  // 处理建议搜索
+  useEffect(() => {
+    fetchDebouncedSuggest(inputValue);
+  }, [inputValue, fetchDebouncedSuggest]);
+
+  // 处理点赞
+  const handlePostLike = (postId) => {
+    like(postId);
   };
 
-  const removeTag = (tagId) => {
-    setSelectedTags(prev => prev.filter(t => t !== tagId));
+  // 处理取消点赞
+  const handlePostdisLike = (postId) => {
+    dislike(postId);
   };
 
-  const toggleCategory = (catId) => {
-    setExpandedCategories(prev => ({
-      ...prev,
-      [catId]: !prev[catId]
-    }));
+  // 返回上一页
+  const handleGoBack = () => {
+    window.history.back();
   };
 
-  const getSelectedTagNames = () => {
-    const names = [];
-    Object.values(tags).flat().forEach(tag => {
-      if (selectedTags.includes(tag.id)) {
-        names.push(tag.name);
-      }
-    });
-    return names;
+  // 处理页码变化
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    // 滚动到顶部
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const filteredPhotos = selectedTags.length === 0 ? photos : photos;
-
-  if (loading) {
+  // 加载状态
+  if (loading && paginationLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-orange-50 to-green-50 flex items-center justify-center">
-        <div className="text-lg text-gray-600">加载中...</div>
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-pink-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+            <Camera className="w-8 h-8 text-orange-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <div className="text-lg text-gray-600 mt-4">加载精彩作品...</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-orange-50 to-green-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* 返回按钮和标题 */}
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => goto('/')}
-            className="p-2 hover:bg-white/50 rounded-full transition-colors"
-          >
-            <ChevronLeft className="w-6 h-6 text-gray-600" />
-          </button>
-          <h1 className="text-3xl font-bold text-gray-800">摄影师作品集</h1>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-pink-50">
+      {/* 装饰性背景元素 - 柔和风格 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-orange-200/30 to-pink-200/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-amber-200/30 to-orange-200/30 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-gradient-to-r from-pink-200/20 to-orange-200/20 rounded-full blur-3xl" />
+        {/* 装饰性相机图标 */}
+        <Camera className="absolute top-20 left-10 w-12 h-12 text-orange-200/20 rotate-12" />
+        <Camera className="absolute bottom-20 right-10 w-16 h-16 text-pink-200/20 -rotate-12" />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* 页面标题和返回按钮 */}
+        <div className="mb-10">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-28 w-full">
+              <button
+                onClick={handleGoBack}
+                className="flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full shadow-sm border border-orange-100 text-gray-600 hover:text-orange-500 hover:border-orange-200 transition-all duration-300 group"
+                aria-label="返回"
+              >
+                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                <span className="text-sm font-medium">返回</span>
+              </button>
+              <div className='ml-[20px]'>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent inline-flex items-center gap-2">
+                  作品广场
+                  <Sparkles className="w-8 h-8 text-orange-400" />
+                </h1>
+                <p className="text-gray-600 mt-2 text-lg">发现优秀的摄影作品，灵感从这里开始</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* 已选标签 */}
-        {selectedTags.length > 0 && (
-          <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-            <div className="flex flex-wrap gap-3">
-              {getSelectedTagNames().map((tagName, idx) => {
-                const tagId = selectedTags[idx];
-                return (
-                  <SelectedTag
-                    key={tagId}
-                    tagId={tagId}
-                    tagName={tagName}
-                    onRemove={removeTag}
+        {/* 搜索组件 */}
+        <SearchInput
+          searchHistory={searchHistory}
+          suggest={suggestions}
+          searchFn={handleSearch}
+          value={inputValue}
+          setValue={setInputValue}
+          placeholder="搜索作品、作者或标签..."
+        />
+
+        {/* 帖子网格 */}
+        {postList.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr">
+              {postList.map((post, index) => (
+                <div
+                  key={post.post_id}
+                  className="transform transition-all duration-300 hover:-translate-y-1"
+                  style={{
+                    animationDelay: `${index * 100}ms`,
+                    animation: 'fadeInUp 0.6s ease-out forwards',
+                    opacity: 0,
+                  }}
+                >
+                  <PostCard
+                    post={post}
+                    onClick={() => setSelectedPost(post)}
                   />
-                );
-              })}
+                </div>
+              ))}
             </div>
+
+            {/* 使用 Pagination 组件替代原有的分页控件 */}
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
+
+            {/* 显示总条数（可选，因为 Pagination 组件没有包含总条数显示） */}
+            {totalPages > 0 && (
+              <div className="text-center mt-4 text-sm text-gray-500">
+                共 {postTotal || 0} 条作品
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-20">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-orange-100 rounded-full mb-6">
+              <Camera className="w-12 h-12 text-orange-400" />
+            </div>
+            <p className="text-xl text-gray-500">暂无作品</p>
+            <p className="text-gray-400 mt-2">
+              {inputValue ? '没有找到相关作品，试试其他关键词' : '敬请期待摄影师们的精彩作品'}
+            </p>
           </div>
         )}
 
-        {/* 作品网格 - 改为2列布局，卡片更大 */}
-        <div className="relative">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {filteredPhotos.map(photo => (
-              <PhotoCard key={photo.id} photo={photo} />
-            ))}
+        {/* 加载更多指示器 */}
+        {paginationLoading && (
+          <div className="fixed bottom-8 right-8">
+            <div className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+              <span className="text-sm text-gray-600">加载中...</span>
+            </div>
           </div>
-
-          {/* 移动端筛选按钮 */}
-          <button
-            onClick={() => setFilterOpen(!filterOpen)}
-            className="fixed bottom-8 right-8 bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 md:hidden"
-          >
-            <ChevronDown
-              className={`w-6 h-6 transition-transform ${
-                filterOpen ? 'rotate-180' : ''
-              }`}
-            />
-          </button>
-
-          {/* 筛选面板 */}
-          <FilterPanel
-            categories={categories}
-            tags={tags}
-            selectedTags={selectedTags}
-            onToggleTag={toggleTag}
-            expandedCategories={expandedCategories}
-            onToggleCategory={toggleCategory}
-            onClose={() => setFilterOpen(false)}
-            isOpen={filterOpen}
-          />
-        </div>
+        )}
       </div>
+
+      {/* 帖子详情弹窗 */}
+      {selectedPost && (
+        <PostDetail
+          post={currentPost}
+          onClose={() => setSelectedPost(null)}
+          onLike={handlePostLike}
+          onDislike={handlePostdisLike}
+        />
+      )}
+
+      {/* 内联样式动画 */}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

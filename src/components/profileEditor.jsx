@@ -8,15 +8,17 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
   // 直接用profile初始化state
   const [formData, setFormData] = useState({
     nickname: profile?.nickname || '',
-    sex: profile?.sex || 1,
+    sex: profile?.sex || 0,
     phone: profile?.phone || '',
     detail: profile?.detail || '',
     photographer: {
-      style: profile?.photographer?.style || '',
-      equipment: profile?.photographer?.equipment || '',
-      type: profile?.photographer?.type || ''
+      style: profile?.style || '',
+      equipment: profile?.equipment || '',
+      type: profile?.photographerType || ''
     }
   });
+
+  const [isVerfied,] = useState(profile.role ===2)
   
   const [avatarFile, setAvatarFile] = useState(null);        // 存储原始图片 base64
   const [avatarPreview, setAvatarPreview] = useState(profile?.avatarUrl || ''); // 预览URL
@@ -170,7 +172,10 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
           URL.revokeObjectURL(avatarPreview);
         }
       }
-
+      console.log('data',{
+        ...formData,
+        avatarUrl: finalAvatarUrl  // 使用图床返回的永久URL
+      })
       // 保存表单数据
       await onSave({
         ...formData,
@@ -431,7 +436,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
             </div>
 
             {/* 摄影师信息 */}
-            <div className="space-y-5">
+            {isVerfied&&<div className="space-y-5">
               <h3 className="text-lg font-medium text-orange-800 border-b border-orange-200 pb-2">摄影师信息</h3>
               
               <div>
@@ -478,7 +483,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
                   disabled={isUploading}
                 />
               </div>
-            </div>
+            </div>}
 
             {/* 按钮组 */}
             <div className="flex gap-3 pt-6">

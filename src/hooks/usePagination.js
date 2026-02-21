@@ -1,26 +1,64 @@
 // hooks/usePagination.js
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 
 export function usePagination({ 
-  data = [], 
   itemsPerPage = 9,
   initialPage = 1,
-  fetchData, // fetchData(pageNum, pageSize) 应该返回 { data: { list: [], total: number } }
-  dependencies = [] // 依赖项，变化时重新获取数据
+  fetchData,
+  dependencies = [],
+  total: externalTotal,
+  onTotalChange,
 } = {}) {
+  // 检查是否提供了 fetchData
+  if (!fetchData) {
+    console.warn('usePagination: fetchData is required for API mode');
+  }
+
   const [currentPage, setCurrentPage] = useState(initialPage);
-  const [paginatedData, setPaginatedData] = useState([]);
-  const [total, setTotal] = useState(0);
+  const [internalTotal, setInternalTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  const prevDepsRef = useRef(dependencies);
+  const prevPageRef = useRef(initialPage);
+  const isMounted = useRef(true);
+  const initialLoadDone = useRef(false);
+  const prevTotalRef = useRef(externalTotal);
+
+  // 使用外部传入的 total，如果没有则使用 internalTotal
+  const total = useMemo(() => {
+    return Math.max(0, externalTotal !== undefined ? externalTotal : internalTotal);
+  }, [externalTotal, internalTotal]);
 
   // 计算总页数
-  const totalPages = useMemo(() => 
-    Math.ceil(total / itemsPerPage), 
-    [total, itemsPerPage]
-  );
+  const totalPages = useMemo(() => {
+    if (total <= 0) return 0;
+    return Math.ceil(total / itemsPerPage);
+  }, [total, itemsPerPage]);
 
-  // 获取数据的函数
+  // 监听外部 total 变化，如果当前页超出总页数，自动调整
+  useEffect(() => {
+    if (prevTotalRef.current !== externalTotal) {
+      prevTotalRef.current = externalTotal;
+
+      if (totalPages === 0) {
+        setCurrentPage(initialPage);
+      } else if (currentPage > totalPages) {
+        setCurrentPage(totalPages);
+      }
+    }
+  }, [externalTotal, totalPages, currentPage, initialPage]);
+
+  const updateTotal = useCallback((newTotal) => {
+    const validTotal = Math.max(0, newTotal);
+    if (externalTotal === undefined) {
+      setInternalTotal(validTotal);
+    }
+    if (onTotalChange) {
+      onTotalChange(validTotal);
+    }
+  }, [externalTotal, onTotalChange]);
+
   const loadData = useCallback(async (page) => {
     if (!fetchData) return;
     
@@ -28,55 +66,121 @@ export function usePagination({
     setError(null);
     
     try {
+      console.log('Loading data for page:', page);
       const result = await fetchData(page, itemsPerPage);
       
-      // 处理返回格式：{ data: { list: [], total: number } }
-      if (result?.data) {
-        if (Array.isArray(result.data.list)) {
-          setPaginatedData(result.data.list);
-          setTotal(result.data.total || result.data.list.length);
-        } else {
-          console.warn('Unexpected data format: list is not an array', result.data);
-          setPaginatedData([]);
-          setTotal(0);
-        }
-      } 
+      if (!isMounted.current) return;
+      
+      if (result && typeof result.total === 'number') {
+        updateTotal(result.total);
+      }
+      
     } catch (err) {
-      setError(err.message || 'Failed to load data');
-      setPaginatedData([]);
-      setTotal(0);
+      if (isMounted.current) {
+        setError(err.message || 'Failed to load data');
+        updateTotal(0);
+      }
     } finally {
-      setLoading(false);
+      if (isMounted.current) {
+        setLoading(false);
+      }
     }
-  }, [fetchData, itemsPerPage]);
+  }, [fetchData, itemsPerPage, updateTotal]);
 
-  // 首次加载或依赖变化时加载数据
+  const handlePageChange = useCallback((page) => {
+    if (totalPages === 0) {
+      setCurrentPage(initialPage);
+      return;
+    }
+    const validPage = Math.max(1, Math.min(page, totalPages));
+    setCurrentPage(validPage);
+  }, [totalPages, initialPage]);
+
+  // 使用 useCallback 缓存 haveDependenciesChanged 函数
+  const haveDependenciesChanged = useCallback(() => {
+    const prevDeps = prevDepsRef.current;
+    if (prevDeps.length !== dependencies.length) return true;
+    
+    return dependencies.some((dep, index) => dep !== prevDeps[index]);
+  }, [dependencies]);
+
   useEffect(() => {
+    isMounted.current = true;
+    
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  // 修改这里：当页码变化或依赖变化时加载数据
+  useEffect(() => {
+    if (!fetchData) return;
+
+    const depsChanged = haveDependenciesChanged();
+    const pageChanged = prevPageRef.current !== currentPage;
+    
+    console.log('Effect triggered:', {
+      currentPage,
+      prevPage: prevPageRef.current,
+      depsChanged,
+      pageChanged,
+      initialLoadDone: initialLoadDone.current
+    });
+
+    if (!initialLoadDone.current || depsChanged || pageChanged) {
+      console.log('Loading data for page', currentPage);
+      loadData(currentPage);
+      
+      initialLoadDone.current = true;
+      prevDepsRef.current = dependencies;
+      prevPageRef.current = currentPage;
+    }
+  }, [currentPage, dependencies, fetchData, loadData, haveDependenciesChanged]);
+
+  // 当依赖变化时，重置到第一页
+  useEffect(() => {
+    if (fetchData && initialLoadDone.current && haveDependenciesChanged()) {
+      console.log('Dependencies changed, resetting to initial page:', initialPage);
+      setCurrentPage(initialPage);
+    }
+  }, [dependencies, fetchData, haveDependenciesChanged, initialPage]);
+
+  const resetPagination = useCallback(() => {
+    console.log('Resetting pagination');
+    setCurrentPage(initialPage);
+    if (externalTotal === undefined) {
+      setInternalTotal(0);
+    }
+    setError(null);
+    initialLoadDone.current = false;
+    prevPageRef.current = initialPage;
+  }, [initialPage, externalTotal]);
+
+  const reloadCurrentPage = useCallback(() => {
     if (fetchData) {
+      console.log('Reloading current page:', currentPage);
       loadData(currentPage);
     }
-  }, [currentPage, ...dependencies]);
+  }, [fetchData, currentPage, loadData]);
 
-  // 处理数据变化（当传入data且没有fetchData时使用同步数据）
-  useEffect(() => {
-    if (!fetchData && data.length > 0) {
-      const startIndex = (currentPage - 1) * itemsPerPage;
-      const endIndex = startIndex + itemsPerPage;
-      setPaginatedData(data.slice(startIndex, endIndex));
-      setTotal(data.length);
+  const setTotal = useCallback((newTotal) => {
+    const validTotal = Math.max(0, newTotal);
+    if (externalTotal === undefined) {
+      setInternalTotal(validTotal);
+    } else if (onTotalChange) {
+      onTotalChange(validTotal);
     }
-  }, [data, currentPage, itemsPerPage, fetchData]);
+  }, [externalTotal, onTotalChange]);
 
   return {
-    // 状态
     currentPage,
     totalPages,
     total,
-    paginatedData,
     loading,
     error,
-    
-    // 方法
-    setCurrentPage,
+    setCurrentPage: handlePageChange,
+    resetPagination,
+    reloadCurrentPage,
+    setTotal,
   };
 }

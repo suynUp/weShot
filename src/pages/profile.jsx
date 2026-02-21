@@ -1,3 +1,4 @@
+// Profile.jsx
 import { useEffect, useState } from 'react';
 import { ProfileHeader } from '../components/profileHeader';
 import { OrderCard } from '../components/orderCard';
@@ -7,304 +8,125 @@ import { useNavigation } from '../hooks/navigation';
 import { usePagination } from '../hooks/usePagination';
 import ProfileEditModal from '../components/profileEditor';
 import { Camera, FileText, Image, Clock, Trash2, Edit } from 'lucide-react';
-import { useGetMyPost } from '../hooks/useUser';
-import { useToast } from '../hooks/useToast';
+import { useGetMyOrder, useGetMyPost, useUserMutation, useUserUpdate } from '../hooks/useUser';
+import { UserStore } from '../store/userStore';
 
 function Profile() {
   const [selectedOrders, setSelectedOrders] = useState(new Set());
   const [selectedPosts, setSelectedPosts] = useState(new Set());
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('posts'); // 'posts', 'myOrders', 'receivedOrders'
-  const [orderType, setOrderType] = useState('my'); // 'my' 或 'received'，用于区分订单类型
+  const [activeTab, setActiveTab] = useState('posts');
+  const [orderType, setOrderType] = useState('my');
   const { goto } = useNavigation();
-  const toast = useToast()
   
-  // 模拟用户身份（实际应从后端获取）
-  const [isPhotographer, setIsPhotographer] = useState(false); // 是否是摄影师
+  // 数据状态
+  const postsData = UserStore(state => state.myPosts)
+  const totalPostNum = UserStore(state=>state.totalPost)
 
-  const mockProfile = {
-    id: '1',
-    username: '叮咚鸡',
-    user_id: '101010',
-    avatar_url: null
-  };
+  const myOrdersData = UserStore(state => state.myOrders)
+  const totalOrdersNum = UserStore(state=>state.totalOrders)
 
-  const useGetPostsMutation = useGetMyPost()
+  const receivedOrdersData = UserStore(state => state.myReceivedOrders)
+  const totalReceivedNum = UserStore(state => state.totalReceived)
+  
+  const isPhotographer = UserStore(state=>state.isVerFied)
+  const profileData = UserStore(state => state.user)
+
+  //操作方法
+  const useGetMyOrderMutation = useGetMyOrder()//获取订单
+  const useGetPostsMutation = useGetMyPost()//获取帖子
+  const getUserMutation = useUserMutation()//获取基础信息
+  const userUpdateFn = useUserUpdate()//更新基础信息
 
   useEffect(()=>{
-    useGetPostsMutation.mutate()
+    getUserMutation.mutate()
   },[])
-  // 用户个人信息 - 添加了用户类型和简介
-  const [userProfile, setUserProfile] = useState({
-    nickname: "析阳",
-    avatarUrl: "https://avatars.githubusercontent.com/u/68357909",
-    sex: 1,
-    phone: "42654087011",
-    bio: "热爱摄影，擅长人像和风景摄影，希望能记录下每一个美好瞬间", // 个人简介
-    detail: "sed",
-    joinDate: "2024-01-15",
-    location: "北京",
-    userType: "photographer", // 'photographer' 或 'normal'
-    stats: {
-      totalOrders: 128,      // 总订单数
-      completedOrders: 96,   // 已完成订单数
-      satisfaction: 98,      // 满意度
-      totalPosts: 15,        // 总发帖数
-      followers: 234,        // 粉丝数
-      following: 89          // 关注数
-    },
-    photographer: {
-      style: "人像摄影、风景摄影",
-      equipment: "Sony A7M4, 24-70mm F2.8, 70-200mm F4",
-      type: "职业摄影师"
-    }
-  });
 
   // 处理保存个人信息
   const handleSaveProfile = (newProfile) => {
-    setUserProfile(newProfile);
-    console.log('Saving profile:', newProfile);
+    userUpdateFn.mutate(newProfile);
   };
 
-  // 模拟我的发帖数据
+  // 我的发帖数据
   const fetchPosts = async (pageNum, pageSize) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  
-    const start = (pageNum - 1) * pageSize;
-    const end = start + pageSize;
-    const allData = [
-      { 
-        id: '1', 
-        title: '毕业季摄影作品集',
-        content: '又是一年毕业季，记录下校园里的美好瞬间。有需要毕业照的同学可以联系我~',
-        cover_image_url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644',
-        likes_count: 45,
-        views_count: 234,
-        comments_count: 12,
-        created_at: '2026-02-15T10:30:00',
-        photographers: {
-          name: userProfile.nickname,
-          avatar_url: userProfile.avatarUrl,
-          bio: userProfile.bio
-        }
-      },
-      { 
-        id: '2', 
-        title: '城市夜景拍摄',
-        content: '分享一组城市夜景照片，拍摄于济南泉城广场。',
-        cover_image_url: 'https://images.unsplash.com/photo-1514924013411-cbf25faa35bb',
-        likes_count: 32,
-        views_count: 156,
-        comments_count: 8,
-        created_at: '2026-02-10T20:15:00',
-        photographers: {
-          name: userProfile.nickname,
-          avatar_url: userProfile.avatarUrl,
-          bio: userProfile.bio
-        }
-      },
-      { 
-        id: '3', 
-        title: '人像摄影技巧分享',
-        content: '分享一些人像摄影的小技巧，包括构图、光线运用等。',
-        cover_image_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb',
-        likes_count: 67,
-        views_count: 412,
-        comments_count: 23,
-        created_at: '2026-02-05T14:20:00',
-        photographers: {
-          name: userProfile.nickname,
-          avatar_url: userProfile.avatarUrl,
-          bio: userProfile.bio
-        }
-      },
-      { 
-        id: '4', 
-        title: '校园风光摄影',
-        content: '记录山东大学软件园校区的四季美景。',
-        cover_image_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f',
-        likes_count: 28,
-        views_count: 134,
-        comments_count: 5,
-        created_at: '2026-02-01T09:45:00',
-        photographers: {
-          name: userProfile.nickname,
-          avatar_url: userProfile.avatarUrl,
-          bio: userProfile.bio
-        }
-      },
-      { 
-        id: '5', 
-        title: '活动跟拍案例',
-        content: '公司年会、婚礼跟拍等活动现场记录。',
-        cover_image_url: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622',
-        likes_count: 19,
-        views_count: 98,
-        comments_count: 3,
-        created_at: '2026-01-28T16:30:00',
-        photographers: {
-          name: userProfile.nickname,
-          avatar_url: userProfile.avatarUrl,
-          bio: userProfile.bio
-        }
-      }
-    ];
-    
-    return {
-      data: {
-        total: allData.length,
-        list: allData.slice(start, end)
-      }
-    };
+    useGetPostsMutation.mutate({pageNum,pageSize})
   };
 
   // 模拟我发起的订单（作为客户）
   const fetchMyOrders = async (pageNum, pageSize) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  
-    const start = (pageNum - 1) * pageSize;
-    const end = start + pageSize;
-    const allData = [
-      { id: '1', user_name: '摄影师小明', status: '对接中', description: '毕业季帮拍，需自带设备。', has_budget: true, post_id: 1, nickname: '小明摄影', created_at: '2026-02-08T15:18:42', type: 1, role: 'customer' },
-      { id: '2', user_name: '摄影师小红', status: '已完成', description: '情侣写真拍摄', has_budget: true, post_id: 2, nickname: '小红工作室', created_at: '2026-02-10T01:34:18', type: 2, role: 'customer' },
-      { id: '3', user_name: '摄影师小李', status: '待接单', description: '毕业季帮拍，需自带设备。', has_budget: true, post_id: 3, nickname: '小李摄影', created_at: '2026-02-11T17:42:46', type: 2, role: 'customer' },
-      { id: '4', user_name: '摄影师小王', status: '对接中', description: '产品拍摄需求', has_budget: true, post_id: 4, nickname: '王老师', created_at: '2026-02-12T10:00:00', type: 1, role: 'customer' },
-      { id: '5', user_name: '摄影师小张', status: '已完成', description: '家庭写真', has_budget: true, post_id: 5, nickname: '小张摄影', created_at: '2026-02-12T11:00:00', type: 3, role: 'customer' }
-    ];
-    
-    return {
-      data: {
-        total: allData.length,
-        list: allData.slice(start, end)
-      }
-    };
-  };
+    useGetMyOrderMutation.mutate({pageNum,pageSize})
+  }
 
   // 模拟我接收的订单（作为摄影师）
   const fetchReceivedOrders = async (pageNum, pageSize) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-  
-    const start = (pageNum - 1) * pageSize;
-    const end = start + pageSize;
-    const allData = [
-      { id: '101', user_name: '客户小赵', status: '对接中', description: '毕业照拍摄需求', has_budget: true, post_id: 101, nickname: '赵同学', created_at: '2026-02-09T14:20:00', type: 1, role: 'photographer' },
-      { id: '102', user_name: '客户小钱', status: '已完成', description: '婚礼跟拍', has_budget: true, post_id: 102, nickname: '钱女士', created_at: '2026-02-07T09:30:00', type: 2, role: 'photographer' },
-      { id: '103', user_name: '客户小孙', status: '待接单', description: '产品拍摄', has_budget: true, post_id: 103, nickname: '孙先生', created_at: '2026-02-13T11:15:00', type: 2, role: 'photographer' },
-      { id: '104', user_name: '客户小李', status: '对接中', description: '活动跟拍', has_budget: true, post_id: 104, nickname: '李经理', created_at: '2026-02-12T16:40:00', type: 1, role: 'photographer' },
-      { id: '105', user_name: '客户小周', status: '已完成', description: '宠物摄影', has_budget: true, post_id: 105, nickname: '周女士', created_at: '2026-02-05T13:25:00', type: 3, role: 'photographer' }
-    ];
-    
-    return {
-      data: {
-        total: allData.length,
-        list: allData.slice(start, end)
-      }
-    };
   };
 
-  // 使用不同的分页hook
+  // 帖子分页
   const { 
     currentPage: postsPage, 
     totalPages: postsTotalPages, 
-    paginatedData: postsData,
     loading: postsLoading,
-    // error: postsError,
     setCurrentPage: setPostsPage,
-    refresh: refreshPosts
+    reloadCurrentPage: refreshPosts
   } = usePagination({
     fetchData: fetchPosts,
     itemsPerPage: 6,
     initialPage: 1,
+    dependencies: [],
+    total:totalPostNum
   });
 
+  // 我的发起订单分页
   const { 
     currentPage: myOrdersPage, 
     totalPages: myOrdersTotalPages, 
-    paginatedData: myOrdersData,
     loading: myOrdersLoading,
-    error: myOrdersError,
     setCurrentPage: setMyOrdersPage,
-    refresh: refreshMyOrders
+    reloadCurrentPage: refreshMyOrders
   } = usePagination({
     fetchData: fetchMyOrders,
     itemsPerPage: 9,
     initialPage: 1,
+    dependencies: [],
+    total:totalOrdersNum
   });
 
+  // 我的接收订单分页
   const { 
     currentPage: receivedOrdersPage, 
     totalPages: receivedOrdersTotalPages, 
-    paginatedData: receivedOrdersData,
     loading: receivedOrdersLoading,
-    error: receivedOrdersError,
     setCurrentPage: setReceivedOrdersPage,
-    refresh: refreshReceivedOrders
+    reloadCurrentPage: refreshReceivedOrders
   } = usePagination({
     fetchData: fetchReceivedOrders,
     itemsPerPage: 9,
     initialPage: 1,
+    dependencies: [],
+    total:totalReceivedNum
   });
 
-  const handleOrderCheck = (id, checked) => {
-    setSelectedOrders(prev => {
-      const newSelected = new Set(prev);
-      if (checked) {
-        newSelected.add(id);
-      } else {
-        newSelected.delete(id);
-      }
-      return newSelected;
-    });
-  };
+  // 初始加载
+  useEffect(() => {
+    fetchPosts(1, 6);
+    fetchMyOrders(1, 9);
+    if (isPhotographer) {
+      fetchReceivedOrders(1, 9);
+    }
+  }, []);
 
   const handlePostCheck = (id, checked) => {
-    setSelectedPosts(prev => {
-      const newSelected = new Set(prev);
-      if (checked) {
-        newSelected.add(id);
-      } else {
-        newSelected.delete(id);
-      }
-      return newSelected;
-    });
+
   };
 
   // 批量删除帖子
   const handleBatchDeletePosts = async () => {
-    if (selectedPosts.size === 0) return;
-    
-    if (window.confirm(`确定要删除选中的 ${selectedPosts.size} 篇帖子吗？`)) {
-      try {
-        // 这里调用删除API
-        console.log('Deleting posts:', Array.from(selectedPosts));
-        // 删除成功后刷新列表
-        await refreshPosts();
-        setSelectedPosts(new Set());
-      } catch (error) {
-        console.error('Failed to delete posts:', error);
-      }
-    }
+
   };
 
   // 批量删除订单
   const handleBatchDeleteOrders = async () => {
-    if (selectedOrders.size === 0) return;
-    
-    if (window.confirm(`确定要删除选中的 ${selectedOrders.size} 个订单吗？`)) {
-      try {
-        // 这里调用删除API
-        console.log('Deleting orders:', Array.from(selectedOrders));
-        // 删除成功后刷新对应的列表
-        if (activeTab === 'myOrders') {
-          await refreshMyOrders();
-        } else if (activeTab === 'receivedOrders') {
-          await refreshReceivedOrders();
-        }
-        setSelectedOrders(new Set());
-      } catch (error) {
-        console.error('Failed to delete orders:', error);
-      }
-    }
+
   };
 
   const handlePostClick = (post) => {
@@ -317,29 +139,19 @@ function Profile() {
   };
 
   const handleDeletePost = async (post, e) => {
-    e.stopPropagation();
-    if (window.confirm(`确定要删除帖子 "${post.title}" 吗？`)) {
-      try {
-        // 这里调用删除API
-        console.log('Deleting post:', post.id);
-        await refreshPosts();
-      } catch (error) {
-        console.error('Failed to delete post:', error);
-      }
-    }
-  };
 
-  // const currentOrders = getCurrentOrders();
+  };
 
   // 加载状态显示
   const showLoading = (postsLoading && activeTab === 'posts') || 
                       (myOrdersLoading && activeTab === 'myOrders') || 
                       (receivedOrdersLoading && activeTab === 'receivedOrders');
 
-  if (showLoading && 
-      ((activeTab === 'posts' && postsData.length === 0) ||
-       (activeTab === 'myOrders' && myOrdersData.length === 0) ||
-       (activeTab === 'receivedOrders' && receivedOrdersData.length === 0))) {
+  const currentData = activeTab === 'posts' ? postsData : 
+                     activeTab === 'myOrders' ? myOrdersData : 
+                     receivedOrdersData;
+
+  if (showLoading && currentData.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-pink-50 flex items-center justify-center">
         <div className="text-center">
@@ -355,23 +167,22 @@ function Profile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-pink-50">
-
       {/* 装饰性背景元素 */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-orange-200/30 to-pink-200/30 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-amber-200/30 to-orange-200/30 rounded-full blur-3xl" />
         <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-gradient-to-r from-pink-200/20 to-orange-200/20 rounded-full blur-3xl" />
       </div>
+      
       <div className="relative z-10">
         <ProfileHeader
-          profile={mockProfile}
+          profile={profileData}
           onBack={() => goto('/')}
           onEdit={() => setIsEditModalOpen(true)}
           onAvatarClick={() => console.log('Avatar clicked')}
         />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
           {/* 选项卡 */}
           <div className="flex gap-2 mb-6 flex-wrap">
             <button
@@ -387,7 +198,6 @@ function Profile() {
             </button>
             
             {isPhotographer ? (
-              // 摄影师：区分我的发起和我的接收
               <>
                 <button
                   onClick={() => {
@@ -419,7 +229,6 @@ function Profile() {
                 </button>
               </>
             ) : (
-              // 普通用户：只显示我的订单
               <button
                 onClick={() => setActiveTab('myOrders')}
                 className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 flex items-center gap-2 ${
@@ -491,7 +300,6 @@ function Profile() {
                       post={post}
                       onClick={() => handlePostClick(post)}
                     />
-                    {/* 复选框 */}
                     <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <input
                         type="checkbox"
@@ -500,7 +308,6 @@ function Profile() {
                         className="w-5 h-5 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
                       />
                     </div>
-                    {/* 操作按钮 */}
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                       <button
                         onClick={(e) => handleEditPost(post, e)}
@@ -554,9 +361,10 @@ function Profile() {
                   <OrderCard
                     key={order.id}
                     order={order}
-                    checked={selectedOrders.has(order.id)}
-                    onCheck={handleOrderCheck}
-                    onStatusClick={(order) => console.log('Status clicked', order)}
+                    onAction={(action, order) => {
+                      if (action === 'take') console.log(order);
+                      if (action === 'comment') console.log(order);
+                    }}
                   />
                 ))}
               </div>
@@ -596,9 +404,10 @@ function Profile() {
                   <OrderCard
                     key={order.id}
                     order={order}
-                    checked={selectedOrders.has(order.id)}
-                    onCheck={handleOrderCheck}
-                    onStatusClick={(order) => console.log('Status clicked', order)}
+                    onAction={(action, order) => {
+                      if (action === 'take') console.log(order);
+                      if (action === 'comment') console.log(order);
+                    }}
                   />
                 ))}
               </div>
@@ -663,7 +472,7 @@ function Profile() {
       <ProfileEditModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        profile={userProfile}
+        profile={profileData}
         onSave={handleSaveProfile}
       />
     </div>

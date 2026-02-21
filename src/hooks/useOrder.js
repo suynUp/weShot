@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query"
 import orderAPI from "../api/orderAPI"
 import { OrderStore } from "../store/orderStore"
+import { useToast } from "./useToast"
 
 export const orderAction={
     ACCEPT:'ACCEPT',
@@ -31,53 +32,93 @@ export const useGetOrder = () => {
         setMyPending(res)
     }
 
-    const setAllOrders = OrderStore(state=>state.setAllOrders)
+    const setAllPendingOrders = OrderStore(state=>state.setAllPendingOrders)
 
     const getAllLobbys = async () => {//获取所有待接订单     
         const res = await orderAPI.getLobbyList()
-        setAllOrders(res)
+        setAllPendingOrders(res)
     }
 
     return {getMyOrder,getMyAllPendings,getAllLobbys}
 }
 
-export const useCreateOrders = () => useMutation({
-    mutationFn: async (order) => {
-        return orderAPI.createOrder(order)
-    }
-})
-
-export const useTakeOrderMutation = () => {
+export const useCreateOrders = () => {
+    const toast = useToast()
+    
     return useMutation({
-        mutationFn: async (id) => {
-            return orderAPI.SnatchOrders(id)
+        mutationFn: async (order) => {
+                const res = await orderAPI.createOrder(order)
+                if (res.code !== 200) {
+                    throw new Error(res.message || '创建订单失败')
+                }
+                return res
         },
-        onSuccess:()=>{
-            console.log('接取成功')
-        }
-    })
-} 
-
-export const useOrderLunchMutation = () => {
-    return useMutation({
-        mutationFn:async (order) => {
-            return orderAPI.createOrder(order)
+        onSuccess: () => {
+            toast.success('创建订单成功')
+        },
+        onError: (error) => {
+            toast.error(error.message || '创建订单失败')
         }
     })
 }
 
-export const useManageOrderMutation = () => {
+export const useTakeOrderMutation = () => {
+    const toast = useToast()
+    
     return useMutation({
-        mutationFn: async (orderAction)=>{
-            return orderAPI.handleOrder(orderAction)
+        mutationFn: async (id) => {
+                const res = await orderAPI.SnatchOrders(id)
+                if (res.code !== 200) {
+                    throw new Error(res.message || '接单失败')
+                }
+                return res
+        },
+        onSuccess: () => {
+            toast.success('接单成功')
+            console.log('接取成功')
+        },
+        onError: (error) => {
+            toast.error(error.message || '接单失败')
+        }
+    })
+} 
+
+export const useManageOrderMutation = () => {
+    const toast = useToast()
+    
+    return useMutation({
+        mutationFn: async (orderAction) => {
+                const res = await orderAPI.handleOrder(orderAction)
+                if (res.code !== 200) {
+                    throw new Error(res.message || '操作失败')
+                }
+                return res
+        },
+        onSuccess: () => {
+            toast.success('操作成功')
+        },
+        onError: (error) => {
+            toast.error(error.message || '操作失败')
         }
     })
 }
 
 export const useCommentMutation = () => {
+    const toast = useToast()
+    
     return useMutation({
         mutationFn: async (comment) => {
-            return orderAPI.commentOrder(comment)
+                const res = await orderAPI.commentOrder(comment)
+                if (res.code !== 200) {
+                    throw new Error(res.message || '评论失败')
+                }
+                return res
+        },
+        onSuccess: () => {
+            toast.success('评论成功')
+        },
+        onError: (error) => {
+            toast.error(error.message || '评论失败')
         }
     })
 }

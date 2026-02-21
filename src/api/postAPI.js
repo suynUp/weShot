@@ -18,8 +18,8 @@ class postAPI {
         return request.post('/square/publish',square)
     }
 
-    static getSquareList = (type,pageNum,pageSize) => {
-        return request.get('/square/posts',{type,pageNum,pageSize})
+    static getSquareList = (type,pageNum,pageSize,keyword) => {
+        return request.get('/square/posts',{type,pageNum,pageSize,keyword})
     }
 
     static getMyPosts = (pageNum,pageSize) => {
@@ -48,10 +48,6 @@ class postAPI {
 
     static getCommentsById = (postId,pageNum,pageSize) => {
         return request.get(`/square/comments/${postId}`,{pageNum,pageSize})
-    }
-
-    static search = (keyword) => {
-        return request.get('/square/search',{keyword})
     }
 
     static suggest = (keyword) => {

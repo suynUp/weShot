@@ -7,16 +7,12 @@ class photographerAPI {
      * @param pageSize 页面大小，默认10
      * @returns 
      */
-    static getPhotographerList=(pageNum,pageSize)=>{
-        return request.get('/photographer/list',{pageNum,pageSize})
+    static getPhotographerList=(pageNum,pageSize,keyword)=>{
+        return request.get('/photographer/list',{pageNum,pageSize,keyword})
     }
 
     static enroll = (inviteCode) => {
         return request.get('/photographer/enroll',{inviteCode})
-    }
-
-    static search = (keyword) => {
-        return request.get('/photographer/search',{keyword})
     }
 
     static searchSuggest = (keyword) => {

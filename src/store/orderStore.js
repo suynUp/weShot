@@ -1,14 +1,19 @@
 import { create } from "zustand";
 import { getFromLocalStorage, LOCAL_STORAGE_KEYS, saveToLocalStorage } from "../utils/localStorage";
 
-//这里主要就处理自己的订单吧
+
 export const OrderStore = create(
     (set)=>({
 
-        pageSize:9,
+        //自己的，此处应有localStorage
         myOrderList:[],
         myPengdings:[],
-        allOrders:[],
+
+        //你看别人的
+        otherOrderList:[],
+
+        //广场上的
+        allPendingOrders:[],
 
         setMyOrderList:(orders)=>{
             saveToLocalStorage(LOCAL_STORAGE_KEYS.MYORDER,orders)
@@ -17,17 +22,9 @@ export const OrderStore = create(
             })
         },
 
-        setMyPendings:(orders)=>{
-            set({
-                myPengdings:orders
-            }) 
-        },
+        setMyPendings:(orders)=>set({myPengdings:orders}), 
 
-        setAllOrders:(orders) => {
-            set({
-                allOrders:orders
-            })
-        },
+        setAllPendingOrders:(orders) => set({allPendingOrders:orders}),
 
         getMyOrderList:()=>{
 

@@ -1,187 +1,202 @@
 import { useEffect, useState } from 'react';
-import { PostCard } from '../components/postCard';
-import { PostDetail } from '../components/postDetail';
-import { Camera, Sparkles, ArrowLeft } from 'lucide-react';
+import { ChevronLeft, Camera, Image as ImageIcon } from 'lucide-react';
+import PhotoCard from '../components/photoCard';
 import SearchInput from '../components/searchInput';
-import { squarePostConfig, useGetPost, usePostAction, useSearch, useSearchHistory, useSearchSuggestWithDebounce } from '../hooks/usePost';
+import { useNavigation } from '../hooks/navigation';
+import { usePagination } from '../hooks/usePagination';
+import { Pagination } from '../components/pagination';
 import postStore from '../store/postStore';
+import { useGetPost, useSearchSuggestWithDebounce } from '../hooks/usePost';
+import { PostDetail } from '../components/postDetail';
 
-// 模拟数据
-const MOCK_POSTS = [
-  {
-    images: "https://images.unsplash.com/photo-1453227588063-bb302b62f50b",
-    role: false,
-    post_id: 6,
-    avatar_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80",
-    user_id: 202300106,
-    nickname: "周小萌",
-    created_at: "2024-02-10T16:30:00Z",
-    type: 1,
-    title: "宠物摄影抓拍技巧",
-    content: "如何拍出活泼可爱的宠物照片，分享一些抓拍心得。",
-    status: 1
-  }
-];
 export function Feed() {
-  const [loading, setLoading] = useState(true);
-  const [selectedPost, setSelectedPost] = useState(null);
+  const { goto } = useNavigation();
+  
+  const { 
+    history, 
+    suggestions, 
+    postList,
+    totalposts,
+    currentPost
+  } = postStore();
 
-  const [inputValue, setInputValue] = useState('')
+  const [searchValue, setSearchValue] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false); // 跟踪搜索框焦点状态
+  const [showDetails, setShowDetails] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState(null);
 
-  const searchHistory = postStore(state=>state.history)
-  const postList = postStore(state => state.postList)
-  const searchResults = postStore(state=>state.searchResults)
-
-  const currentPost = postStore(state=>state.currentPost)
-
-  //获取历史
-  const searchHistoryMutation = useSearchHistory()
-
-  //搜索，传入keyword
-  const searchMutation = useSearch()
-
-  //获取所有
-  const {getAllPost} = useGetPost()
-
-  const {
-    fetchDebouncedSuggest,
-    suggestions
-  } = useSearchSuggestWithDebounce()
+  const { getAllPost,getPostDetail } = useGetPost();
+  const useSearchSuggest = useSearchSuggestWithDebounce();
+  
+  const getPosts = async (pageNum, pageSize) => {
+    const res = await getAllPost(null, pageNum, pageSize, searchValue);
+    return res;
+  };
 
   const {
-    like,
-    dislike,
-    comment,
-    getComments
-  } = usePostAction()
-
-  useEffect(()=>{
-    fetchDebouncedSuggest(inputValue) 
-    //将自动setSuggestions
-  },[inputValue,fetchDebouncedSuggest])
+    currentPage,
+    totalPages,
+    loading: paginationLoading,
+    setCurrentPage,
+  } = usePagination({
+    itemsPerPage: 12,
+    fetchData: getPosts,
+    initialPage: 1,
+    total: totalposts,
+  });
 
   useEffect(() => {
-    getAllPost(null,squarePostConfig.pageNum,squarePostConfig.pageSize) //所有获取列表
-    searchHistoryMutation.mutate() //获取历史
-  }, []);
+    useSearchSuggest.mutate(searchValue);
+  }, [searchValue]);
 
-  const handlePostLike = (postId) => {
-    like(postId)
-  };
+  useEffect(() => {
+    if (selectedPostId) {
+      getPostDetail(selectedPostId);
+    }}, [selectedPostId])
 
-  const handlePostdisLike = (postId) => {
-    dislike(postId)
-  }
+  const isEmpty = !paginationLoading && (!postList || postList.length === 0);
 
-  const handleGoBack = () => {
-    window.history.back();
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-pink-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative">
-            <div className="w-20 h-20 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
-            <Camera className="w-8 h-8 text-orange-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
-          </div>
-          <div className="text-lg text-gray-600 mt-4">加载精彩作品...</div>
-        </div>
-      </div>
-    );
+  const handleCardClick = (postId) => {
+    setSelectedPostId(postId);
+    setShowDetails(true);
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-pink-50">
-      {/* 装饰性背景元素 - 柔和风格 */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-orange-200/30 to-pink-200/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-amber-200/30 to-orange-200/30 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-gradient-to-r from-pink-200/20 to-orange-200/20 rounded-full blur-3xl" />
-        {/* 装饰性相机图标 */}
-        <Camera className="absolute top-20 left-10 w-12 h-12 text-orange-200/20 rotate-12" />
-        <Camera className="absolute bottom-20 right-10 w-16 h-16 text-pink-200/20 -rotate-12" />
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-emerald-50/30">
+      {/* 装饰性背景元素 - 降低z-index确保不干扰交互 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-amber-200/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-emerald-200/20 rounded-full blur-3xl" />
       </div>
-
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* 页面标题和返回按钮 */}
-        <div className="mb-10">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-28 w-full">
-              <button
-                onClick={handleGoBack}
-                className="flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full shadow-sm border border-orange-100 text-gray-600 hover:text-orange-500 hover:border-orange-200 transition-all duration-300 group"
-                aria-label="返回"
-              >
-                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                <span className="text-sm font-medium">返回</span>
-              </button>
-              <div className='ml-[20px]'>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent inline-flex items-center gap-2">
-                  作品广场
-                  <Sparkles className="w-8 h-8 text-orange-400" />
-                </h1>
-                <p className="text-gray-600 mt-2 text-lg">发现优秀的摄影作品，灵感从这里开始</p>
-              </div>
-            </div>
+      
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        {/* 头部导航 */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => goto('/')}
+              className="group p-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
+              aria-label="返回首页"
+            >
+              <ChevronLeft className="w-5 h-5 text-gray-600 group-hover:text-gray-900" />
+            </button>
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-amber-700 via-orange-600 to-emerald-700 bg-clip-text text-transparent">
+              灵感画廊 · 社区
+            </h1>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-500 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm">
+            <Camera className="w-4 h-4" />
+            <span>分享瞬间</span>
           </div>
         </div>
 
-        <SearchInput
-        searchHistory={searchHistory}
-        suggest={suggestions}
-        searchFn={searchMutation}
-        value={inputValue}
-        setValue={setInputValue}
-        />
+        {/* 搜索组件 - 使用较高的z-index确保下拉框浮在卡片上方 */}
+        <div 
+          className="relative z-30 mb-10"
+          onFocus={() => setIsSearchFocused(true)}
+          onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+        >
+          <SearchInput
+            searchHistory={history}
+            suggest={suggestions}
+            searchFn={getPosts}
+            placeholder="搜索摄影师或作品..."
+            value={searchValue}
+            setValue={setSearchValue}
+            initialPageSize={12}
+            // 如果SearchInput组件支持，可以传递一个prop来控制下拉框的z-index
+          />
+        </div>
 
-        {/* 帖子网格 */}
-        {postList.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr">
-                {postList.map((post, index) => (
-                <div
-                    key={post.post_id}
-                    className="transform transition-all duration-300 hover:-translate-y-1"
+        {/* 作品网格区域 - 使用较低的z-index */}
+        <div className={`relative transition-opacity duration-300 ${isSearchFocused ? 'opacity-40' : 'opacity-100'}`}>
+          {paginationLoading ? (
+            // 加载状态...
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-white/50 rounded-3xl overflow-hidden shadow-md">
+                    <div className="aspect-[4/5] bg-gray-200/60" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-4 bg-gray-200/80 rounded-full w-3/4" />
+                      <div className="h-3 bg-gray-200/60 rounded-full w-1/2" />
+                      <div className="flex gap-2">
+                        <div className="h-8 w-8 bg-gray-200/70 rounded-full" />
+                        <div className="h-8 w-8 bg-gray-200/70 rounded-full" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : isEmpty ? (
+            // 空状态...
+            <div className="flex flex-col items-center justify-center py-20 px-4">
+              <div className="bg-white/70 backdrop-blur-sm rounded-full p-6 mb-6 shadow-lg">
+                <ImageIcon className="w-16 h-16 text-amber-400/70" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">还没有作品</h3>
+              <p className="text-gray-500 text-center max-w-md mb-6">
+                试试其他关键词，或者上传你的第一张摄影作品，与社区分享灵感
+              </p>
+              <button 
+                onClick={() => goto('/upload')}
+                className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-400 text-white rounded-full shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
+              >
+                立即上传作品
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* 作品网格 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 auto-rows-fr">
+                {postList.map((photo, index) => (
+                  <div
+                    key={photo.post_id}
+                    className="transform transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1"
                     style={{
-                    animationDelay: `${index * 100}ms`,
-                    animation: 'fadeInUp 0.6s ease-out forwards',
-                    opacity: 0,
+                      animation: `fadeIn 0.5s ease-out ${index * 0.05}s both`
                     }}
-                >
-                    <PostCard
-                    post={post}
-                    onClick={() => setSelectedPost(post)}
-                    />
-                </div>
+                  >
+                    <PhotoCard photo={photo} onSelect={handleCardClick}/>
+                  </div>
                 ))}
-            </div>
-            ) : (
-            <div className="text-center py-20">
-                <div className="inline-flex items-center justify-center w-24 h-24 bg-orange-100 rounded-full mb-6">
-                <Camera className="w-12 h-12 text-orange-400" />
+              </div>
+
+              {/* 分页组件 */}
+              {totalPages > 1 && (
+                <div className="mt-12 flex justify-center">
+                  <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg p-2">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={setCurrentPage}
+                    />
+                  </div>
                 </div>
-                <p className="text-xl text-gray-500">暂无作品</p>
-                <p className="text-gray-400 mt-2">敬请期待摄影师们的精彩作品</p>
-            </div>
-            )}
+              )}
+
+              {/* 统计信息 */}
+              <div className="mt-8 flex justify-center items-center gap-2 text-sm text-gray-400">
+                <span className="w-2 h-2 bg-emerald-400 rounded-full" />
+                <span>共 {postList.length} 个作品</span>
+                <span className="w-2 h-2 bg-amber-400 rounded-full" />
+                <span>第 {currentPage} / {totalPages} 页</span>
+              </div>
+            </>
+          )}
+        </div>
+        {showDetails && <PostDetail
+          post={currentPost}
+          onClose={() => setShowDetails(false)}
+        />}
       </div>
 
-      {/* 帖子详情弹窗 */}
-      {selectedPost && (
-        <PostDetail
-          post={currentPost}
-          onClose={() => setSelectedPost(null)}
-          onLike={handlePostLike}
-          onDislike={handlePostdisLike}
-        />
-      )}
-
-      {/* 内联样式动画 */}
-      <style>{`
-        @keyframes fadeInUp {
+      <style jsx>{`
+        @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(10px);
           }
           to {
             opacity: 1;
@@ -192,3 +207,5 @@ export function Feed() {
     </div>
   );
 }
+
+export default Feed;

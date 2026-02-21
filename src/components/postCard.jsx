@@ -1,5 +1,4 @@
 import { Heart,BadgeCheck } from 'lucide-react';
-import { useMemo } from 'react';
 
 // 在 postCard.jsx 中
 export function PostCard({ post, onClick }) {

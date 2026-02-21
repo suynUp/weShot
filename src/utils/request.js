@@ -90,7 +90,7 @@ class Request {
   }
 
   hasToken(){
-    return this.getToken===null
+    return this.getToken()!==null
   }
 
   // 保存token,7天
