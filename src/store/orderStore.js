@@ -14,6 +14,7 @@ export const OrderStore = create(
 
         //广场上的
         allPendingOrders:[],
+        totalPendingOrderNum:0,
 
         setMyOrderList:(orders)=>{
             saveToLocalStorage(LOCAL_STORAGE_KEYS.MYORDER,orders)
@@ -23,6 +24,8 @@ export const OrderStore = create(
         },
 
         setMyPendings:(orders)=>set({myPengdings:orders}), 
+        setOtherOrderList:(orders) => set({otherOrderList:orders}),
+        setTotalPendingOrderNum:(num) => set({totalPendingOrderNum:num}),
 
         setAllPendingOrders:(orders) => set({allPendingOrders:orders}),
 

@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Search, 
   Star, 
   Camera, 
-  Film, 
-  Award, 
-  ChevronRight,
   TrendingUp,
   Medal,
   Crown,
@@ -129,13 +125,13 @@ function PhotographerCard({ photographer }) {
           </div>
 
           {/* 标签区域 */}
-          <div className="mt-2 space-y-1">
-            <div className="flex flex-wrap gap-1">
+          <div className="mt-2 flex flex-wrap gap-1">
+            <div className="">
               {photographer.type && (
                 <SmartTag tag={photographer.type} />
               )}
             </div>
-            <div className="flex flex-wrap gap-1">
+            <div className="">
               {photographer.style && (
                 <SmartTag tag={photographer.style} />
               )}
@@ -361,7 +357,7 @@ export default function PhotographersPage() {
         searchFn={handleSearch}
         clearAll={handleClearAllHistory}
         deleteOne={removePhgSearchHistory}
-        placeholder="查找摄影师、作品或灵感..."
+        placeholder="查找摄影师吧..."
         value={searchValue}
         setValue={setSearchValue}
         initialPageNum={1}

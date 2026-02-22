@@ -20,7 +20,7 @@ export function usePagination({
   const [error, setError] = useState(null);
   
   const prevDepsRef = useRef(dependencies);
-  const prevPageRef = useRef(initialPage);
+  const prevPageRef = useRef(initialPage); // 添加页码引用，用于检测页码变化
   const isMounted = useRef(true);
   const initialLoadDone = useRef(false);
   const prevTotalRef = useRef(externalTotal);
@@ -66,7 +66,6 @@ export function usePagination({
     setError(null);
     
     try {
-      console.log('Loading data for page:', page);
       const result = await fetchData(page, itemsPerPage);
       
       if (!isMounted.current) return;
@@ -96,7 +95,6 @@ export function usePagination({
     setCurrentPage(validPage);
   }, [totalPages, initialPage]);
 
-  // 使用 useCallback 缓存 haveDependenciesChanged 函数
   const haveDependenciesChanged = useCallback(() => {
     const prevDeps = prevDepsRef.current;
     if (prevDeps.length !== dependencies.length) return true;
@@ -127,10 +125,15 @@ export function usePagination({
       initialLoadDone: initialLoadDone.current
     });
 
+    // 加载条件：
+    // 1. 如果是初始加载 (!initialLoadDone.current)
+    // 2. 或者依赖发生变化 (depsChanged)
+    // 3. 或者页码发生变化 (pageChanged)
     if (!initialLoadDone.current || depsChanged || pageChanged) {
       console.log('Loading data for page', currentPage);
       loadData(currentPage);
       
+      // 更新引用
       initialLoadDone.current = true;
       prevDepsRef.current = dependencies;
       prevPageRef.current = currentPage;
@@ -153,7 +156,7 @@ export function usePagination({
     }
     setError(null);
     initialLoadDone.current = false;
-    prevPageRef.current = initialPage;
+    prevPageRef.current = initialPage; // 重置页码引用
   }, [initialPage, externalTotal]);
 
   const reloadCurrentPage = useCallback(() => {
@@ -161,6 +164,7 @@ export function usePagination({
       console.log('Reloading current page:', currentPage);
       loadData(currentPage);
     }
+    console.log('Reload current page triggered鹅鹅鹅饿');
   }, [fetchData, currentPage, loadData]);
 
   const setTotal = useCallback((newTotal) => {

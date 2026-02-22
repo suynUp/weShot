@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query"
 import DraftAPI from "../api/draftAPI"
 import { DraftStore } from "../store/draftStore"
+import { toast } from "./useToast"
 
 const pageConfig = {
     pageSize:8,
@@ -17,26 +18,22 @@ export const useGetDraft = () => {
         if(getDraftList()){
             console.log('load list from localstorage')
         }else{
-            const list = await DraftAPI.getList(pageConfig.pageNum,pageConfig.pageSize)
-            setDraftList(list)
+            const data = await DraftAPI.getList(pageConfig.pageNum,pageConfig.pageSize)
+            setDraftList(data.data.list)
         }
 
         return
     }
 
-        const getDraftDetail = DraftStore(state => state.getDraftDetail)
-        const setDraft = DraftStore(state=>state.setDraft)
+    const setDraft = DraftStore(state=>state.setDraft)
 
     const getDetail = async (id) => {
-
-        if(getDraftDetail(id)){
-            return
+        const data = await DraftAPI.getDetailById(id)
+        if(data.code === 200){
+            setDraft(data.data)
         }else{
-            const draft = await DraftAPI.getDetailById(id)
-            console.log(draft)
-            setDraft(draft)
+            toast.error(data.message || '获取草稿详情失败')
         }
-
     }
 
     return{getList,getDetail}
@@ -46,13 +43,23 @@ export const useGetDraft = () => {
 export const useSaveDraftMutation = () => {
 
     const saveDraft = DraftStore(state=>state.saveDraft)
-    
+
     return useMutation({
-        queryFn: async (draft) => {
-            return DraftAPI.saveDraft(draft)
+        mutationFn: async (draft) => {
+            console.log('saving draft:', draft)
+            const res = await DraftAPI.saveDraft(draft)
+            if(res.code !== 200){
+                throw new Error(res.message || '保存草稿失败')
+            }
+            return res
         },
         onSuccess:(data,draft)=>{
-            saveDraft(draft,data.id,data.date)
+            saveDraft(draft,data.data.orderId,data.data.savedAt)
+            toast.success('保存草稿成功')
+        },
+        onError:(e)=>{
+            console.log(e)
+            toast.error(e.message || '保存草稿失败')
         }
     })
 }
@@ -61,17 +68,19 @@ export const useDeleteDraftMutation = () => {
     const deleteDraft = DraftStore(state=>state.deleteDraft)
 
     return useMutation({
-        queryFn: async (id) => {
-            deleteDraft(id)
-            return DraftAPI.deleteDraft()
-        },
-        onSuccess:(data)=>{
-            if(data.code===200){
-                console.log('成功')
+        mutationFn: async (id) => {
+            const res = await DraftAPI.deleteDraft(id)
+            if(res.code !== 200){
+                throw new Error(res.message || '删除草稿失败')
             }
+            return res
+        },
+        onSuccess:(data,id)=>{
+            deleteDraft(id)
+            toast.success('删除成功')
         },
         onError:(e)=>{
-            console.log(e)
+            toast.error(e.message || '删除失败')
         }
     })
 }

@@ -37,7 +37,7 @@ const DraftShifter = ({ draftlist, setLoadId, deleteDraft, hasLoaded }) => {
             >
                 {draftlist.map((d, index) => (
                     <div 
-                        key={d.id} 
+                        key={d.orderId} 
                         className="group relative bg-gradient-to-br from-white to-orange-50/50 rounded-xl border border-orange-200/50 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
                     >
                         {/* 装饰性色条 */}
@@ -52,7 +52,7 @@ const DraftShifter = ({ draftlist, setLoadId, deleteDraft, hasLoaded }) => {
                                 <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button 
                                         onClick={() => {
-                                            setLoadId(d.id);
+                                            setLoadId(d.orderId);
                                             hasLoaded(true);
                                         }}
                                         className="p-1.5 hover:bg-orange-100 rounded-lg transition-colors"
@@ -61,7 +61,7 @@ const DraftShifter = ({ draftlist, setLoadId, deleteDraft, hasLoaded }) => {
                                         <PenLine className="w-4 h-4 text-orange-500" />
                                     </button>
                                     <button 
-                                        onClick={() => deleteDraft(d.id)}
+                                        onClick={() => deleteDraft(d.orderId)}
                                         className="p-1.5 hover:bg-red-100 rounded-lg transition-colors"
                                         title="删除"
                                     >
@@ -75,14 +75,14 @@ const DraftShifter = ({ draftlist, setLoadId, deleteDraft, hasLoaded }) => {
                                 <div className="flex items-center text-sm text-gray-600">
                                     <Clock className="w-3.5 h-3.5 mr-2 text-orange-400 flex-shrink-0" />
                                     <span className="truncate">
-                                        上次编辑于 <span className="text-gray-800 font-medium">{d.date}</span>
+                                        上次编辑于 <span className="text-gray-800 font-medium">{d.savedAt}</span>
                                     </span>
                                 </div>
                                 
                                 <div className="flex items-center text-sm text-gray-600">
                                     <MapPin className="w-3.5 h-3.5 mr-2 text-orange-400 flex-shrink-0" />
                                     <span className="truncate">
-                                        拍摄地点 <span className="text-gray-800 font-medium">{d.place}</span>
+                                        拍摄地点 <span className="text-gray-800 font-medium">{d.location}</span>
                                     </span>
                                 </div>
 

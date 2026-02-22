@@ -6,9 +6,10 @@ import {
 } from 'lucide-react';
 
 // 订单卡片组件
-function OrderCard({ order, isVerfied ,takeOrder}) {
+function OrderCard({ order, isVerfied, takeOrder }) {
   // 格式化日期时间
   const formatDate = (dateString) => {
+    if (!dateString) return { date: '未知', time: '未知' };
     const date = new Date(dateString);
     return {
       date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`,
@@ -16,8 +17,8 @@ function OrderCard({ order, isVerfied ,takeOrder}) {
     };
   };
 
-  const shootTime = formatDate(order.shoot_time);
-  const createTime = formatDate(order.created_at);
+  const shootTime = formatDate(order.shootTime);
+  const createTime = formatDate(order.createdAt);
 
   // 获取状态标签样式
   const getStatusBadge = (status) => {
@@ -33,14 +34,17 @@ function OrderCard({ order, isVerfied ,takeOrder}) {
   const statusBadge = getStatusBadge(order.status);
   const StatusIcon = statusBadge.icon;
 
+  // 生成客户头像（如果没有则使用默认）
+  const customerAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(order.customerId || '用户')}&background=random&size=40`;
+
   return (
-    <div className="bg-white rounded-xl h-full shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-xl h-full shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200 overflow-hidden flex flex-col">
       {/* 订单头部 - 简洁状态和订单号 */}
       <div className="px-6 py-3 bg-gradient-to-r from-orange-50 to-amber-50 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Package className="w-4 h-4 text-orange-600" />
-            <span className="text-sm font-medium text-gray-600">#{order.order_id}</span>
+            <span className="text-sm font-medium text-gray-600">#{order.orderId}</span>
           </div>
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusBadge.color} flex items-center gap-1`}>
             <StatusIcon className="w-3 h-3" />
@@ -50,25 +54,25 @@ function OrderCard({ order, isVerfied ,takeOrder}) {
       </div>
 
       {/* 订单主体内容 - 模块化布局 */}
-      <div className="p-6">
+      <div className="p-6 flex-1 flex flex-col">
         {/* 模块1: 客户信息 */}
         <div className="mb-6">
-          <h3 className="text-start text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">客户信息</h3>
+          <h3 className="text-start text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">订单信息</h3>
           <div className="flex items-center gap-3">
             <img
-              src={order.customerAvatar}
-              alt={order.customerName}
+              src={customerAvatar}
+              alt={`客户 ${order.customerId}`}
               className="w-12 h-12 rounded-full object-cover border-2 border-orange-200"
             />
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-gray-900">{order.customerName}</span>
-                <span className="text-xs text-gray-500">ID: {order.customer_id}</span>
+                <span className="font-bold text-gray-900">客户</span>
+                <span className="text-xs text-gray-500">ID: {order.customerId}</span>
               </div>
               <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
                 <User className="w-3 h-3 text-gray-400" />
                 <span className="text-xs">
-                  {order.photographer_id ? '指定摄影师' : '平台分配'}
+                  {order.photographerId ? '指定摄影师' : '平台分配'}
                 </span>
               </div>
             </div>
@@ -92,16 +96,16 @@ function OrderCard({ order, isVerfied ,takeOrder}) {
               <Clock className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-xs text-start text-gray-500">拍摄时长</p>
-                <p className="text-sm text-start font-medium">{order.duration}</p>
+                <p className="text-sm text-start font-medium">{order.duration || '未指定'}</p>
               </div>
             </div>
 
             <div className="flex items-start gap-2">
               <MapPin className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs text-start text-gray-500">拍摄地点</p>
-                <p className="text-start text-sm font-medium truncate max-w-[120px]" title={order.location}>
-                  {order.location}
+                <p className="text-start text-sm font-medium break-words whitespace-normal">
+                  {order.location || '未指定'}
                 </p>
               </div>
             </div>
@@ -110,15 +114,15 @@ function OrderCard({ order, isVerfied ,takeOrder}) {
               <Users className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-xs text-start text-gray-500">拍摄人数</p>
-                <p className="text-start text-sm font-medium">{order.subject_count} 人</p>
+                <p className="text-start text-sm font-medium">{order.subjectCount || 1} 人</p>
               </div>
             </div>
 
             <div className="flex items-start gap-2">
-              <Image className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+              <Camera className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-xs text-start text-gray-500">拍摄类型</p>
-                <p className="text-start text-sm font-medium">{order.type}</p>
+                <p className="text-start text-sm font-medium">人像摄影</p>
               </div>
             </div>
 
@@ -127,7 +131,7 @@ function OrderCard({ order, isVerfied ,takeOrder}) {
               <div>
                 <p className="text-xs text-gray-500">专业设备</p>
                 <p className="text-start text-sm font-medium">
-                  {order.need_equipment ? (
+                  {order.needEquipment ? (
                     <span className="text-start text-green-600">需要</span>
                   ) : (
                     <span className="text-start text-gray-500">不需要</span>
@@ -144,17 +148,17 @@ function OrderCard({ order, isVerfied ,takeOrder}) {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center gap-2 bg-orange-50 p-3 rounded-lg">
               <DollarSign className="w-5 h-5 text-orange-500" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs text-gray-500">报酬</p>
-                <p className="text-lg font-bold text-orange-600">¥ {order.price.toFixed(2)}</p>
+                <p className="text-lg font-bold text-orange-600 truncate">¥ {order.price?.toFixed(2) || '0.00'}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 bg-blue-50 p-3 rounded-lg">
               <Phone className="w-5 h-5 text-blue-500" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs text-gray-500">联系方式</p>
-                <p className="text-base font-medium">{order.contact_info}</p>
+                <p className="text-base font-medium truncate">{order.contactInfo || '未提供'}</p>
               </div>
             </div>
           </div>
@@ -166,20 +170,20 @@ function OrderCard({ order, isVerfied ,takeOrder}) {
             <h3 className="text-xs text-start font-semibold text-gray-400 uppercase tracking-wider mb-2">备注</h3>
             <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
               <MessageSquare className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-gray-700">{order.remark}</p>
+              <p className="text-sm text-gray-700 break-words whitespace-normal">{order.remark}</p>
             </div>
           </div>
         )}
 
-        {/* 底部操作栏 */}
-        <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+        {/* 底部操作栏 - 使用margin-top: auto 推到底部 */}
+        <div className="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-1 text-xs text-gray-400">
             <BookOpen className="w-3 h-3" />
             <span>发布时间: {createTime.date} {createTime.time}</span>
           </div>
           
-          {/* 支付状态标签 */}
-          <div className=" flex items-center gap-3">
+          {/* 接单按钮 */}
+          <div className="flex items-center gap-3">
             {order.status === 0 && (
               <button
                 onClick={() => isVerfied && takeOrder(order.orderId)}
@@ -200,4 +204,4 @@ function OrderCard({ order, isVerfied ,takeOrder}) {
   );
 }
 
-export default OrderCard
+export default OrderCard;

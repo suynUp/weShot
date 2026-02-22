@@ -1,105 +1,55 @@
 import { create } from "zustand";
-import { getFromLocalStorage, LOCAL_STORAGE_KEYS, saveToLocalStorage } from "../utils/localStorage";
+import { getFromLocalStorage, LOCAL_STORAGE_KEYS, saveToLocalStorage } from "../utils/localStorage"
 
 export const DraftStore = create(
-        (set,get)=>({
-        
-        draftList:[{
-            id:1,
-            place:'山东大学',
-            date:'2026-3-9'
-        }],
-        draftDetailList:[],
-        currentDraft:{},
+    (set, get) => ({
+        draftList: [],
+        currentDraft: {},
 
-        setDraftList: (drafts)=>{//获取草稿列表
-            set({
-                draftList:drafts
-            })
-
-            saveToLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST,drafts)
+        setDraftList: (drafts) => {
+            set({ draftList: drafts });
+            saveToLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST, drafts);
         },
 
-        setDraft : (draft) => {
-            set({
-                currentDraft:draft
-            })
+        setDraft: (draft) => {
+            set({ currentDraft: draft });
         },
 
-        getDraftDetail:(id) => {
-            get().getDetails()
-            const draft = get().draftDetailList.filter(d=>d.id===id)
-            if(draft){
-                set({
-                    currentDraft:draft
-                })
-                return true
-            }
-            else return false
-        },
-
-        saveDraft:(draft,id,saveDate)=>{//保存新的草稿
-        
-            const newDraftList = [...get().draftList, {
-                place: draft.place,
-                id,
-                saveDate
-            }];
-            const newDetailList = [...get().draftDetailList,draft]
-
-            set({
-                draftList:newDraftList,
-                draftDetailList:newDetailList
-            })
-
-            saveToLocalStorage(LOCAL_STORAGE_KEYS.DRAFTDETAILIST,newDetailList)
-            saveToLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST,newDraftList)
-        },
-
-        getDraftList:() => {
-            const list = getFromLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST)
-            if(list){
-                set({
-                    draftList:list
-                })
-                return true
-            }
+        saveDraft: (draft, orderId, createdAt) => {
+            const oldDraftList = getFromLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST) || [];
             
-            return false
-        },
-
-        getDetails: () => {
-            const detaillist = getFromLocalStorage(LOCAL_STORAGE_KEYS.DRAFTDETAILIST)
-            if(detaillist){
-                set({
-                    draftDetailList:detaillist
-                })
-                return true
-            }
+            // 创建完整的草稿对象，包含所有信息
+            const newDraft = {
+                ...draft,  // 包含 location 和其他所有草稿信息
+                orderId,
+                createdAt
+            };
             
-            return false
+            const newDraftList = [...oldDraftList, newDraft];
+
+            set({ draftList: newDraftList });
+            saveToLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST, newDraftList);
         },
 
-        deleteDraft:(draftId) => {
+        getDraftList: () => {
+            const list = getFromLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST);
+            if (list) {
+                set({ draftList: list });
+                return true;
+            }
+            return false;
+        },
 
-            const newDraftList = get().draftList.filter((d)=>d.id!==draftId)
-            const newDetailList = get().draftDetailList.filter((d)=>d.id!==draftId)
+        deleteDraft: (draftId) => {
+            const oldDraftList = getFromLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST) || [];
+            const newDraftList = oldDraftList.filter(d => d.orderId !== draftId);
 
-            set({
-                draftList:newDraftList,
-                draftDetailList:newDetailList
-            })
+            set({ draftList: newDraftList });
+            saveToLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST, newDraftList);
 
-            saveToLocalStorage(LOCAL_STORAGE_KEYS.DRAFTDETAILIST,newDetailList)
-            saveToLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST,newDraftList)
-
-            if(get().currentDraft.id === draftId){
-                set({
-                    currentDraft:{}
-                })
+            if (get().currentDraft.orderId === draftId) {
+                set({ currentDraft: {} });
             }
         }
     })
-)
-    
-
+);

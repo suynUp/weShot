@@ -49,6 +49,10 @@ class orderAPI {
         return request.post('/order/rate',rate)
     }
 
+    static getCompletedOrders = (pageNum,pageSize) => {
+        return request.get('/order/gallery',{pageNum,pageSize})
+    }
+
 }
 
 export default orderAPI

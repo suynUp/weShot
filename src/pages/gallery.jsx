@@ -1,99 +1,53 @@
-import { useEffect, useState } from 'react';
-import { PostCard } from '../components/postCard';
+// Gallery.jsx
+import { useCallback, useEffect, useState } from 'react';
+import { OrderDisplayCard } from '../components/orderDisplayCard';
 import { PostDetail } from '../components/postDetail';
 import { Camera, Sparkles, ArrowLeft } from 'lucide-react';
-import SearchInput from '../components/searchInput';
-import { Pagination } from '../components/pagination'; // 导入分页组件
-import { useGetPost, usePostAction, useSearchHistory, useSearchSuggestWithDebounce } from '../hooks/usePost';
-import postStore from '../store/postStore';
+import { Pagination } from '../components/pagination';
+import { OrderDisplayStore } from '../store/orderDisplayStore';
+import { useNavigation } from '../hooks/navigation';
 import { usePagination } from '../hooks/usePagination';
+import { useGetCompletedOrders } from '../hooks/useOrder'; // 假设有这个 hook
 
 function Gallery() {
+  const { goBack } = useNavigation();
   const [loading, setLoading] = useState(true);
   const [selectedPost, setSelectedPost] = useState(null);
-  const [inputValue, setInputValue] = useState('');
 
-  const searchHistory = postStore(state => state.history);
-  const postList = postStore(state => state.postList);
-  const postTotal = postStore(state => state.totalposts);
-  const currentPost = postStore(state => state.currentPost);
+  const orders = OrderDisplayStore(state => state.orderList);
+  const totalOrdersNum = OrderDisplayStore(state => state.totalOrders);
+  console.log('Gallery render, orders:', orders);
 
-  // 获取历史
-  const searchHistoryMutation = useSearchHistory()
+  const getCompletedOrders = useGetCompletedOrders();
 
-  // 获取所有帖子
-  const { getAllPost } = useGetPost();
+  // 分页逻辑
+  // 使用 useCallback 包装
+  const fetchOrders = useCallback(async (pageNum, pageSize) => {
+    return getCompletedOrders.mutateAsync({pageNum, pageSize});
+  }, [getCompletedOrders]);
 
-  const {
-    fetchDebouncedSuggest,
-    suggestions
-  } = useSearchSuggestWithDebounce();
-
-  const {
-    like,
-    dislike,
-    comment,
-    getComments
-  } = usePostAction();
-
-  // 使用分页 hook
   const {
     currentPage,
     totalPages,
-    loading: paginationLoading,
-    setCurrentPage
+    setCurrentPage,
   } = usePagination({
-    fetchData: async (page, size) => {
-      const result = await getAllPost(null, page, size, inputValue);
-      return result; // 确保返回结果以便分页组件获取总数
-    },
     itemsPerPage: 12,
+    fetchData: fetchOrders,
     initialPage: 1,
-    dependencies: [inputValue], // 添加依赖，当搜索词变化时重新加载
-    total: postTotal, // 传入外部的 total
+    total: totalOrdersNum,
   });
 
-  // 获取历史记录
+  // 监听 orders 变化
   useEffect(() => {
-    searchHistoryMutation.mutate();
-  }, []);
+    console.log('orders 更新了:', orders);
+  }, [orders]);
 
-  // 处理搜索
-  const handleSearch = async (keyword) => {
-    setInputValue(keyword);
-    // 分页 hook 会自动处理搜索，因为 dependencies 包含 inputValue
-    // 并且会自动重置到第一页
-  };
-
-  // 处理建议搜索
-  useEffect(() => {
-    fetchDebouncedSuggest(inputValue);
-  }, [inputValue, fetchDebouncedSuggest]);
-
-  // 处理点赞
-  const handlePostLike = (postId) => {
-    like(postId);
-  };
-
-  // 处理取消点赞
-  const handlePostdisLike = (postId) => {
-    dislike(postId);
-  };
-
-  // 返回上一页
   const handleGoBack = () => {
-    window.history.back();
-  };
-
-  // 处理页码变化
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-    // 滚动到顶部
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    goBack();
   };
 
   // 加载状态
-  if (loading && paginationLoading) {
+  if (loading && !orders.length) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-pink-50 flex items-center justify-center">
         <div className="text-center">
@@ -107,14 +61,14 @@ function Gallery() {
     );
   }
 
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-pink-50">
-      {/* 装饰性背景元素 - 柔和风格 */}
+      {/* 装饰性背景元素 */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-orange-200/30 to-pink-200/30 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-amber-200/30 to-orange-200/30 rounded-full blur-3xl" />
         <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-gradient-to-r from-pink-200/20 to-orange-200/20 rounded-full blur-3xl" />
-        {/* 装饰性相机图标 */}
         <Camera className="absolute top-20 left-10 w-12 h-12 text-orange-200/20 rotate-12" />
         <Camera className="absolute bottom-20 right-10 w-16 h-16 text-pink-200/20 -rotate-12" />
       </div>
@@ -143,23 +97,13 @@ function Gallery() {
           </div>
         </div>
 
-        {/* 搜索组件 */}
-        <SearchInput
-          searchHistory={searchHistory}
-          suggest={suggestions}
-          searchFn={handleSearch}
-          value={inputValue}
-          setValue={setInputValue}
-          placeholder="搜索作品、作者或标签..."
-        />
-
         {/* 帖子网格 */}
-        {postList.length > 0 ? (
+        {orders && orders.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-fr">
-              {postList.map((post, index) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+              {orders.map((order, index) => (
                 <div
-                  key={post.post_id}
+                  key={order?.order_id ?? index}
                   className="transform transition-all duration-300 hover:-translate-y-1"
                   style={{
                     animationDelay: `${index * 100}ms`,
@@ -167,62 +111,51 @@ function Gallery() {
                     opacity: 0,
                   }}
                 >
-                  <PostCard
-                    post={post}
-                    onClick={() => setSelectedPost(post)}
+                  <OrderDisplayCard
+                    post={order}
+                    onClick={() => setSelectedPost(order)}
                   />
                 </div>
               ))}
             </div>
 
-            {/* 使用 Pagination 组件替代原有的分页控件 */}
+            {/* 分页组件 */}
             {totalPages > 1 && (
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-            )}
-
-            {/* 显示总条数（可选，因为 Pagination 组件没有包含总条数显示） */}
-            {totalPages > 0 && (
-              <div className="text-center mt-4 text-sm text-gray-500">
-                共 {postTotal || 0} 条作品
+              <div className="mt-10 flex justify-center">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
               </div>
             )}
+
+            {/* 显示统计信息 */}
+            <div className="text-center mt-6 text-sm text-gray-500">
+              共 {totalOrdersNum || 0} 条作品
+              {totalPages > 1 && `，第 ${currentPage} / ${totalPages} 页`}
+            </div>
           </>
         ) : (
           <div className="text-center py-20">
             <div className="inline-flex items-center justify-center w-24 h-24 bg-orange-100 rounded-full mb-6">
               <Camera className="w-12 h-12 text-orange-400" />
             </div>
-            <p className="text-xl text-gray-500">暂无作品</p>
+            <p className="text-xl text-gray-500">暂无已完成的作品</p>
             <p className="text-gray-400 mt-2">
-              {inputValue ? '没有找到相关作品，试试其他关键词' : '敬请期待摄影师们的精彩作品'}
+              等待摄影师完成订单后，作品会在这里展示
             </p>
           </div>
         )}
 
-        {/* 加载更多指示器 */}
-        {paginationLoading && (
-          <div className="fixed bottom-8 right-8">
-            <div className="bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
-              <span className="text-sm text-gray-600">加载中...</span>
-            </div>
-          </div>
+        {/* 作品详情弹窗 */}
+        {selectedPost && (
+          <PostDetail
+            post={selectedPost}
+            onClose={() => setSelectedPost(null)}
+          />
         )}
       </div>
-
-      {/* 帖子详情弹窗 */}
-      {selectedPost && (
-        <PostDetail
-          post={currentPost}
-          onClose={() => setSelectedPost(null)}
-          onLike={handlePostLike}
-          onDislike={handlePostdisLike}
-        />
-      )}
 
       {/* 内联样式动画 */}
       <style>{`

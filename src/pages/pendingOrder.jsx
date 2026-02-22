@@ -5,51 +5,66 @@ import {
 } from 'lucide-react';
 
 import OrderCard from '../components/orderSquareCard';
-import { Pagination } from '../components/pagination'; // 导入页码组件
+import { Pagination } from '../components/pagination';
 import { usePagination } from '../hooks/usePagination';
 import { useNavigation } from '../hooks/navigation';
 import { UserStore } from '../store/userStore';
 import { useGetOrder, useTakeOrderMutation } from '../hooks/useOrder';
 import { OrderStore } from '../store/orderStore';
 
-// 主页面组件 - 接单广场
 function PhotographerOrderSquare() {
-  // 模拟订单数据（扩大数据量用于测试分页）
-
   // 状态
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' 或 'list'
-  const [sortBy, setSortBy] = useState('newest'); // 'newest', 'price', 'popular'
+  const [viewMode, setViewMode] = useState('grid');
+  const [sortBy, setSortBy] = useState('newest');
   const [showSortMenu, setShowSortMenu] = useState(false);
 
-  const isVerFied = UserStore(state => state.isVerFied)
+  const isVerFied = UserStore(state => state.isVerFied);
   
-  const {getAllLobbys} = useGetOrder()
-  const allPendingOrders = OrderStore(state => state.allPendingOrders)
-
-  const takeOrder = useTakeOrderMutation()
+  const { getAllLobbys } = useGetOrder();
+  const allPendingOrders = OrderStore(state => state.allPendingOrders);
+  const totalPendingOrderNum = OrderStore(state => state.totalPendingOrderNum);
+  const takeOrder = useTakeOrderMutation();
   
   const { goto } = useNavigation();
 
-  useEffect(()=>{
-    getAllLobbys()
-  },[])
+  // 获取订单数据的函数
+  const fetchOrders = async (pageNum, pageSize) => {
+    await getAllLobbys(pageNum, pageSize);
+  };
 
-  // 使用分页 Hook
+  // 使用分页 Hook - 类似Feed页面的用法
   const {
     currentPage,
     totalPages,
-    paginatedData: currentOrders,
-    setCurrentPage
+    loading: paginationLoading,
+    setCurrentPage,
   } = usePagination({
-    data: allPendingOrders,
-    itemsPerPage: 9, // 每页显示6个订单
-    initialPage: 1
+    itemsPerPage: 12,
+    fetchData: fetchOrders, // 使用fetchData方式而不是直接传入data
+    initialPage: 1,
+    total: totalPendingOrderNum, // 使用store中的总数
   });
 
+  // 初始加载和搜索/排序变化时重新获取数据
+  useEffect(() => {
+    // 当searchTerm或sortBy变化时，重置到第一页并重新获取
+    setCurrentPage(1);
+  }, [searchTerm, sortBy]);
+
+  // 初始加载
+  useEffect(() => {
+    // 这个useEffect现在主要由usePagination的fetchData处理
+    // 但你可能需要初始触发一次
+    fetchOrders(currentPage, 12);
+  }, []); // 空依赖，只在组件挂载时执行一次
+
   const handleTakeOrder = (postId) => {
-    takeOrder.mutate(postId)
-  }
+    takeOrder.mutate(postId);
+  };
+
+  // 加载状态
+  const isLoading = paginationLoading;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
@@ -87,7 +102,7 @@ function PhotographerOrderSquare() {
             <div className="flex items-center gap-2 text-sm bg-gradient-to-r from-orange-50 to-amber-50 px-4 py-2 rounded-full border border-orange-200">
               <AlertCircle className="w-4 h-4 text-orange-500" />
               <span className="text-orange-700 font-medium">
-                <span className="text-lg font-bold">{allPendingOrders.length}</span> 个订单可接
+                <span className="text-lg font-bold">{totalPendingOrderNum}</span> 个订单可接
               </span>
             </div>
           </div>
@@ -100,13 +115,12 @@ function PhotographerOrderSquare() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-500">
-              找到 <span className="font-semibold text-orange-600">{allPendingOrders.length}</span> 个订单
+              找到 <span className="font-semibold text-orange-600">{totalPendingOrderNum}</span> 个订单
             </span>
             {searchTerm && (
               <button
                 onClick={() => {
                   setSearchTerm('');
-                  setCurrentPage(1);
                 }}
                 className="text-xs px-2 py-1 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 transition-colors"
               >
@@ -147,7 +161,6 @@ function PhotographerOrderSquare() {
                         onClick={() => {
                           setSortBy(option.value);
                           setShowSortMenu(false);
-                          setCurrentPage(1);
                         }}
                         className={`w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-orange-50 transition-colors ${
                           sortBy === option.value ? 'text-orange-600 bg-orange-50' : 'text-gray-700'
@@ -188,35 +201,62 @@ function PhotographerOrderSquare() {
           </div>
         </div>
 
-        {/* 订单列表 */}
-        {currentOrders.length > 0 ? (
+        {/* 加载状态 */}
+        {isLoading ? (
+          <div className={viewMode === 'grid' 
+            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
+            : 'space-y-4'
+          }>
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-white/50 rounded-2xl overflow-hidden shadow-md">
+                  <div className="aspect-[4/3] bg-gray-200/60" />
+                  <div className="p-4 space-y-3">
+                    <div className="h-4 bg-gray-200/80 rounded-full w-3/4" />
+                    <div className="h-3 bg-gray-200/60 rounded-full w-1/2" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : allPendingOrders.length > 0 ? (
           <>
             <div className={
               viewMode === 'grid' 
                 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
                 : 'space-y-4'
             }>
-              {currentOrders.map((order) => (
+              {allPendingOrders.map((order) => (
                 <OrderCard 
-                  key={order.order_id} 
+                  key={order.orderId} 
                   order={order}
                   takeOrder={handleTakeOrder} 
                   viewMode={viewMode}
-                  isVerfied = {isVerFied}
+                  isVerfied={isVerFied}
                 />
               ))}
             </div>
 
             {/* 分页组件 */}
             {totalPages > 1 && (
-              <div className="mt-12">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                />
+              <div className=" mt-12 flex justify-center">
+                <div className="px-10 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg p-2">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
               </div>
             )}
+
+            {/* 统计信息 - 类似Feed页面 */}
+            <div className="mt-8 flex justify-center items-center gap-2 text-sm text-gray-400">
+              <span className="w-2 h-2 bg-orange-400 rounded-full" />
+              <span>共 {allPendingOrders.length} 个订单</span>
+              <span className="w-2 h-2 bg-amber-400 rounded-full" />
+              <span>第 {currentPage} / {totalPages} 页</span>
+            </div>
           </>
         ) : (
           <div className="text-center py-20 bg-white/60 backdrop-blur-sm rounded-2xl border border-orange-100">
@@ -232,7 +272,6 @@ function PhotographerOrderSquare() {
               <button 
                 onClick={() => {
                   setSearchTerm('');
-                  setCurrentPage(1);
                 }}
                 className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl text-sm font-medium hover:from-orange-600 hover:to-amber-600 transition-all transform hover:scale-105 shadow-lg"
               >
@@ -243,7 +282,7 @@ function PhotographerOrderSquare() {
         )}
 
         {/* 返回顶部按钮 */}
-        {currentOrders.length > 0 && (
+        {allPendingOrders.length > 0 && (
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="fixed bottom-8 right-8 p-3 bg-orange-500 text-white rounded-full shadow-lg hover:bg-orange-600 transition-all transform hover:scale-110 z-50"

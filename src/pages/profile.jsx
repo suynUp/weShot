@@ -387,7 +387,7 @@ function Profile() {
                   </div>
                   <p className="text-gray-500 mb-2">暂无发起的订单</p>
                   <button 
-                    onClick={() => goto('/create-order')}
+                    onClick={() => goto('/launch')}
                     className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 transition-colors"
                   >
                     发布新订单

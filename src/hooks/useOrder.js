@@ -2,6 +2,9 @@ import { useMutation } from "@tanstack/react-query"
 import orderAPI from "../api/orderAPI"
 import { OrderStore } from "../store/orderStore"
 import { useToast } from "./useToast"
+import { useNavigation } from "./navigation"
+import { OrderDisplayStore } from "../store/orderDisplayStore"
+import { toast } from "./useToast"
 
 export const orderAction={
     ACCEPT:'ACCEPT',
@@ -33,10 +36,12 @@ export const useGetOrder = () => {
     }
 
     const setAllPendingOrders = OrderStore(state=>state.setAllPendingOrders)
+    const setTotalPendingOrderNum = OrderStore(state=>state.setTotalPendingOrderNum)    
 
-    const getAllLobbys = async () => {//获取所有待接订单     
-        const res = await orderAPI.getLobbyList()
-        setAllPendingOrders(res)
+    const getAllLobbys = async (pageNum, pageSize) => {//获取所有待接订单  
+        const res = await orderAPI.getLobbyList(pageNum, pageSize)
+        setAllPendingOrders(res.data.list)
+        setTotalPendingOrderNum(res.data.total)
     }
 
     return {getMyOrder,getMyAllPendings,getAllLobbys}
@@ -44,9 +49,11 @@ export const useGetOrder = () => {
 
 export const useCreateOrders = () => {
     const toast = useToast()
+    const {goBack} = useNavigation()
     
     return useMutation({
         mutationFn: async (order) => {
+                console.log('creating order with data:', order)
                 const res = await orderAPI.createOrder(order)
                 if (res.code !== 200) {
                     throw new Error(res.message || '创建订单失败')
@@ -55,6 +62,7 @@ export const useCreateOrders = () => {
         },
         onSuccess: () => {
             toast.success('创建订单成功')
+            goBack()
         },
         onError: (error) => {
             toast.error(error.message || '创建订单失败')
@@ -75,7 +83,6 @@ export const useTakeOrderMutation = () => {
         },
         onSuccess: () => {
             toast.success('接单成功')
-            console.log('接取成功')
         },
         onError: (error) => {
             toast.error(error.message || '接单失败')
@@ -119,6 +126,29 @@ export const useCommentMutation = () => {
         },
         onError: (error) => {
             toast.error(error.message || '评论失败')
+        }
+    })
+}
+
+export const useGetCompletedOrders = () =>{
+
+    const setOrderList = OrderDisplayStore(state=>state.setOrderList)
+    const setTotalOrders = OrderDisplayStore(state=>state.setTotalOrders)
+
+    return useMutation({
+        mutationFn:async ({pageNum,pageSize})=>{
+            const res =await orderAPI.getCompletedOrders(pageNum,pageSize)
+            if(res.code !== 200){
+                throw new Error(res.message || '获取订单失败')
+            }
+            return res
+        },
+        onSuccess:(data)=>{
+            setOrderList(data.data.list)
+            setTotalOrders(data.data.total)   
+        },
+        onError:(e)=>{
+            toast.error(e.message || '获取订单失败')
         }
     })
 }

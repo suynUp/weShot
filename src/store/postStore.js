@@ -8,6 +8,9 @@ const postStore = create(
     postList:[],
     currentPost:{},
 
+    draftList:[],
+    currentDraft:{},
+
     setHistory: (history) => set({ history }),
     setSuggestions: (suggestions) => set({ suggestions }),
     // 仅更新列表，不触碰 totalposts

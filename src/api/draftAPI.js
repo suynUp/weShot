@@ -19,9 +19,7 @@ class DraftAPI {
     }
 
     static deleteDraft = (id) => {
-        return request.delete('/order/draft/delete/{orderId}',{
-            orderId:id
-        })
+        return request.delete(`/order/draft/delete/${id}`)
     }
 }
 

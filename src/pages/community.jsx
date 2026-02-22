@@ -84,7 +84,9 @@ export function Feed() {
               灵感画廊 · 社区
             </h1>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm">
+          <div
+          onClick={() => goto('/postpublish')}
+           className="cursor-pointer hover:shadow-lg transition-all duration-300 border-orange-500 border flex items-center gap-2 text-sm text-gray-500 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm">
             <Camera className="w-4 h-4" />
             <span>分享瞬间</span>
           </div>

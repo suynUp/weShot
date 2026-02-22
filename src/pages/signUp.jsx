@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Camera, Sparkles, ChevronRight, CheckCircle, XCircle, Image, Grid, Heart, Plus, LogIn, ArrowRight, AlertCircle, ChevronLeft } from 'lucide-react';
+import { Camera, ChevronRight, CheckCircle, XCircle, Image, Grid, Heart, Plus, LogIn, ArrowRight, AlertCircle, ChevronLeft } from 'lucide-react';
 import { useNavigation } from '../hooks/navigation';
+import { UserStore } from '../store/userStore';
 
 function PhotographerSignUp() {
   const [step, setStep] = useState(1); // 1: 邀请码, 2: 详细信息
@@ -8,13 +9,23 @@ function PhotographerSignUp() {
   const [inviteValid, setInviteValid] = useState(false);
   const [checkingInvite, setCheckingInvite] = useState(false);
   const [inviteError, setInviteError] = useState('');
+  const [verifiedInviteCode, setVerifiedInviteCode] = useState(''); // 保存验证通过的邀请码
 
-  // 假设用户已登录，这里使用模拟的登录用户信息
-  const [user] = useState({
-    name: '张摄影师',
-    email: 'zhang@example.com',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-  });
+  const user = UserStore(state => state.user)
+  /**
+   * {
+            avatarUrl:'www.123.com',
+            nickname:'昵称未知',
+            casId:'000',
+            gender:'性别未知',
+            contact:'110',
+            detail:'祂很神秘',
+            role:1,
+            name:null,
+            totalLikes:0
+        },
+   */
+
 
   const {goto} = useNavigation()
 
@@ -76,6 +87,7 @@ function PhotographerSignUp() {
     
     if (isValid) {
       setInviteValid(true);
+      setVerifiedInviteCode(inviteCode); // 保存验证通过的邀请码
       // 自动进入下一步
       setTimeout(() => setStep(2), 500);
     } else {
@@ -115,8 +127,8 @@ function PhotographerSignUp() {
     }));
   };
 
-  // 处理提交
-  const handleSubmit = () => {
+  // 处理提交 - 第二步的最终提交
+  const handleSubmit = async () => {
     // 构建最终的风格和类型值
     const finalStyle = photographerInfo.style === 'other' 
       ? photographerInfo.styleOther 
@@ -126,18 +138,39 @@ function PhotographerSignUp() {
       ? photographerInfo.typeOther
       : typeOptions.find(t => t.id === photographerInfo.type)?.label;
 
-    console.log('提交摄影师信息:', {
-      userId: user.email,
-      inviteCode,
+    // 准备提交的数据
+    const submitData = {
+      casId: user.casId,
+      inviteCode: verifiedInviteCode, // 使用第一步验证通过的邀请码
       equipment: photographerInfo.equipment.map(e => 
         equipmentOptions.find(opt => opt.id === e)?.label
       ),
       style: finalStyle,
       type: finalType,
-      specialties: photographerInfo.specialties
-    });
+      specialties: photographerInfo.specialties,
+      userInfo: {
+        avatarUrl: user.avatarUrl,
+        nickname: user.nickname,
+        gender: user.gender,
+        contact: user.contact,
+        detail: user.detail
+      }
+    };
+
+    console.log('提交摄影师入驻申请:', submitData);
     
-    alert('入驻申请提交成功！等待审核...');
+    try {
+      // 这里调用实际的API提交数据
+      // await submitPhotographerApplication(submitData);
+      
+      alert('入驻申请提交成功！等待审核...');
+      
+      // 可选：提交成功后跳转到其他页面
+      // goto('/profile');
+    } catch (error) {
+      console.error('提交失败:', error);
+      alert('提交失败，请稍后重试');
+    }
   };
 
   // 检查是否可以进入下一步
@@ -154,9 +187,10 @@ function PhotographerSignUp() {
     return false;
   };
 
-  const handleFeedback = () => {
-    console.log('打开反馈弹窗');
-    // 这里可以打开反馈弹窗或跳转到反馈页面
+  // 返回第一步（如果需要）
+  const goBackToStep1 = () => {
+    setStep(1);
+    // 注意：保留已验证的邀请码，但可以重新验证新的邀请码
   };
 
   return (
@@ -182,23 +216,28 @@ function PhotographerSignUp() {
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-orange-100 to-pink-100 border-2 border-orange-200">
               <img 
-                src={user.avatar} 
-                alt={user.name}
+                src={user.avatarUrl} 
+                alt={user.nickname}
                 className="w-full h-full object-cover"
               />
             </div>
-            <div>
+            <div className='text-start'>
               <p className="text-sm text-gray-500">已登录</p>
-              <p className="font-medium text-gray-800">{user.name}</p>
-              <p className="text-xs text-gray-400">{user.email}</p>
+              <p className="font-medium text-gray-800">{user.nickname}</p>
+              <p className="text-xs text-gray-400">ID：{user.casId}</p>
             </div>
           </div>
-          <button 
-            onClick={() => console.log('切换账号')}
-            className="text-sm text-orange-500 hover:text-orange-600 transition-colors"
-          >
-            切换账号
-          </button>
+          
+          {/* 如果在第二步，可以添加返回第一步的按钮 */}
+          {step === 2 && (
+            <button
+              onClick={goBackToStep1}
+              className="text-sm text-orange-500 hover:text-orange-600 flex items-center gap-1"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              重新验证邀请码
+            </button>
+          )}
         </div>
 
         {/* 步骤指示器 */}
@@ -267,7 +306,7 @@ function PhotographerSignUp() {
                 {inviteValid && (
                   <p className="mt-3 text-sm text-green-500 flex items-center gap-1 bg-green-50 p-2 rounded-lg">
                     <CheckCircle className="w-4 h-4" />
-                    邀请码验证成功！
+                    邀请码验证成功！即将进入信息填写页面...
                   </p>
                 )}
 
@@ -280,12 +319,12 @@ function PhotographerSignUp() {
                     <>验证中...</>
                   ) : inviteValid ? (
                     <>
-                      解锁新身份！
+                      验证成功，即将跳转
                       <CheckCircle className="w-5 h-5" />
                     </>
                   ) : (
                     <>
-                      解锁新身份！
+                      验证邀请码
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
@@ -300,19 +339,8 @@ function PhotographerSignUp() {
                   <LogIn className="w-4 h-4" />
                   登录
                 </button>
-                <button 
-                  onClick={handleFeedback}
-                  className="flex items-center gap-1 text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <AlertCircle className="w-4 h-4" />
-                  不满意？点击此处反馈意见
-                </button>
               </div>
             </div>
-
-            <p className="text-xs text-gray-400 text-center mt-6">
-              提示：邀请码格式为 PHOTO + 4位数字
-            </p>
           </div>
         )}
 
@@ -325,6 +353,11 @@ function PhotographerSignUp() {
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">填写摄影师信息</h2>
               <p className="text-gray-600">请选择您的设备、风格和类型</p>
+              {verifiedInviteCode && (
+                <p className="text-sm text-green-600 mt-2">
+                  已验证邀请码：{verifiedInviteCode}
+                </p>
+              )}
             </div>
 
             <div className="space-y-8">
@@ -442,4 +475,4 @@ function PhotographerSignUp() {
   );
 }
 
-export default PhotographerSignUp
+export default PhotographerSignUp;
