@@ -37,6 +37,10 @@ class postAPI {
     static dislikePost = (postId) => {
         return request.post(`/square/unlike/${postId}`,)
     }
+    
+    static deletePost = (postId) => {
+        return request.delete(`/square/posts/${postId}`)
+    }
 
     /**{
     "postId": 1,

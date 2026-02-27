@@ -322,8 +322,8 @@ export default function PhotographersPage() {
     try {
     Promise.all([
       getHistory.mutateAsync(),
-      getOrderRanking.mutateAsync(),
-      getRatingRanking.mutateAsync()
+      getOrderRanking.mutateAsync(5),
+      getRatingRanking.mutateAsync(5)
     ]);
     } catch (E) {
       toast.error(E.message );

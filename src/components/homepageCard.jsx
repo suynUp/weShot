@@ -2,7 +2,7 @@
 import { useNavigation } from "../hooks/navigation";
 import { Users, PenSquare, Trophy, MessageCircle, Star, Camera } from "lucide-react";
 
-const CenterCard = () => {
+const CenterCard = ({RatingRanking,OrderRanking}) => {
     const { goto } = useNavigation();
 
     return (
@@ -35,14 +35,14 @@ const CenterCard = () => {
                             <span className="text-xs font-medium text-gray-700">单量排行</span>
                         </div>
                         <div className="space-y-1.5">
-                            {[1, 2, 3].map((i) => (
-                                <div key={i} className="flex items-center gap-2">
-                                    <span className="text-[10px] font-bold text-gray-400 w-4">#{i}</span>
-                                    <div className="w-4 h-4 rounded-full bg-gradient-to-r from-orange-200 to-pink-200 flex-shrink-0" />
+                            {OrderRanking.map((i,index) => (
+                                <div key={i.cas_id} className="flex items-center gap-2">
+                                    <span className="text-[10px] font-bold text-gray-400 w-4">#{index+1}</span>
+                                    <img src={i.avatar_url} className="w-4 h-4 rounded-full flex-shrink-0" />
                                     <span className="text-[10px] text-gray-600 truncate flex-1">
-                                        {i === 1 ? '光影行者' : i === 2 ? '时光记录者' : '城市猎人'}
+                                        {i.nickname}
                                     </span>
-                                    <span className="text-[10px] font-medium text-gray-700">{i === 1 ? '328' : i === 2 ? '256' : '189'}单</span>
+                                    <span className="text-[10px] font-medium text-gray-700">{i.orderCount}单</span>
                                 </div>
                             ))}
                         </div>
@@ -55,14 +55,14 @@ const CenterCard = () => {
                             <span className="text-xs font-medium text-gray-700">评分排行</span>
                         </div>
                         <div className="space-y-1.5">
-                            {[1, 2, 3].map((i) => (
-                                <div key={i} className="flex items-center gap-2">
-                                    <span className="text-[10px] font-bold text-gray-400 w-4">#{i}</span>
-                                    <div className="w-4 h-4 rounded-full bg-gradient-to-r from-orange-200 to-pink-200 flex-shrink-0" />
+                            {RatingRanking.map((i,index) => (
+                                <div key={i.cas_id} className="flex items-center gap-2">
+                                    <span className="text-[10px] font-bold text-gray-400 w-4">#{index+1}</span>
+                                    <img src={i.avatar_url} className="w-4 h-4 rounded-full flex-shrink-0" />
                                     <span className="text-[10px] text-gray-600 truncate flex-1">
-                                        {i === 1 ? '城市猎人' : i === 2 ? '光影行者' : '婚礼诗人'}
+                                        {i.nickname}
                                     </span>
-                                    <span className="text-[10px] font-medium text-gray-700">{i === 1 ? '5.0' : i === 2 ? '4.9' : '4.9'}分</span>
+                                    <span className="text-[10px] font-medium text-gray-700">{i.ratingCount}分</span>
                                 </div>
                             ))}
                         </div>

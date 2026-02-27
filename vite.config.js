@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   preview: {
     allowedHosts: [
-      'kc539596.natappfree.cc'
+      'r4ea5ded.natappfree.cc'
     ]
   }
 })

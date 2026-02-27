@@ -29,9 +29,7 @@ const photographerStore = create(
         })),
         
         // 订单排行榜
-        setPhgOrderRanking: (ranking) =>{
-            console.log('设置订单排行榜数据：', ranking);
-            set({ phgOrderRanking: ranking })},
+        setPhgOrderRanking: (ranking) =>set({ phgOrderRanking: ranking }),
         
         // 评分排行榜
         setPhgRatingRanking: (ranking) => set({ phgRatingRanking: ranking }),

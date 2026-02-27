@@ -8,6 +8,10 @@ export const OrderStore = create(
         //自己的，此处应有localStorage
         myOrderList:[],
         myPengdings:[],
+        myTotalPengings:0,
+        setMyPendings:(orders)=>set({myPengdings:orders}), 
+        setMyTotalPendings:(total)=>set({myTotalPengings:total}), 
+
 
         //你看别人的
         otherOrderList:[],
@@ -23,7 +27,6 @@ export const OrderStore = create(
             })
         },
 
-        setMyPendings:(orders)=>set({myPengdings:orders}), 
         setOtherOrderList:(orders) => set({otherOrderList:orders}),
         setTotalPendingOrderNum:(num) => set({totalPendingOrderNum:num}),
 

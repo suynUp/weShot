@@ -14,7 +14,7 @@ import { usePagination } from '../../hooks/usePagination';
 import { useLogOut } from '../../hooks/useUser';
 import { PostDetail } from '../postDetail';
 import postStore from '../../store/postStore';
-import { useGetPostDetail } from '../../hooks/usePost';
+import { useDeletePost, useGetPostDetail } from '../../hooks/usePost';
 
 export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum, 
   myOrdersData, totalOrdersNum, receivedOrdersData, totalReceivedNum,
@@ -33,6 +33,7 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
   const useGetPostDetailMutation = useGetPostDetail()
 
   const LogOut = useLogOut()
+  const useDeletePostMutation = useDeletePost()
 
   useEffect(()=>{
     if(loadId!==-1){
@@ -89,10 +90,14 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
     setSelectedPosts(newSelected);
   };
 
-  const handlePostClick = (post) => {
-    setLoadId(post)
+  const handlePostClick = (postId) => {
+    setLoadId(postId)
     setShowPostDetail(true)
   };
+
+  const handlePostDelete = (postId) => {
+    useDeletePostMutation.mutate(postId)
+  }
 
   const showLoading = () => {
     if (activeTab === 'posts') return postsLoading;
@@ -193,7 +198,7 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
             selectedPosts={selectedPosts}
             onPostCheck={handlePostCheck}
             onPostClick={handlePostClick}
-            onDeletePost={() => {}}
+            onDeletePost={handlePostDelete}
             onNewPost={() => goto('/postpublish')}
           />
           {showPostDetail&&<PostDetail
@@ -226,7 +231,7 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
           <OrdersSection
             orders={receivedOrdersData}
             loading={receivedOrdersLoading}
-            emptyMessage="暂无接收的订单"
+            emptyMessage="暂无待接收订单"
             emptyHint="前往接单广场接单吧"
           />
         )}

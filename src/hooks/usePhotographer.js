@@ -97,8 +97,8 @@ export const useGetOrderRanking = () => {
     const setOrderRanking = photographerStore(state => state.setPhgOrderRanking)
 
     return useMutation({
-        mutationFn: async () => {
-            const res = await photographerAPI.orderRank()
+        mutationFn: async (limit) => {
+            const res = await photographerAPI.orderRank(limit)
             if(res.code === 200){
                 return res.data
             }else{
@@ -116,8 +116,8 @@ export const useGetRatingRanking = () => {
     const setRatingRanking = photographerStore(state => state.setPhgRatingRanking)
 
     return useMutation({
-        mutationFn: async () => {
-            const res = await photographerAPI.rateRank()
+        mutationFn: async (limit) => {
+            const res = await photographerAPI.rateRank(limit)
             if(res.code === 200){
                 return res.data
             }else{

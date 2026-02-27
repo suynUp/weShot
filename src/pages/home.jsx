@@ -8,7 +8,7 @@ import { useNavigation } from "../hooks/navigation";
 import SearchInput from "../components/searchInput";
 import request from "../utils/request";
 import { UserStore } from "../store/userStore";
-
+import useHomePageData from "../hooks/useHomePage";
 const Home = () => {
     const {goto} = useNavigation()
     const loginSuccessMutation = useUserLoginSuccess();
@@ -20,6 +20,25 @@ const Home = () => {
     const isLoggedIn = request.hasToken();
 
     const isVerified = UserStore(state=>state.isVerFied)
+
+    const {
+        displayPending, 
+        displayRR, 
+        displayOR, 
+        displayComplete,
+
+        allPengdings,
+        rateRanking, 
+        orderRanking,
+        gallery 
+    } = useHomePageData()
+
+    useEffect(()=>{
+        displayPending() 
+        displayComplete()
+        displayRR() 
+        displayOR()
+    },[])
 
     const closeOverlay = () => {
         setShowOverlay(false)
@@ -195,20 +214,20 @@ const Home = () => {
                         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-orange-200/50 flex flex-col h-[480px]">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-xl font-bold text-orange-800">客单广场</h3>
-                                <span className="text-sm bg-orange-100 text-orange-600 px-3 py-1.5 rounded-full">最新12单</span>
+                                <span className="text-sm bg-orange-100 text-orange-600 px-3 py-1.5 rounded-full">最新6单</span>
                             </div>
                             <div className="flex-1 overflow-y-auto pr-1" style={{
                                 scrollbarWidth: 'thin',
                                 scrollbarColor: '#f97316 #fff1e6'
                             }}>
                                 <div className="space-y-3">
-                                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                                        <div key={i} className="flex items-center justify-between p-3 hover:bg-orange-50 rounded-xl transition-colors">
+                                    {allPengdings.map((order) => (
+                                        <div key={order.orderId} className="flex items-center justify-between p-3 hover:bg-orange-50 rounded-xl transition-colors">
                                             <div className="flex items-center space-x-3">
-                                                <div className="w-12 h-12 bg-gradient-to-br from-orange-200 to-amber-200 rounded-xl flex-shrink-0"></div>
+                                                <img src={order.customerAvatar} className="w-12 h-12 rounded-xl flex-shrink-0"></img>
                                                 <div className="min-w-0">
-                                                    <p className="text-sm font-medium text-gray-700 truncate">人像摄影 #{i}</p>
-                                                    <p className="text-xs text-gray-500 truncate">浏览 234次 • 发起用户 张三</p>
+                                                    <p className="text-start text-sm font-medium text-gray-700 truncate">{order.type}</p>
+                                                    <p className="text-xs text-gray-500 truncate">发起人：{order.customerName}</p>
                                                 </div>
                                             </div>
                                             <button className="text-xs px-2 py-1 text-orange-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors flex-shrink-0">
@@ -227,7 +246,10 @@ const Home = () => {
 
                         {/* 中心卡片 - 与CenterCard完全匹配，无标题，无滚动 */}
                         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-orange-200/50 h-[480px]">
-                            <CenterCard />
+                            <CenterCard
+                            OrderRanking={orderRanking}
+                            RatingRanking={rateRanking}
+                             />
                         </div>
 
                         {/* 作品展示 */}
@@ -241,12 +263,26 @@ const Home = () => {
                                 scrollbarColor: '#f97316 #fff1e6'
                             }}>
                                 <div className="grid grid-cols-2 gap-3">
-                                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                                        <div key={i} className="aspect-square bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl hover:from-orange-200 hover:to-amber-200 transition-colors cursor-pointer relative group">
-                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 rounded-xl transition-opacity">
-                                                <span className="text-white text-xs font-medium">查看</span>
-                                            </div>
+                                   {gallery.map((o) => (
+                                    <div 
+                                        key={o.order_id} 
+                                        className="aspect-square rounded-xl overflow-hidden cursor-pointer relative group"
+                                    >
+                                        <img 
+                                        src={o.cover_url||null} 
+                                        alt="gallery"
+                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                        />
+                                        {/* 遮罩层 - hover时变暗 */}
+                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300" />
+                                        
+                                        {/* 查看文字 */}
+                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <span className="text-white text-sm font-medium px-4 py-2 bg-black/50 rounded-full backdrop-blur-sm">
+                                            查看
+                                        </span>
                                         </div>
+                                    </div>
                                     ))}
                                 </div>
                             </div>

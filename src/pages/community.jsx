@@ -6,7 +6,7 @@ import { useNavigation } from '../hooks/navigation';
 import { usePagination } from '../hooks/usePagination';
 import { Pagination } from '../components/pagination';
 import postStore from '../store/postStore';
-import { useGetPost, useSearchSuggestWithDebounce } from '../hooks/usePost';
+import { useGetPost, useSearchHistory, useSearchSuggestWithDebounce } from '../hooks/usePost';
 import { PostDetail } from '../components/postDetail';
 import { toast } from '../hooks/useToast';
 
@@ -28,6 +28,7 @@ export function Feed() {
 
   const { getAllPost, getPostDetail } = useGetPost();
   const useSearchSuggest = useSearchSuggestWithDebounce();
+  const useGetSearchHistory = useSearchHistory()
   
   const getPosts = async (pageNum, pageSize) => {
     try {
@@ -59,6 +60,10 @@ export function Feed() {
       getPostDetail(selectedPostId);
     }
   }, [selectedPostId]);
+
+  useEffect(()=>{
+    useGetSearchHistory.mutate()
+  },[])
 
   const isEmpty = !paginationLoading && (!postList || postList.length === 0);
 
@@ -119,25 +124,47 @@ export function Feed() {
         {/* 作品网格区域 - 使用较低的z-index */}
         <div className={`relative transition-opacity duration-300 ${isSearchFocused ? 'opacity-40' : 'opacity-100'}`}>
           {paginationLoading ? (
-            // 加载状态...
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="bg-white/50 rounded-3xl overflow-hidden shadow-md">
-                    <div className="aspect-[4/5] bg-gray-200/60" />
-                    <div className="p-5 space-y-3">
-                      <div className="h-4 bg-gray-200/80 rounded-full w-3/4" />
-                      <div className="h-3 bg-gray-200/60 rounded-full w-1/2" />
-                      <div className="flex gap-2">
-                        <div className="h-8 w-8 bg-gray-200/70 rounded-full" />
-                        <div className="h-8 w-8 bg-gray-200/70 rounded-full" />
+          // 加载状态 - 使用与 PhotoCard 完全一致的尺寸比例
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {[...Array(6)].map((_, i) => (
+              <div 
+                key={i} 
+                className="animate-pulse bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg border border-orange-100/50 relative aspect-[4/5]"
+              >
+                {/* 图片区域 - 占满整个卡片 */}
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300" />
+                
+                {/* 点赞数标签骨架 */}
+                <div className="absolute top-4 right-4 w-16 h-8 bg-gray-300/50 rounded-full" />
+                
+                {/* 摄影师标签骨架 - 左上方 */}
+                <div className="absolute top-4 left-4 w-20 h-6 bg-gray-300/50 rounded-full" />
+                
+                {/* 内容区域骨架 - 底部渐变 */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-gray-200/90 via-gray-200/70 to-transparent">
+                  {/* 标题骨架 */}
+                  <div className="h-5 bg-gray-300 rounded w-3/4 mb-3" />
+                  
+                  {/* 摄影师信息骨架 */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {/* 头像骨架 */}
+                      <div className="w-10 h-10 bg-gray-300 rounded-full" />
+                      <div>
+                        {/* 昵称骨架 */}
+                        <div className="h-4 bg-gray-300 rounded w-16 mb-1" />
+                        {/* ID骨架 */}
+                        <div className="h-3 bg-gray-300 rounded w-20" />
                       </div>
                     </div>
+                    {/* 专业标签骨架 */}
+                    <div className="w-12 h-6 bg-gray-300 rounded-full" />
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : isEmpty ? (
+              </div>
+            ))}
+          </div>
+        ): isEmpty ? (
             // 空状态...
             <div className="flex flex-col items-center justify-center py-20 px-4">
               <div className="bg-white/70 backdrop-blur-sm rounded-full p-6 mb-6 shadow-lg">

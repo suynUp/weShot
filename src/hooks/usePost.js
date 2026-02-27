@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query"
 import postAPI from "../api/postAPI"
-import { toast, useToast } from "./useToast"
+import { toast } from "./useToast"
 import postStore from "../store/postStore"
 import { useCallback, useEffect, useRef } from "react"
 import DebounceThrottle from "../utils/debonceThrottle"
@@ -87,9 +87,18 @@ export const useComment = () => {
     })
 }
 
+export const useDeletePost = () => useMutation({
+    mutationFn:(postId)=>{
+        const res = postAPI.deletePost(postId)
+        if(res.code !== 200){
+            throw Error
+        }
+    },
+    onError:()=>toast.error('删除失败，请稍后再试')
+})
+
 export const usePostPublish = () =>{ //记得加一下本地缓存清除，另一个发布也是
 
-    const toast = useToast()
     const deleteDraft = PostDraftStore(state => state.deleteDraft)
 
     return useMutation({
@@ -114,7 +123,6 @@ export const usePostPublish = () =>{ //记得加一下本地缓存清除，另�
 }
 
 export const useSearchHistory = () => {
-    const toast = useToast();
     const setHistory = postStore(state => state.setHistory); // 注意：应该是 setHistory 方法
 
     return useMutation({
@@ -138,7 +146,6 @@ export const useSearchHistory = () => {
 
 
 export const useSearchSuggestWithDebounce = (delay = 500) => {
-    const toast = useToast();
     const setSuggestions = postStore(state => state.setSuggestions);
     const debounceRef = useRef(null);
 

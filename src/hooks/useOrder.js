@@ -29,14 +29,15 @@ export const useGetOrder = () => {
         }
     }
 
-    const setMyPending = OrderStore(state=>state.setMyPendings)
-
+    const setMyPending = UserStore(state=>state.setMyReceivedOrders)
+    const setMyTotalPendings = UserStore(state=>state.setTotalReceived)
     const getMyAllPendings = async () =>{
         const res = await orderAPI.getMyPendingOrders()
         if(res.code !== 200){
-            throw new Error(res.message || '获取待接订单失败')
+            toast.error('获取失败')
         }
-        setMyPending(res)
+        setMyPending(res.data.list)
+        setMyTotalPendings(res.data.total)
     }
 
     const setAllPendingOrders = OrderStore(state=>state.setAllPendingOrders)
