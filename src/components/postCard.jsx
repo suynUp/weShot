@@ -14,7 +14,7 @@ export function PostCard({ post, onClick }) {
           alt={post.title}
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           onError={(e) => {
-            e.target.src = 'https://via.placeholder.com/400x400?text=Image+Not+Found';
+            e.target.src = '';
           }}
         />
         {post.type === 2 && (

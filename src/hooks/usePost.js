@@ -1,10 +1,10 @@
 import { useMutation } from "@tanstack/react-query"
 import postAPI from "../api/postAPI"
-import { imgUpload } from "../api/imgUpload"
 import { toast, useToast } from "./useToast"
 import postStore from "../store/postStore"
 import { useCallback, useEffect, useRef } from "react"
 import DebounceThrottle from "../utils/debonceThrottle"
+import { PostDraftStore } from "../store/postDraftStore"
 
 export const useGetPost = () => {
 
@@ -13,7 +13,7 @@ export const useGetPost = () => {
 
     const getAllPost = async (type=null,pageNum,pageSize,keyword=null) => {
         try{
-            const res = await postAPI.getSquareList(type,pageNum,pageSize,keyword)
+            const res = await postAPI.getSquareList(type,pageNum,pageSize,keyword,null,1)
             if(res.code === 200){
                 setTotal(res.data.total)
                 setPostList(res.data.list)
@@ -27,9 +27,8 @@ export const useGetPost = () => {
         }
     }
 
-    const getMyPost = () => {}
-
     const setCurresntPost = postStore(state => state.setCurrentPost)
+
     const getPostDetail = async (postId) => {
         try{
             const res = await postAPI.getPostDetail(postId)
@@ -42,7 +41,7 @@ export const useGetPost = () => {
         }
     }
 
-    return {getAllPost,getMyPost, getPostDetail}
+    return {getAllPost, getPostDetail}
 }
 
 export const usePostAction = () => {
@@ -54,56 +53,62 @@ export const usePostAction = () => {
         postAPI.dislikePost(postId)
     }
 
+    
+    return {
+        like,
+        dislike,
+    }
+}
+
     /**
-     * 
      * @param {*} comment
      * {
      * "postId": 1,
      * "content": "太棒了"
      * } 
      */
-    const comment = async (comment) => {
-        postAPI.comment(comment)
-    }
-
-    const getComments = async (postId) => {
-        postAPI.getCommentsById(postId)
-    }
-
-    return {
-        like,
-        dislike,
-        comment,
-        getComments
-    }
-}
-
-export const usePostPublish = () =>{
-
-    const toast = useToast()
+export const useComment = () => {
 
     return useMutation({
-        mutationFn:async ({ images, formData })=>{
+        mutationFn: async (comment) => {
+            const res = await postAPI.comment(comment) 
+            if(res.code === 200){
+                return res.data
+            }else{
+                throw new Error(res.msg || '评论失败')
+            }
+        },
+        onSuccess:() => {
+            toast.success('评论成功')
+        },
+        onError:(error) => {
+            toast.error(error.message || '评论失败')
+        }
+    })
+}
+
+export const usePostPublish = () =>{ //记得加一下本地缓存清除，另一个发布也是
+
+    const toast = useToast()
+    const deleteDraft = PostDraftStore(state => state.deleteDraft)
+
+    return useMutation({
+        mutationFn:async ( formData )=>{
             console.log(formData)
-            const uploadPromises = images.map(async (item) => {
-                const url = await imgUpload(item.file);
-                return url;
-            });
             
-            const imgUrls = await Promise.all(uploadPromises);
-            
-            return await postAPI.publish({
-                ...formData,
-                images:imgUrls
-            })
+            return await postAPI.publish(formData)
 
         },
         onError:(error)=>{
             toast.error(error)
         },
-        onSuccess:(data)=>{
-            if(data.code === 200) toast.success('成功发布')
-                else toast.error(data.massage)
+        onSuccess:(data,formData)=>{
+            if(data.code === 200){
+                deleteDraft(formData.postId); // 删除草稿
+                toast.success('成功发布')
+
+            } 
+                else toast.error(data.message || '发布失败')
         }
     })
 }
@@ -203,15 +208,43 @@ export const useGetPostDetail = () =>{
     const setCurrentPost = postStore(state=>state.setCurrentPost)
 
     return useMutation({
-        mutationFn:()=>{
-            
+        mutationFn:async (postId)=>{
+            const res = await postAPI.getPostDetail(postId)
+            if(res.code === 200){
+                return res.data
+            }else{
+                throw new Error(res.msg || '获取帖子详情失败')
+            }
         },
-        onSuccess:()=>{
-
+        onSuccess:(data)=>{
+            setCurrentPost(data)
         },
-        onError:()=>{
-
-
+        onError:(error)=>{
+            toast.error(error.message || '获取帖子详情失败')
         }
     })  
 } 
+
+export const useGetPostComments = () =>{
+
+    const setCommentList = postStore(state => state.setCommentList)
+    const setTotalComments = postStore(state => state.setTotalComments)
+
+    return useMutation({
+        mutationFn:async ({postId,pageNum,pageSize})=>{
+            const res = await postAPI.getCommentsById(postId,pageNum,pageSize)
+            if(res.code === 200){
+                return res.data
+            }else{
+                throw new Error(res.msg || '获取评论失败')
+            }
+        },
+        onSuccess:(data)=>{
+            setCommentList(data.list)
+            setTotalComments(data.total)
+        },
+        onError:(error)=>{
+            toast.error(error.message || '获取评论失败')
+        }
+    })
+}

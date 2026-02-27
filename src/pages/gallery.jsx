@@ -1,24 +1,32 @@
 // Gallery.jsx
 import { useCallback, useEffect, useState } from 'react';
 import { OrderDisplayCard } from '../components/orderDisplayCard';
-import { PostDetail } from '../components/postDetail';
+import { OrderDetail } from '../components/orderDetailCard';
 import { Camera, Sparkles, ArrowLeft } from 'lucide-react';
 import { Pagination } from '../components/pagination';
 import { OrderDisplayStore } from '../store/orderDisplayStore';
 import { useNavigation } from '../hooks/navigation';
 import { usePagination } from '../hooks/usePagination';
-import { useGetCompletedOrders } from '../hooks/useOrder'; // 假设有这个 hook
+import { useGetCompletedOrders, useGetOrderDetail } from '../hooks/useOrder'; // 假设有这个 hook
 
 function Gallery() {
   const { goBack } = useNavigation();
   const [loading, setLoading] = useState(true);
-  const [selectedPost, setSelectedPost] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const orders = OrderDisplayStore(state => state.orderList);
   const totalOrdersNum = OrderDisplayStore(state => state.totalOrders);
-  console.log('Gallery render, orders:', orders);
+  const currentOrder = OrderDisplayStore(state => state.currentOrder);
 
   const getCompletedOrders = useGetCompletedOrders();
+
+  const useGetOrderDetailMutation = useGetOrderDetail();
+
+  useEffect(() => {
+    if (selectedOrder?.order_id) {
+      useGetOrderDetailMutation.mutate(selectedOrder?.order_id)
+    }
+  }, [selectedOrder]);
 
   // 分页逻辑
   // 使用 useCallback 包装
@@ -36,11 +44,6 @@ function Gallery() {
     initialPage: 1,
     total: totalOrdersNum,
   });
-
-  // 监听 orders 变化
-  useEffect(() => {
-    console.log('orders 更新了:', orders);
-  }, [orders]);
 
   const handleGoBack = () => {
     goBack();
@@ -113,7 +116,7 @@ function Gallery() {
                 >
                   <OrderDisplayCard
                     post={order}
-                    onClick={() => setSelectedPost(order)}
+                    onClick={() => setSelectedOrder(order)}
                   />
                 </div>
               ))}
@@ -149,10 +152,10 @@ function Gallery() {
         )}
 
         {/* 作品详情弹窗 */}
-        {selectedPost && (
-          <PostDetail
-            post={selectedPost}
-            onClose={() => setSelectedPost(null)}
+        {selectedOrder && (
+          <OrderDetail
+            orderData={currentOrder}
+            onClose={() => setSelectedOrder(null)}
           />
         )}
       </div>

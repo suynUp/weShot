@@ -52,13 +52,6 @@ function PhotographerOrderSquare() {
     setCurrentPage(1);
   }, [searchTerm, sortBy]);
 
-  // 初始加载
-  useEffect(() => {
-    // 这个useEffect现在主要由usePagination的fetchData处理
-    // 但你可能需要初始触发一次
-    fetchOrders(currentPage, 12);
-  }, []); // 空依赖，只在组件挂载时执行一次
-
   const handleTakeOrder = (postId) => {
     takeOrder.mutate(postId);
   };

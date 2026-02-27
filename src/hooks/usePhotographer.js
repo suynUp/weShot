@@ -2,6 +2,8 @@ import { useMutation } from "@tanstack/react-query"
 import photographerAPI from "../api/photographerAPI"
 import { toast } from "./useToast"
 import photographerStore from "../store/photographerStore"
+import { LOCAL_STORAGE_KEYS, removeFromLocalStorage } from "../utils/localStorage"
+import { UserStore } from "../store/userStore"
 
 export const useGetPhgList = () => {
     
@@ -26,21 +28,29 @@ export const useGetPhgList = () => {
     })
 }
 
-export const useEnroll = () => useMutation({
+export const useEnroll = () => {
+
+    const update = UserStore(state=>state.update)
+
+    return useMutation({
     mutationFn: async (inviteCode)=>{
-        return photographerAPI.enroll(inviteCode)
-    },
-    onSuccess:(data)=>{
-        if(data.code === 200){
-            toast.success('成功入驻！')
+        const res = await photographerAPI.enroll(inviteCode)
+        if(res.code === 200){
+            return res.data
         }else{
-            toast.error(data.msg||'入驻失败')
+            throw new Error(res.msg || '入驻失败')
         }
+    },
+    onSuccess:()=>{    
+        toast.success('入驻成功！')
+        update({
+            role: 2
+        })
     },
     onError:(e)=>{
         toast.error(e.message||'入驻失败')
     }
-})
+})}
 
 export const useGetSuggestions = () =>{
 
@@ -69,18 +79,16 @@ export const useGetHistory = () => {
 
     return useMutation({
         mutationFn: async () => {
-            return photographerAPI.searchHistory()
-        },
-        onSuccess:(data)=>{
-            if(data.code === 200){
-                setHistory(data.data)
+            const res = await photographerAPI.searchHistory()
+            if(res.code === 200){
+                return res.data
             }else{
-                toast.error(data.msg||'获取失败')
+                throw new Error(res.msg || '获取失败')
             }
         },
-        onError:(e)=>{
-            toast.error(e.message||'获取失败')
-        }
+        onSuccess:(data)=>{
+            setHistory(data)
+        },
     })
 } 
 
@@ -90,17 +98,15 @@ export const useGetOrderRanking = () => {
 
     return useMutation({
         mutationFn: async () => {
-            return photographerAPI.orderRank()
-        },
-        onSuccess:(data)=>{
-            if(data.code === 200){
-                setOrderRanking(data.data)
+            const res = await photographerAPI.orderRank()
+            if(res.code === 200){
+                return res.data
             }else{
-                toast.error(data.msg||'获取失败')
+                throw new Error(res.msg || '获取失败')
             }
         },
-        onError:(e)=>{
-            toast.error(e.message||'获取失败')
+        onSuccess:(data)=>{
+            setOrderRanking(data)
         }
     })
 }
@@ -111,17 +117,15 @@ export const useGetRatingRanking = () => {
 
     return useMutation({
         mutationFn: async () => {
-            return photographerAPI.rateRank()
-        },
-        onSuccess:(data)=>{
-            if(data.code === 200){
-                setRatingRanking(data.data)
+            const res = await photographerAPI.rateRank()
+            if(res.code === 200){
+                return res.data
             }else{
-                toast.error(data.msg||'获取失败')
+                throw new Error(res.msg || '获取失败')
             }
         },
-        onError:(e)=>{
-            toast.error(e.message||'获取失败')
+        onSuccess:(data)=>{
+            setRatingRanking(data)
         }
     })
 }

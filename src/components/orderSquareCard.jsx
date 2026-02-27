@@ -35,7 +35,7 @@ function OrderCard({ order, isVerfied, takeOrder }) {
   const StatusIcon = statusBadge.icon;
 
   // 生成客户头像（如果没有则使用默认）
-  const customerAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(order.customerId || '用户')}&background=random&size=40`;
+  const customerAvatar = order.customerAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(order.customer_id || '用户')}&background=random&size=40`;
 
   return (
     <div className="bg-white rounded-xl h-full shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200 overflow-hidden flex flex-col">
@@ -58,22 +58,21 @@ function OrderCard({ order, isVerfied, takeOrder }) {
         {/* 模块1: 客户信息 */}
         <div className="mb-6">
           <h3 className="text-start text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">订单信息</h3>
-          <div className="flex items-center gap-3">
+          <div className="flex gap-3">
             <img
               src={customerAvatar}
-              alt={`客户 ${order.customerId}`}
+              alt={`客户 ${order.customer_id}`}
               className="w-12 h-12 rounded-full object-cover border-2 border-orange-200"
             />
             <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-gray-900">客户</span>
-                <span className="text-xs text-gray-500">ID: {order.customerId}</span>
-              </div>
-              <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
-                <User className="w-3 h-3 text-gray-400" />
-                <span className="text-xs">
-                  {order.photographerId ? '指定摄影师' : '平台分配'}
+              <div className="flex text-sm items-center gap-1 text-sm text-gray-600 mt-1">
+                昵称:
+                <span>
+                  {order.customerName || '未知客户'}
                 </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">ID: {order.customer_id}</span>
               </div>
             </div>
           </div>

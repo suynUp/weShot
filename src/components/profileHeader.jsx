@@ -1,4 +1,4 @@
-import { ChevronLeft, Camera, Pencil, Camera as CameraIcon, Film, Settings, Award, CheckCircle, Package, Star } from 'lucide-react';
+import { ChevronLeft, Camera, Pencil,LogOut, Camera as CameraIcon, Film, Settings, Award, CheckCircle, Package, Star } from 'lucide-react';
 import { SmartTag } from './tags';
 
 // Mock数据 - 认证摄影师
@@ -7,24 +7,26 @@ export function ProfileHeader({
   profile , 
   onBack, 
   onEdit, 
-  onAvatarClick 
+  onAvatarClick,
+  logOut,
+  isOwnProfile
 }) {
   // 判断是否是认证摄影师
   const isVerifiedPhotographer = profile?.role === 2 ;
   const getPhotographyStyles = () => {
-    if(profile?.style) return []
-    return [profile.style]
+    if(!profile?.style) return []
+    return profile.style
   }
   // 获取摄影设备数组
   const getPhotographyEquipment = () => {
     if (!profile?.equipment) return [];
-    return [profile.equipment];
+    return profile.equipment;
   };
 
   // 获取摄影类型数组
   const getPhotographyTypes = () => {
     if (!profile?.photographerType) return [];
-      return [profile.photographerType]
+      return profile.photographerType
   };
 
 
@@ -103,12 +105,12 @@ export function ProfileHeader({
                   
                   {/* 摄影师信息标签区域 - 仅认证摄影师显示 */}
                   {isVerifiedPhotographer && (
-                    <div className="space-y-2 mb-3 flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {/* 摄影类型标签 */}
                       {photographyTypes.length > 0 && (
-                          photographyTypes.map((type, index) => (
+                          photographyTypes.map((type) => (
                            <SmartTag
-                           key={index}
+                           key={type}
                            tag={type}
                            />
                           ))
@@ -116,9 +118,9 @@ export function ProfileHeader({
                       
                       {/* 摄影风格标签 */}
                       {photographyStyles.length > 0 && (
-                          photographyStyles.map((style, index) => (
+                          photographyStyles.map((style) => (
                             <SmartTag
-                            key={index}
+                            key={style}
                             tag={style}
                             />
                           ))
@@ -126,10 +128,10 @@ export function ProfileHeader({
                       
                       {/* 摄影设备标签 */}
                       {photographyEquipment.length > 0 && (
-                          photographyEquipment.map((equipment, index) => (
+                          photographyEquipment.map((equipment) => (
                             <SmartTag
-                            icon={<Film/>}
-                            key={index}
+                            icon={Film}
+                            key={equipment}
                             tag={equipment}
                             />
                           ))
@@ -186,13 +188,22 @@ export function ProfileHeader({
                 </div>
                 
                 {/* 编辑按钮 */}
-                <button
-                  onClick={onEdit}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors ml-2 flex-shrink-0"
+                {isOwnProfile&&
+                <><button
+                  onClick={()=>onEdit()}
+                  className="flex p-2 items-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors ml-2 flex-shrink-0"
                   title="编辑资料"
                 >
                   <Pencil className="w-5 h-5" />
                 </button>
+                <button
+                  onClick={()=>logOut()}
+                  className="flex p-2 items-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors ml-2 flex-shrink-0"
+                  title="登出"
+                >
+                  <LogOut className="w-5 h-5"/>
+                </button>
+                </>}
               </div>
             </div>
           </div>

@@ -1,11 +1,13 @@
-// Home.jsx (修改底部中心卡片部分)
-import { useEffect, useState, useRef } from "react";
-import { Search, X, ChevronRight, Users, Camera, Image as ImageIcon, Sparkles } from "lucide-react";
+// Home.jsx
+import { useEffect, useState } from "react";
+import { X, ChevronRight, Users, Camera, Image as ImageIcon, Sparkles } from "lucide-react";
 import CenterCard from "../components/homepageCard";
 import { useUserLoginSuccess } from "../hooks/useUser";
 import { useSearchParams } from "react-router-dom";
 import { useNavigation } from "../hooks/navigation";
 import SearchInput from "../components/searchInput";
+import request from "../utils/request";
+import { UserStore } from "../store/userStore";
 
 const Home = () => {
     const {goto} = useNavigation()
@@ -14,6 +16,10 @@ const Home = () => {
     const [searchHistory, setSearchHistory] = useState(['人像摄影', '毕业季', '婚礼跟拍', '商业摄影']);
     const [showOverlay, setShowOverlay] = useState(false);
     const [inputValue, setInputValue] = useState('')
+
+    const isLoggedIn = request.hasToken();
+
+    const isVerified = UserStore(state=>state.isVerFied)
 
     const closeOverlay = () => {
         setShowOverlay(false)
@@ -24,6 +30,7 @@ const Home = () => {
         if (token) {
             loginSuccessMutation.mutate(token);
         } else {
+            if(!isLoggedIn)
             console.warn('URL 中没有找到 token');
         }
     }, []);
@@ -54,16 +61,16 @@ const Home = () => {
                         
                         <div className="space-y-4 text-gray-700">
                             <div className="flex gap-3">
-                                <span className="text-orange-500 font-bold">1.</span>
-                                <p>摄影师上传至平台的作品，版权归属摄影师。平台仅获得展示、推广权限，未经摄影师授权，任何用户不得擅自传播。</p>
+                                <span className="text-start text-orange-500 font-bold">1.</span>
+                                <p className="text-left">摄影师上传至平台的作品，版权归属摄影师。平台仅获得展示、推广权限，未经摄影师授权，任何用户不得擅自传播。</p>
                             </div>
                             <div className="flex gap-3">
-                                <span className="text-orange-500 font-bold">2.</span>
-                                <p>客户通过平台合作拍摄的作品，摄影师授予客户非商用使用权（含个人收藏、朋友圈分享等），客户不得用于商业宣传、盈利等用途。</p>
+                                <span className="text-start text-orange-500 font-bold">2.</span>
+                                <p className="text-left">客户通过平台合作拍摄的作品，摄影师授予客户非商用使用权（含个人收藏、朋友圈分享等），客户不得用于商业宣传、盈利等用途。</p>
                             </div>
                             <div className="flex gap-3">
-                                <span className="text-orange-500 font-bold">3.</span>
-                                <p>管理员有权对违规使用他人作品的内容进行删除、屏蔽。</p>
+                                <span className="text-start text-orange-500 font-bold">3.</span>
+                                <p className="text-left">管理员有权对违规使用他人作品的内容进行删除、屏蔽。</p>
                             </div>
                         </div>
                         
@@ -96,21 +103,38 @@ const Home = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         {/* 邀请入驻卡片 */}
                         <div className="group bg-gradient-to-br from-orange-400 to-amber-500 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 h-64">
-                            <div className="h-full flex flex-col justify-between">
+                        <div className="h-full flex flex-col justify-between">
+                            {!isVerified ? (
+                            // 未入驻状态
+                            <>
                                 <div>
-                                    <Users className="w-12 h-12 text-white mb-4" />
-                                    <h3 className="text-2xl font-bold text-white mb-2">摄影师入驻</h3>
-                                    <p className="text-orange-100 text-base">分享你的摄影作品，获得更多曝光机会</p>
+                                <Users className="w-12 h-12 text-white mb-4" />
+                                <h3 className="text-2xl font-bold text-white mb-2">摄影师入驻</h3>
+                                <p className="text-orange-100 text-base">分享你的摄影作品，获得更多曝光机会</p>
                                 </div>
                                 <button
-                                onClick={()=>goto('/signup')}
-                                className="mt-4 px-5 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all flex items-center justify-between group text-base">
-                                    <span>立即入驻</span>
-                                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                onClick={() => goto('/signup')}
+                                className="mt-4 px-5 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all flex items-center justify-between group text-base"
+                                >
+                                <span>立即入驻</span>
+                                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </button>
-                            </div>
+                            </>
+                            ) : (
+                            // 已入驻状态
+                            <>
+                                <div>
+                                <Users className="w-12 h-12 text-white mb-4" />
+                                <h3 className="text-2xl font-bold text-white mb-2">欢迎摄影师</h3>
+                                <p className="text-orange-100 text-base">你已经成功入驻，开始分享你的作品吧</p>
+                                </div>
+                                <div className="mt-4 px-5 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl flex items-center justify-center text-base">
+                                <span>✓ 已入驻</span>
+                                </div>
+                            </>
+                            )}
                         </div>
-
+                        </div>
                         {/* 轮播区域 */}
                         <div className="bg-gradient-to-br from-pink-400 to-orange-400 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 h-64">
                             <div className="h-full flex flex-col">
@@ -151,10 +175,16 @@ const Home = () => {
                                     <h3 className="text-2xl font-bold text-white mb-2">个人主页</h3>
                                     <p className="text-blue-100 text-base">管理你的作品集和个人信息</p>
                                 </div>
-                                <button onClick={()=>goto('/profile')} className="mt-4 px-5 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all flex items-center justify-between group text-base">
-                                    <span>查看主页</span>
-                                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                </button>
+                                {isLoggedIn ? (
+                                    <button onClick={()=>goto('/profile')} className="mt-4 px-5 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all flex items-center justify-between group text-base">
+                                        <span>查看主页</span>
+                                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                ):(
+                                    <button onClick={()=>goto('/login')} className="mt-4 px-5 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all flex items-center justify-between group text-base">
+                                        <span>立即登录</span>
+                                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    </button>)}
                             </div>
                         </div>
                     </div>
@@ -167,7 +197,10 @@ const Home = () => {
                                 <h3 className="text-xl font-bold text-orange-800">客单广场</h3>
                                 <span className="text-sm bg-orange-100 text-orange-600 px-3 py-1.5 rounded-full">最新12单</span>
                             </div>
-                            <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
+                            <div className="flex-1 overflow-y-auto pr-1" style={{
+                                scrollbarWidth: 'thin',
+                                scrollbarColor: '#f97316 #fff1e6'
+                            }}>
                                 <div className="space-y-3">
                                     {[1, 2, 3, 4, 5, 6].map((i) => (
                                         <div key={i} className="flex items-center justify-between p-3 hover:bg-orange-50 rounded-xl transition-colors">
@@ -203,7 +236,10 @@ const Home = () => {
                                 <h3 className="text-xl font-bold text-orange-800">作品展示</h3>
                                 <ImageIcon className="w-5 h-5 text-orange-400" />
                             </div>
-                            <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
+                            <div className="flex-1 overflow-y-auto pr-1" style={{
+                                scrollbarWidth: 'thin',
+                                scrollbarColor: '#f97316 #fff1e6'
+                            }}>
                                 <div className="grid grid-cols-2 gap-3">
                                     {[1, 2, 3, 4, 5, 6].map((i) => (
                                         <div key={i} className="aspect-square bg-gradient-to-br from-orange-100 to-amber-100 rounded-xl hover:from-orange-200 hover:to-amber-200 transition-colors cursor-pointer relative group">
@@ -224,16 +260,16 @@ const Home = () => {
                 </div>
             </div>
 
-            {/* 自定义滚动条样式 */}
-            <style jsx>{`
-                .custom-scrollbar::-webkit-scrollbar {
+            {/* 为了支持WebKit浏览器的滚动条样式，添加一个style标签 */}
+            <style>{`
+                .overflow-y-auto::-webkit-scrollbar {
                     width: 4px;
                 }
-                .custom-scrollbar::-webkit-scrollbar-track {
+                .overflow-y-auto::-webkit-scrollbar-track {
                     background: rgba(255, 255, 255, 0.1);
                     border-radius: 10px;
                 }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
+                .overflow-y-auto::-webkit-scrollbar-thumb {
                     background: linear-gradient(to bottom, #f97316, #f59e0b);
                     border-radius: 10px;
                 }

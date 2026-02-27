@@ -18,8 +18,8 @@ class postAPI {
         return request.post('/square/publish',square)
     }
 
-    static getSquareList = (type,pageNum,pageSize,keyword) => {
-        return request.get('/square/posts',{type,pageNum,pageSize,keyword})
+    static getSquareList = (type,pageNum,pageSize,keyword,casId=null,status=null) => {
+        return request.get('/square/posts',{type,pageNum,pageSize,keyword,casId,status})
     }
 
     static getMyPosts = (pageNum,pageSize) => {

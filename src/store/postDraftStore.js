@@ -1,14 +1,14 @@
 import { create } from "zustand";
 import { getFromLocalStorage, LOCAL_STORAGE_KEYS, saveToLocalStorage } from "../utils/localStorage"
 
-export const DraftStore = create(
+export const PostDraftStore = create(
     (set, get) => ({
         draftList: [],
         currentDraft: {},
 
         setDraftList: (drafts) => {
             set({ draftList: drafts });
-            saveToLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST, drafts);
+            saveToLocalStorage(LOCAL_STORAGE_KEYS.POST_DRAFTLIST, drafts);
         },
 
         setDraft: (draft) => {
@@ -16,7 +16,7 @@ export const DraftStore = create(
         },
 
         saveDraft: (draft, orderId, createdAt) => {
-            const oldDraftList = getFromLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST) || [];
+            const oldDraftList = getFromLocalStorage(LOCAL_STORAGE_KEYS.POST_DRAFTLIST) || [];
             
             // 创建完整的草稿对象，包含所有信息
             const newDraft = {
@@ -28,11 +28,11 @@ export const DraftStore = create(
             const newDraftList = [...oldDraftList, newDraft];
 
             set({ draftList: newDraftList });
-            saveToLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST, newDraftList);
+            saveToLocalStorage(LOCAL_STORAGE_KEYS.POST_DRAFTLIST, newDraftList);
         },
 
         getDraftList: () => {
-            const list = getFromLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST);
+            const list = getFromLocalStorage(LOCAL_STORAGE_KEYS.POST_DRAFTLIST);
             if (list) {
                 set({ draftList: list });
                 return true;
@@ -41,18 +41,18 @@ export const DraftStore = create(
         },
 
         deleteDraft: (draftId) => {
-            const oldDraftList = getFromLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST) || [];
+            const oldDraftList = getFromLocalStorage(LOCAL_STORAGE_KEYS.POST_DRAFTLIST) || [];
             const newDraftList = oldDraftList.filter(d => d.orderId !== draftId);
 
             set({ draftList: newDraftList });
-            saveToLocalStorage(LOCAL_STORAGE_KEYS.DRAFTLIST, newDraftList);
+            saveToLocalStorage(LOCAL_STORAGE_KEYS.POST_DRAFTLIST, newDraftList);
 
             if (get().currentDraft.orderId === draftId) {
                 set({ currentDraft: {} });
             }
         },
 
-        reset:()=>set({
+        reset:() => set({
             draftList: [],
             currentDraft: {},
         })

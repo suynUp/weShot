@@ -16,7 +16,8 @@ export const LOCAL_STORAGE_KEYS = {
   USERID: 'user_id', 
   DRAFTLIST: 'draft_list',
   DRAFTDETAILIST:'draft_detail_list',
-  MYORDER:'my_order'
+  MYORDER:'my_order',
+  POST_DRAFTLIST:'post_draft_list',
 };
 
 /**
@@ -240,20 +241,20 @@ export const removeFromLocalStorage = (key) => {
  * 清空localStorage中的所有数据
  * @returns {boolean} 是否清空成功
  */
-// export const clearLocalStorage = () => {
-//   try {
-//     if (typeof window === 'undefined' || !window.localStorage) {
-//       console.warn('localStorage is not available');
-//       return false;
-//     }
+export const clearLocalStorage = () => {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      console.warn('localStorage is not available');
+      return false;
+    }
 
-//     window.localStorage.clear();
-//     return true;
-//   } catch (error) {
-//     console.error('Error clearing localStorage:', error);
-//     return false;
-//   }
-// };
+    window.localStorage.clear();
+    return true;
+  } catch (error) {
+    console.error('Error clearing localStorage:', error);
+    return false;
+  }
+};
 
 export const cleanLocalStorageByKeys = (excludeKeys = []) => {
   const allKeys = Object.values(LOCAL_STORAGE_KEYS);

@@ -1,4 +1,3 @@
-import LoginAPI from "../api/loginAPI"
 import { useUserLogin } from "../hooks/useUser"
 
 const Login = () => {

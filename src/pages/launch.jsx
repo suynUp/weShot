@@ -7,6 +7,7 @@ import { useDeleteDraftMutation, useGetDraft, useSaveDraftMutation } from "../ho
 import { useNavigation } from "../hooks/navigation";
 import { useToast } from "../hooks/useToast";
 import { useCreateOrders } from "../hooks/useOrder";
+import { useSearchParams } from "react-router-dom";
 
 const Launch = () => {
     //路由
@@ -112,10 +113,13 @@ const Launch = () => {
     const [loadId, setLoadId] = useState(-1);
     const [isLuaching, setIsLaunching] = useState(false); // 发布中状态
     const [isSavingDraft, setIsSavingDraft] = useState(false); // 保存草稿中状态
+    const [isToLaunch, setIsToLaunch] = useState(false); // 是否直接发布（跳过草稿）
 
     //UI信息绑定
     const draftList = DraftStore(state => state.draftList);
     const currentDraft = DraftStore(state => state.currentDraft);
+
+    const [searchParams] = useSearchParams();
 
     //hooks
     const deleteMutation = useDeleteDraftMutation(); // 删除草稿的 mutation
@@ -123,7 +127,7 @@ const Launch = () => {
     const createOrderMutation = useCreateOrders(); // 创建order的 mutation
     const { getDetail, getList } = useGetDraft();
 
-     // 从草稿加载数据
+    // 从草稿加载数据
     const loadDraftData = useCallback((draftData) => {
         try {
             // 解析草稿数据并填充表单
@@ -179,17 +183,25 @@ const Launch = () => {
     },[])
 
     useEffect(() => {
-        if(loadId !== -1&&hasload){
+        if((loadId !== -1&&hasload)||isToLaunch){
             getDetail(loadId);
         }
-    },[hasload,loadId,getDetail])
+    },[hasload,loadId,getDetail,isToLaunch])
 
     useEffect(() => {
         console.log('current changed:', currentDraft);
-        if(loadId !== -1&&hasload){
+        if((loadId !== -1&&hasload)||isToLaunch){
             loadDraftData(currentDraft)
         }
     }, [currentDraft,loadDraftData])
+
+    useEffect(() => {
+        const draftId = searchParams.get('draft_id') 
+        if (draftId) {
+            setLoadId(draftId);
+            setIsToLaunch(true); 
+        }
+    },[])
 
     // 动画样式对象
     const slideInKeyframes = `

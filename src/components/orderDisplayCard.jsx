@@ -1,5 +1,5 @@
 // components/orderDisplayCard.jsx
-import { MapPin, Clock, User, Calendar, DollarSign, Image as ImageIcon, CheckCircle } from 'lucide-react';
+import { MapPin, User, Calendar, DollarSign, Image as ImageIcon, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
 
 export const OrderDisplayCard = ({ post, onClick }) => {
@@ -36,10 +36,10 @@ export const OrderDisplayCard = ({ post, onClick }) => {
     // 渲染主图区域
     const renderMainImage = () => {
         // 如果有图片URL且没有加载错误
-        if (post.deliver_url && !mainImageError) {
+        if (post.cover_url && !mainImageError) {
             return (
                 <img 
-                    src={"https://image.foofish.work/i/2026/02/21/699982ed0f0e5-1771668205.jpg"} 
+                    src={post.cover_url} 
                     alt={`作品-${post.type || '摄影'}`}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     onError={handleMainImageError}
@@ -92,7 +92,6 @@ export const OrderDisplayCard = ({ post, onClick }) => {
                 {/* 状态标签 */}
                 {getStatusBadge()}
                 
-                {/* 拍摄类型标签 */}
             </div>
 
             {/* 内容区域 - 紧凑布局，带从下到上的渐变透明效果 */}
@@ -128,7 +127,7 @@ export const OrderDisplayCard = ({ post, onClick }) => {
                 </div>
 
                 {/* 精简信息 - 只保留地点、花费和拍摄时间 */}
-                <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
                     {/* 地点 */}
                     <div className="flex items-center gap-2 text-gray-600">
                         <MapPin className="w-4 h-4 text-orange-400 flex-shrink-0" />
@@ -137,21 +136,13 @@ export const OrderDisplayCard = ({ post, onClick }) => {
                         </span>
                     </div>
 
-                    {/* 花费和拍摄时间 - 左右布局 */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                            <DollarSign className="w-4 h-4 text-green-400 flex-shrink-0" />
-                            <span className="font-semibold text-green-600 text-sm">
-                                ¥{post.price ? Number(post.price).toFixed(2) : '0'}
-                            </span>
-                        </div>
                         <div className="flex items-center gap-1 text-gray-500">
                             <Calendar className="w-3.5 h-3.5 text-pink-400" />
                             <span className="text-xs">
                                 {post.shoot_time ? formatDate(post.shoot_time) : '未指定'}
                             </span>
                         </div>
-                    </div>
+                
                 </div>
             </div>
         </div>

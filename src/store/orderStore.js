@@ -41,6 +41,16 @@ export const OrderStore = create(
             }
             
             return false
-        }
+        },
+
+        reset:() => set({
+            myOrderList:[],
+            myPengdings:[],
+
+            otherOrderList:[],
+
+            allPendingOrders:[],
+            totalPendingOrderNum:0,
+        })
     }
 ))

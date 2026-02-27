@@ -12,13 +12,11 @@ class orderAPI {
     static SnatchOrders = (orderId) => request.get(`/order/take/${orderId}`)
     
     /**
-     * 
      * @returns 获取自己的待接取订单
      */
     static getMyPendingOrders = () => request.get('/order/photographer/pending')
 
     /**
-     * 
      * @param pageNum 默认1 
      * @param pageSize 默认10
      * @returns 
@@ -26,10 +24,9 @@ class orderAPI {
     static getLobbyList = (pageNum,pageSize) => request.get('/order/lobby',{pageNum,pageSize})
     
     //获取我的订单
-    static getMyOrderList = (pageNum,pageSize) => request.get('/order/list',{pageNum,pageSize})
+    static getMyOrderList = (pageNum,pageSize,status=null) => request.get('/order/list',{pageNum,pageSize,status})
 
     /**
-     * 
      * @param orderAction {
      *     action：ACCEPT, REJECT, PAY, DELIVER, COMPLETE
      *     orderId
@@ -49,8 +46,12 @@ class orderAPI {
         return request.post('/order/rate',rate)
     }
 
-    static getCompletedOrders = (pageNum,pageSize) => {
-        return request.get('/order/gallery',{pageNum,pageSize})
+    static getCompletedOrders = (pageNum,pageSize,photographerId=null) => {
+        return request.get('/order/works',{pageNum,pageSize,photographerId})
+    }
+
+    static getOrderDetail = (orderId) => {
+        return request.get(`/order/${orderId}/detail`)
     }
 
 }

@@ -8,6 +8,7 @@ import { Pagination } from '../components/pagination';
 import postStore from '../store/postStore';
 import { useGetPost, useSearchSuggestWithDebounce } from '../hooks/usePost';
 import { PostDetail } from '../components/postDetail';
+import { toast } from '../hooks/useToast';
 
 export function Feed() {
   const { goto } = useNavigation();
@@ -21,16 +22,20 @@ export function Feed() {
   } = postStore();
 
   const [searchValue, setSearchValue] = useState('');
-  const [isSearchFocused, setIsSearchFocused] = useState(false); // 跟踪搜索框焦点状态
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState(null);
 
-  const { getAllPost,getPostDetail } = useGetPost();
+  const { getAllPost, getPostDetail } = useGetPost();
   const useSearchSuggest = useSearchSuggestWithDebounce();
   
   const getPosts = async (pageNum, pageSize) => {
-    const res = await getAllPost(null, pageNum, pageSize, searchValue);
-    return res;
+    try {
+      const res = await getAllPost(null, pageNum, pageSize, searchValue);
+      return res;
+    } catch (E) {
+      toast.error(E.message || '获取帖子列表失败');
+    }
   };
 
   const {
@@ -52,14 +57,15 @@ export function Feed() {
   useEffect(() => {
     if (selectedPostId) {
       getPostDetail(selectedPostId);
-    }}, [selectedPostId])
+    }
+  }, [selectedPostId]);
 
   const isEmpty = !paginationLoading && (!postList || postList.length === 0);
 
   const handleCardClick = (postId) => {
     setSelectedPostId(postId);
     setShowDetails(true);
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-stone-50 via-amber-50/30 to-emerald-50/30">
@@ -85,8 +91,9 @@ export function Feed() {
             </h1>
           </div>
           <div
-          onClick={() => goto('/postpublish')}
-           className="cursor-pointer hover:shadow-lg transition-all duration-300 border-orange-500 border flex items-center gap-2 text-sm text-gray-500 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm">
+            onClick={() => goto('/postpublish')}
+            className="cursor-pointer hover:shadow-lg transition-all duration-300 border-orange-500 border flex items-center gap-2 text-sm text-gray-500 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm"
+          >
             <Camera className="w-4 h-4" />
             <span>分享瞬间</span>
           </div>
@@ -106,7 +113,6 @@ export function Feed() {
             value={searchValue}
             setValue={setSearchValue}
             initialPageSize={12}
-            // 如果SearchInput组件支持，可以传递一个prop来控制下拉框的z-index
           />
         </div>
 
@@ -142,7 +148,7 @@ export function Feed() {
                 试试其他关键词，或者上传你的第一张摄影作品，与社区分享灵感
               </p>
               <button 
-                onClick={() => goto('/upload')}
+                onClick={() => goto('/postpublish')}
                 className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-400 text-white rounded-full shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
               >
                 立即上传作品
@@ -188,13 +194,16 @@ export function Feed() {
             </>
           )}
         </div>
-        {showDetails && <PostDetail
-          post={currentPost}
-          onClose={() => setShowDetails(false)}
-        />}
+        {showDetails && (
+          <PostDetail
+            listItem={currentPost}
+            onClose={() => setShowDetails(false)}
+          />
+        )}
       </div>
 
-      <style jsx>{`
+      {/* 添加全局样式 */}
+      <style>{`
         @keyframes fadeIn {
           from {
             opacity: 0;

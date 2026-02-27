@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getFromLocalStorage, saveToLocalStorage, TIME_UNITS } from './localStorage';
 
-const API_BASE_URL = "https://www.h10eaea4e.nyat.app:48561"; // 可以根据环境变量配置
+const API_BASE_URL = "http://172.24.37.149:8080"; // 可以根据环境变量配置
 
 // 请求配置
 export const createRequestOptions = (options = {}) => ({

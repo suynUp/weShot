@@ -7,6 +7,14 @@ import LoginAPI from "../api/loginAPI"
 import postAPI from "../api/postAPI"
 import { toast } from "./useToast"
 import orderAPI from "../api/orderAPI"
+import { clearLocalStorage } from "../utils/localStorage"
+import { DraftStore } from "../store/draftStore"
+import { OrderDisplayStore } from "../store/orderDisplayStore"
+import { OrderStore } from "../store/orderStore"
+import photographerStore from "../store/photographerStore"
+import postStore from "../store/postStore"
+import { PostDraftStore } from "../store/postDraftStore"
+import { useCallback } from "react"
 
 export const useUserMutation=()=>{
 
@@ -21,7 +29,6 @@ export const useUserMutation=()=>{
                 if(request.hasToken()){ 
                     try{
 
-                        //此数据结构后面再看
                         const res= await UserAPI.getUser()
                         update(res.data) 
 
@@ -58,18 +65,25 @@ export const useOtherUserQuerry = (id) => {
 export const useGetMyPost = () => {
 
     const setMyPosts = UserStore(state => state.setMyPost)
+    const setPostNum = UserStore(state=>state.setTotalPost)
 
     return useMutation({
-        mutationFn:({pageNum,pageSize})=>{
-            return postAPI.getMyPosts(pageNum,pageSize)
+        mutationFn: async ({pageNum,pageSize})=>{
+
+            const res = await postAPI.getMyPosts(pageNum,pageSize)
+            console.log('让我看看',res)
+            if(res.code===200){
+                console.log('进来了',res)
+                return res.data
+            }
+            else{
+                toast.error(res.msg||'获取失败')
+            }
         },
         onSuccess:(data) => {
-            console.log(data.data.list)
-            if(data.code===200){
-                setMyPosts(data.data.list)
-            }else{
-                toast.error(data.msg||'获取失败')
-            }
+            console.log('222222222',data)
+            setMyPosts(data.list)
+            setPostNum(data.total)
         },
         onError:(e)=>{
             toast.error(e.message||'获取失败')
@@ -80,16 +94,20 @@ export const useGetMyPost = () => {
 export const useGetMyOrder = () =>{
 
     const setMyOrders = UserStore(state=>state.setMyOrders)
+    const setTotalOrders = UserStore(state=>state.setTotalOrders)
 
     return useMutation({
         mutationFn:({pageNum,pageSize})=>{
             return orderAPI.getMyOrderList(pageNum,pageSize)
         },
         onSuccess:(data)=>{
-            if(data.code===200)
+            if(data.code===200){
                 setMyOrders(data.data.list)
-            else
+                setTotalOrders(data.data.total)
+            }
+            else{
                 toast.error(data.msg)
+            }
         },
         onError:(e) => {
             toast.error(e.message||'获取失败')
@@ -134,7 +152,6 @@ export const useUserLoginSuccess = () => {
     })
 }
 
-//这里还需要添加乐观更新
 export const useUserUpdate = () => {
 
     const update = UserStore(state=>state.update)
@@ -156,4 +173,83 @@ export const useUserUpdate = () => {
             update(data.data)//更新UI以及localstorage
         }
     })
+}
+
+export const useGetOtherPostsMutation = () => useMutation({
+    mutationFn: async ({pageNum,pageSize,casId,type=null,keyword=null}) => {
+        const res = await postAPI.getSquareList(type,pageNum,pageSize,keyword,casId,1)
+        if(res.code === 200){
+            return res.data
+        }else{
+            throw new Error(res.msg || '获取帖子失败')
+        }
+    },
+    onSuccess:(data)=>{
+        UserStore.getState().setViewUserPosts(data.list)
+        UserStore.getState().setViewUserTotalPost(data.total)
+    },
+    onError:(e)=>{  
+        toast.error(e.message || '获取帖子失败')
+    }
+})
+
+
+export const useGetOtherOrdersMutation = () => {
+        return useMutation({
+        mutationFn: async ({pageNum,pageSize,casId}) => {
+            const res = await orderAPI.getCompletedOrders(pageNum,pageSize,casId)
+            if(res.code === 200){
+                return res.data
+            }else{
+                throw new Error(res.msg || '获取帖子失败')
+            }
+        },
+        onSuccess:(data)=>{
+            UserStore.getState().setUserCompletedOrders(data.list)
+            UserStore.getState().setTotalCompletedOrders(data.total)
+        },
+        onError:(e)=>{
+            toast.error(e.message || '获取帖子失败')
+        }
+    })
+}
+
+export const useLogOut = () => {
+    const resetUser = UserStore(state=>state.reset)
+    const resetDraft = DraftStore(state => state.reset)
+    const resetOrderDisplay = OrderDisplayStore(state=>state.reset)
+    const restOrder = OrderStore(state => state.reset)
+    const resetphotographer = photographerStore(state => state.resetPhgStore)
+    const resetPost = postStore(state => state.reset)
+    const resetPostDraft = PostDraftStore(state=>state.reset)
+    
+    // 使用 useCallback 返回一个函数，这样在渲染时不会执行
+    const logout = useCallback(() => {
+        try{
+            clearLocalStorage()
+            resetUser()
+            resetDraft()
+            resetOrderDisplay()
+            restOrder()
+            resetphotographer()
+            resetPost()
+            resetPostDraft()
+            
+            // 可选：显示成功提示
+            toast.success('退出登录成功')
+        }catch(e){
+            toast.error('退出登录失败')
+            console.error('Logout error:', e)
+        }
+    }, [
+        resetUser,
+        resetDraft,
+        resetOrderDisplay,
+        restOrder,
+        resetphotographer,
+        resetPost,
+        resetPostDraft
+    ])
+    
+    return logout  // 返回函数，而不是执行结果
 }

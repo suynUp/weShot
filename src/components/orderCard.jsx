@@ -1,24 +1,23 @@
-import { MoreHorizontal, MessageCircle, Star, Calendar, MapPin, Users, Clock, DollarSign } from 'lucide-react';
+import { MoreHorizontal, MessageCircle, Calendar, MapPin, Users, Clock, DollarSign } from 'lucide-react';
+import { useNavigation } from '../hooks/navigation';
 
-export function OrderCard({ order, onCheck, checked = false, onStatusClick, onAction }) {
+export function OrderCard({ order, onCheck, checked = false ,readOnly = true }) {
   
+  const {goto} = useNavigation();
+
   // 订单状态映射
   const getOrderStatus = (status) => {
     const statusMap = {
       0: '待接单',
       1: '已接单',
-      2: '支付中',
+      2: '已支付',
       3: '已完成',
+      4: '已评价',
       '-1': '已取消',
       '-2': '已拒绝',
       '-3': '草稿'
     };
     return statusMap[status] || '未知状态';
-  };
-
-  // 支付状态映射
-  const getPaymentStatus = (status) => {
-    return status === 1 ? '已支付' : '待支付';
   };
 
   const getStatusStyle = (status) => {
@@ -38,7 +37,7 @@ export function OrderCard({ order, onCheck, checked = false, onStatusClick, onAc
           text: 'text-blue-700',
           badge: 'bg-blue-200 text-blue-800',
           dot: 'bg-blue-500',
-          label: status === 1 ? '已接单' : '支付中'
+          label: status === 1 ? '已接单' : '已支付'
         };
       case 0: // 待接单
         return {
@@ -68,6 +67,10 @@ export function OrderCard({ order, onCheck, checked = false, onStatusClick, onAc
     }
   };
 
+  const statusMinus3Fn = () => {
+    goto(`/launch?draft_id=${order.order_id}`); // 跳转到订单编辑页，传递草稿ID
+  }
+
   const statusStyle = getStatusStyle(order.status);
   const orderStatus = getOrderStatus(order.status);
 
@@ -79,7 +82,11 @@ export function OrderCard({ order, onCheck, checked = false, onStatusClick, onAc
   };
 
   return (
-    <div className="group bg-white rounded-2xl p-5 border border-gray-100 hover:border-orange-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+    <div
+    onClick={readOnly?()=>{}:()=>{
+      goto(`/orderaction/${order.order_id}`)
+    }}
+     className="group bg-white rounded-2xl p-5 border border-gray-100 hover:border-orange-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden">
       {/* 装饰性背景 */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-50 to-pink-50 rounded-full blur-2xl -mr-10 -mt-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
@@ -110,9 +117,6 @@ export function OrderCard({ order, onCheck, checked = false, onStatusClick, onAc
                 <span className={`w-2 h-2 rounded-full ${statusStyle.dot}`} />
                 <span className={`text-xs px-2 py-0.5 rounded-full ${statusStyle.badge}`}>
                   {orderStatus}
-                </span>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${order.payment_status === 1 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                  {getPaymentStatus(order.payment_status)}
                 </span>
               </div>
               
@@ -175,45 +179,62 @@ export function OrderCard({ order, onCheck, checked = false, onStatusClick, onAc
           </div>
 
           <div className="flex items-center gap-2">
-            {order.status === 3 ? ( // 已完成
-              <>
-                <button 
-                  onClick={() => onAction?.('comment', order)}
-                  className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-orange-50 to-amber-50 text-orange-600 hover:from-orange-100 hover:to-amber-100 transition-all duration-200 flex items-center gap-1"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  去评价
-                </button>
-              </>
-            ) : order.status === 0 ? ( // 待接单
-              <button
-                className="px-6 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-orange-500 to-amber-500 text-white transition-all duration-200 shadow-md hover:shadow-lg"
+          {order.status === 3 ? ( // 已完成
+            <>
+              <button 
+                className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-orange-50 to-amber-50 text-orange-600 hover:from-orange-100 hover:to-amber-100 transition-all duration-200 flex items-center gap-1"
               >
-                等待接单
+                <MessageCircle className="w-3.5 h-3.5" />
+                去评价
               </button>
-            ) : order.status === 1 ?(//已接单
-              <button
-                onClick={() => onStatusClick?.(order)}
-                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1 ${statusStyle.bg} ${statusStyle.text} hover:shadow-md`}
-              >
-                已接单
-              </button>
-            ):  order.status === 4 ?(//完成评价
-              <button className="px-6 py-1.5 bg-gradient-to-r text-sm from-green-100 to-emerald-100 text-green-700 rounded-xl font-medium shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300 flex items-center gap-2 border border-green-200">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                评价成功
-              </button>
-            ):(
-              <button className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-600 hover:from-blue-200 hover:to-cyan-200 transition-all duration-200 flex items-center gap-1 shadow-sm border border-blue-200">
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                支付中
-              </button>
-            )}
+            </>
+          ) : order.status === 0 ? ( // 待接单
+            <button
+              className="px-6 py-1.5 disabled:opacity-50 rounded-lg text-sm font-medium bg-gradient-to-r from-orange-500 to-amber-500 text-white transition-all duration-200 shadow-md hover:shadow-lg"
+            >
+              等待接单
+            </button>
+          ) : order.status === 1 ? ( // 已接单
+            <button
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1 ${statusStyle.bg} ${statusStyle.text} hover:shadow-md`}
+            >
+              去支付
+            </button>
+          ) : order.status === 2 ? ( // 已支付
+            <button className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-600 hover:from-blue-200 hover:to-cyan-200 transition-all duration-200 flex items-center gap-1 shadow-sm border border-blue-200">
+              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              去评价
+            </button>
+          ) : order.status === 4 ? ( // 已评价
+            <button className="px-6 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-xl font-medium shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300 flex items-center gap-2 border border-green-200">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              评价成功
+            </button>
+          ) : order.status === -1 ? ( // 已取消
+            <button 
+            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 cursor-not-allowed opacity-60">
+              已取消
+            </button>
+          ) : order.status === -2 ? ( // 已拒绝
+            <button className="px-4 py-1.5 rounded-lg text-sm font-medium bg-red-100 text-red-600 cursor-not-allowed opacity-60 border border-red-200">
+              已拒绝
+            </button>
+          ) : order.status === -3 ? ( // 草稿
+            <button
+            onClick={statusMinus3Fn} 
+            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors duration-200 cursor-pointer">
+              去发布
+            </button>
+          ) : (
+            <button className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600">
+              未知状态
+            </button>
+          )}
           </div>
         </div>
       </div>

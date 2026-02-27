@@ -4,6 +4,25 @@ import Cropper from 'react-easy-crop';
 import { XMarkIcon, CameraIcon } from '@heroicons/react/24/outline';
 import { imgUpload } from '../api/imgUpload';
 
+// 预设选项
+const presetStyles = [
+  { id: 'portrait', label: '人像摄影', icon: '👤' },
+  { id: 'landscape', label: '风光摄影', icon: '🏔️' },
+  { id: 'street', label: '街拍摄影', icon: '🚶' },
+  { id: 'commercial', label: '商业摄影', icon: '💼' },
+  { id: 'wedding', label: '婚礼摄影', icon: '💒' },
+  { id: 'documentary', label: '纪实摄影', icon: '📖' },
+];
+
+const presetTypes = [
+  { id: 'memory', label: '记忆影像', icon: '📸' },
+  { id: 'impression', label: '印象风格', icon: '🎨' },
+  { id: 'story', label: '故事感', icon: '📖' },
+  { id: 'vintage', label: '复古胶片', icon: '🎞️' },
+  { id: 'minimalist', label: '极简主义', icon: '⬜' },
+  { id: 'artistic', label: '艺术创意', icon: '✨' }
+];
+
 function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
   // 直接用profile初始化state
   const [formData, setFormData] = useState({
@@ -12,17 +31,27 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
     phone: profile?.phone || '',
     detail: profile?.detail || '',
     photographer: {
-      style: profile?.style || '',
-      equipment: profile?.equipment || '',
-      type: profile?.photographerType || ''
+      style: Array.isArray(profile?.photographer?.style) ? profile.photographer.style : [],
+      equipment: Array.isArray(profile?.photographer?.equipment) ? profile.photographer.equipment : [],
+      type: Array.isArray(profile?.photographer?.type) ? profile.photographer.type : []
     }
   });
 
-  const [isVerfied,] = useState(profile.role ===2)
+  // 自定义输入状态
+  const [customStyle, setCustomStyle] = useState('');
+  const [customEquipment, setCustomEquipment] = useState('');
+  const [customType, setCustomType] = useState('');
   
-  const [avatarFile, setAvatarFile] = useState(null);        // 存储原始图片 base64
-  const [avatarPreview, setAvatarPreview] = useState(profile?.avatarUrl || ''); // 预览URL
-  const [avatarUploadFile, setAvatarUploadFile] = useState(null); // 存储最终要上传的 File 对象
+  // 显示自定义输入框的状态
+  const [showCustomStyle, setShowCustomStyle] = useState(false);
+  const [showCustomEquipment, setShowCustomEquipment] = useState(false);
+  const [showCustomType, setShowCustomType] = useState(false);
+
+  const [isVerfied,] = useState(profile?.role === 2);
+  
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(profile?.avatarUrl || '');
+  const [avatarUploadFile, setAvatarUploadFile] = useState(null);
   const [isCropping, setIsCropping] = useState(false);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -31,6 +60,228 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
   const [uploadError, setUploadError] = useState('');
   
   const fileInputRef = useRef(null);
+
+  // 多选处理函数
+  const handleMultiSelect = (field, value) => {
+    setFormData(prev => {
+      const currentValues = [...(prev.photographer[field] || [])];
+      const index = currentValues.indexOf(value);
+      
+      if (index === -1) {
+        // 添加
+        currentValues.push(value);
+      } else {
+        // 移除
+        currentValues.splice(index, 1);
+      }
+      
+      return {
+        ...prev,
+        photographer: {
+          ...prev.photographer,
+          [field]: currentValues
+        }
+      };
+    });
+  };
+
+  // 添加自定义项
+  const addCustomItem = (field, value, setCustom, setShowCustom) => {
+    if (!value.trim()) return;
+    
+    setFormData(prev => ({
+      ...prev,
+      photographer: {
+        ...prev.photographer,
+        [field]: [...(prev.photographer[field] || []), value.trim()]
+      }
+    }));
+    
+    setCustom('');
+    setShowCustom(false);
+  };
+
+  // 移除项
+  const removeItem = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      photographer: {
+        ...prev.photographer,
+        [field]: prev.photographer[field].filter(item => item !== value)
+      }
+    }));
+  };
+
+  // 渲染多选按钮组
+  const renderMultiSelect = (field, label, presetOptions, customValue, setCustomValue, showCustom, setShowCustom) => (
+    <div className="space-y-3">
+      <label className="block text-sm font-medium text-orange-700 text-left">
+        {label}
+      </label>
+      
+      {/* 已选中的项 */}
+      {formData.photographer[field].length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {formData.photographer[field].map((item) => (
+            <span
+              key={item}
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm rounded-full"
+            >
+              {item}
+              <button
+                type="button"
+                onClick={() => removeItem(field, item)}
+                className="ml-1 hover:text-white/80"
+              >
+                <XMarkIcon className="w-4 h-4" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* 预设选项 */}
+      <div className="grid grid-cols-2 gap-2">
+        {presetOptions.map((option) => {
+          const isSelected = formData.photographer[field]?.includes(option.label);
+          return (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => handleMultiSelect(field, option.label)}
+              className={`
+                flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition-all
+                ${isSelected 
+                  ? 'border-orange-500 bg-orange-50 text-orange-700' 
+                  : 'border-orange-200 hover:border-orange-300 text-gray-600 hover:bg-orange-50/50'
+                }
+              `}
+            >
+              <span className="text-lg">{option.icon}</span>
+              <span className="text-sm flex-1 text-left">{option.label}</span>
+              {isSelected && (
+                <span className="w-5 h-5 bg-orange-500 rounded-full text-white flex items-center justify-center text-xs">
+                  ✓
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 自定义输入 */}
+      {showCustom ? (
+        <div className="flex gap-2 mt-2">
+          <input
+            type="text"
+            value={customValue}
+            onChange={(e) => setCustomValue(e.target.value)}
+            placeholder={`输入自定义${label}`}
+            className="flex-1 px-3 py-2 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addCustomItem(field, customValue, setCustomValue, setShowCustom);
+              }
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => addCustomItem(field, customValue, setCustomValue, setShowCustom)}
+            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600"
+          >
+            添加
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowCustom(false)}
+            className="px-4 py-2 border border-orange-300 rounded-lg text-orange-700 hover:bg-orange-100"
+          >
+            取消
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowCustom(true)}
+          className="mt-2 text-sm text-orange-600 hover:text-orange-700 flex items-center gap-1"
+        >
+          <span>+ 自定义{label}</span>
+        </button>
+      )}
+    </div>
+  );
+
+  // 渲染设备输入（支持多选）
+  const renderEquipmentInput = () => (
+    <div className="space-y-3">
+      <label className="block text-sm font-medium text-orange-700 text-left">
+        摄影设备
+      </label>
+
+      {/* 已添加的设备 */}
+      {formData.photographer.equipment.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {formData.photographer.equipment.map((item) => (
+            <span
+              key={item}
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm rounded-full"
+            >
+              {item}
+              <button
+                type="button"
+                onClick={() => removeItem('equipment', item)}
+                className="ml-1 hover:text-white/80"
+              >
+                <XMarkIcon className="w-4 h-4" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* 设备输入 */}
+      {showCustomEquipment ? (
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={customEquipment}
+            onChange={(e) => setCustomEquipment(e.target.value)}
+            placeholder="输入设备名称（如：索尼A7M3）"
+            className="flex-1 px-3 py-2 border border-orange-200 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addCustomItem('equipment', customEquipment, setCustomEquipment, setShowCustomEquipment);
+              }
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => addCustomItem('equipment', customEquipment, setCustomEquipment, setShowCustomEquipment)}
+            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600"
+          >
+            添加
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowCustomEquipment(false)}
+            className="px-4 py-2 border border-orange-300 rounded-lg text-orange-700 hover:bg-orange-100"
+          >
+            取消
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowCustomEquipment(true)}
+          className="text-sm text-orange-600 hover:text-orange-700 flex items-center gap-1"
+        >
+          <span>+ 添加设备</span>
+        </button>
+      )}
+    </div>
+  );
 
   // 组件卸载时清理预览URL
   useEffect(() => {
@@ -77,16 +328,11 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
 
       return new Promise((resolve) => {
         canvas.toBlob((blob) => {
-          // 生成文件名（使用时间戳+随机数）
           const fileName = `avatar_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
-          
-          // 创建 File 对象
           const file = new File([blob], fileName, { 
             type: 'image/jpeg',
             lastModified: Date.now()
           });
-          
-          // 创建预览URL
           const previewUrl = URL.createObjectURL(blob);
           
           resolve({
@@ -105,13 +351,11 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
   const handleAvatarUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // 检查文件大小（限制为5MB）
       if (file.size > 5 * 1024 * 1024) {
         alert('图片大小不能超过5MB');
         return;
       }
       
-      // 检查文件类型
       if (!file.type.startsWith('image/')) {
         alert('请上传图片文件');
         return;
@@ -119,7 +363,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
 
       const reader = new FileReader();
       reader.onload = () => {
-        setAvatarFile(reader.result); // 存储 base64 用于裁剪
+        setAvatarFile(reader.result);
         setIsCropping(true);
         setUploadError('');
       };
@@ -131,15 +375,14 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
   const handleCropConfirm = async () => {
     const result = await getCroppedImageFile();
     if (result) {
-      // 清理旧的预览URL
       if (avatarPreview && avatarPreview.startsWith('blob:')) {
         URL.revokeObjectURL(avatarPreview);
       }
       
-      setAvatarPreview(result.previewUrl);     // 更新预览
-      setAvatarUploadFile(result.file);        // 存储 File 对象用于上传
+      setAvatarPreview(result.previewUrl);
+      setAvatarUploadFile(result.file);
       setIsCropping(false);
-      setAvatarFile(null);                      // 清除原始图片数据
+      setAvatarFile(null);
     }
   };
 
@@ -162,26 +405,28 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
       
       let finalAvatarUrl = profile?.avatarUrl || '';
       
-      // 如果有新上传的头像
       if (avatarUploadFile) {
-        // 上传到图床
         finalAvatarUrl = await imgUpload(avatarUploadFile);
-        console.log(finalAvatarUrl)
-        // 清理预览URL
         if (avatarPreview && avatarPreview.startsWith('blob:')) {
           URL.revokeObjectURL(avatarPreview);
         }
       }
-      console.log('data',{
-        ...formData,
-        avatarUrl: finalAvatarUrl  // 使用图床返回的永久URL
-      })
-      // 保存表单数据
-      await onSave({
-        ...formData,
-        avatarUrl: finalAvatarUrl  // 使用图床返回的永久URL
-      });
-      
+
+      // 构建请求体
+      const submitData = {
+        nickname: formData.nickname,
+        avatarUrl: finalAvatarUrl,
+        sex: formData.sex,
+        phone: formData.phone,
+        detail: formData.detail,
+        photographer: {
+          style: formData.photographer.style,
+          equipment: formData.photographer.equipment,
+          type: formData.photographer.type
+        }
+      };
+
+      await onSave(submitData);
       onClose();
     } catch (error) {
       console.error('Save failed:', error);
@@ -195,7 +440,6 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
   const handleChange = (e) => {
     const { name, value, type } = e.target;
     
-    // 处理单选框
     if (type === 'radio') {
       setFormData(prev => ({
         ...prev,
@@ -204,7 +448,6 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
       return;
     }
     
-    // 处理嵌套对象
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
       setFormData(prev => ({
@@ -222,12 +465,11 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
     }
   };
 
-  // 如果弹窗关闭，不渲染内容
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* 遮罩层 - 暖色调半透明 */}
+      {/* 遮罩层 */}
       <div 
         className="fixed inset-0 bg-gradient-to-br from-orange-500/30 via-pink-500/30 to-amber-500/30 backdrop-blur-sm transition-opacity"
         onClick={onClose}
@@ -236,7 +478,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
       {/* 弹窗内容 */}
       <div className="relative min-h-screen flex items-center justify-center p-4">
         <div className="relative bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-orange-200/50">
-          {/* 头部 - 暖色渐变 */}
+          {/* 头部 */}
           <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-4 flex justify-between items-center rounded-t-2xl text-white">
             <h2 className="text-xl font-semibold">编辑个人信息</h2>
             <button
@@ -436,54 +678,36 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
             </div>
 
             {/* 摄影师信息 */}
-            {isVerfied&&<div className="space-y-5">
-              <h3 className="text-lg font-medium text-orange-800 border-b border-orange-200 pb-2">摄影师信息</h3>
-              
-              <div>
-                <label className="block text-sm font-medium text-orange-700 mb-2 text-left">
-                  摄影风格
-                </label>
-                <input
-                  type="text"
-                  name="photographer.style"
-                  value={formData.photographer.style}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-white/80 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                  placeholder="例如：人像、风景、街拍"
-                  disabled={isUploading}
-                />
-              </div>
+            {isVerfied && (
+              <div className="space-y-5">
+                <h3 className="text-lg font-medium text-orange-800 border-b border-orange-200 pb-2">摄影师信息</h3>
+                
+                {/* 摄影风格多选 */}
+                {renderMultiSelect(
+                  'style',
+                  '摄影风格',
+                  presetStyles,
+                  customStyle,
+                  setCustomStyle,
+                  showCustomStyle,
+                  setShowCustomStyle
+                )}
 
-              <div>
-                <label className="block text-sm font-medium text-orange-700 mb-2 text-left">
-                  摄影设备
-                </label>
-                <input
-                  type="text"
-                  name="photographer.equipment"
-                  value={formData.photographer.equipment}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-white/80 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                  placeholder="例如：索尼A7M3、佳能5D4"
-                  disabled={isUploading}
-                />
-              </div>
+                {/* 摄影类型多选 */}
+                {renderMultiSelect(
+                  'type',
+                  '摄影类型',
+                  presetTypes,
+                  customType,
+                  setCustomType,
+                  showCustomType,
+                  setShowCustomType
+                )}
 
-              <div>
-                <label className="block text-sm font-medium text-orange-700 mb-2 text-left">
-                  摄影类型
-                </label>
-                <input
-                  type="text"
-                  name="photographer.type"
-                  value={formData.photographer.type}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-white/80 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                  placeholder="例如：婚礼摄影、商业摄影"
-                  disabled={isUploading}
-                />
+                {/* 摄影设备 */}
+                {renderEquipmentInput()}
               </div>
-            </div>}
+            )}
 
             {/* 按钮组 */}
             <div className="flex gap-3 pt-6">

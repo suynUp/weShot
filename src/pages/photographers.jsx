@@ -24,6 +24,7 @@ import {
   useGetOrderRanking,
   useGetRatingRanking 
 } from '../hooks/usePhotographer';
+import { toast } from '../hooks/useToast';
 
 // 轮播图组件
 function PhotographerCarousel({ photographers }) {
@@ -97,9 +98,9 @@ function PhotographerCarousel({ photographers }) {
   );
 }
 // 摄影师卡片组件
-function PhotographerCard({ photographer }) {
+function PhotographerCard({ photographer, onClick }) {
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4">
+    <div onClick={onClick} className="cursor-pointer bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4">
       <div className="flex gap-4">
         {/* 头像 */}
         <img
@@ -126,15 +127,20 @@ function PhotographerCard({ photographer }) {
 
           {/* 标签区域 */}
           <div className="mt-2 flex flex-wrap gap-1">
-            <div className="">
-              {photographer.type && (
-                <SmartTag tag={photographer.type} />
-              )}
+            <div>
+              {photographer.type && (photographer.type.map((t, idx) => 
+                <SmartTag key={idx} tag={t} />
+              ))}
             </div>
-            <div className="">
-              {photographer.style && (
-                <SmartTag tag={photographer.style} />
-              )}
+            <div>
+              {photographer.style && (photographer.style.map((s, idx) => 
+                 <SmartTag key={idx} tag={s} />
+              ))}
+            </div>
+            <div>
+              {photographer.equipment && (photographer.equipment.map((e, idx) => 
+                 <SmartTag key={idx} tag={e} />
+              ))}
             </div>
           </div>
 
@@ -156,7 +162,7 @@ function PhotographerCard({ photographer }) {
 }
 
 // 排行榜组件
-function RankingSidebar({ rankingByOrders, rankingByRating }) {
+function RankingSidebar({ rankingByOrders, rankingByRating, onClick }) {
   const [activeTab, setActiveTab] = useState('orders');
 
   const getRankingIcon = (index) => {
@@ -210,8 +216,9 @@ function RankingSidebar({ rankingByOrders, rankingByRating }) {
       <div className="space-y-3">
         {(currentRanking || []).slice(0, 8).map((photographer, index) => (
           <div
+            onClick={()=>onClick(photographer)}
             key={photographer.cas_id}
-            className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+            className="cursor-pointer flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors"
           >
             {/* 排名 */}
             <div className="w-6 text-center font-bold text-gray-400">
@@ -280,7 +287,7 @@ export default function PhotographersPage() {
     phgRatingRanking,
     removePhgSearchHistory 
   } = photographerStore();
-
+  
   // 获取hooks
   const getPhgList = useGetPhgList();
   const getSuggestions = useGetSuggestions();
@@ -312,9 +319,15 @@ export default function PhotographersPage() {
 
   // 初始化数据
   useEffect(() => {
-    getHistory.mutateAsync();
-    getOrderRanking.mutateAsync();
-    getRatingRanking.mutateAsync();
+    try {
+    Promise.all([
+      getHistory.mutateAsync(),
+      getOrderRanking.mutateAsync(),
+      getRatingRanking.mutateAsync()
+    ]);
+    } catch (E) {
+      toast.error(E.message );
+    }
   }, []);
 
   // 搜索建议
@@ -367,7 +380,7 @@ export default function PhotographersPage() {
       {/* 主要内容区域 */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* 轮播图 - 使用排行榜数据 */}
-        <PhotographerCarousel photographers={phgOrderRanking.slice(0, 4)} />
+        <PhotographerCarousel photographers={phgOrderRanking?.slice(0, 4)} />
 
         {/* 内容网格 */}
         <div className="flex gap-6 mt-8">
@@ -398,7 +411,7 @@ export default function PhotographersPage() {
                 <div className="grid grid-cols-2 gap-4">
                   {phgList && phgList.length > 0 ? (
                     phgList.map(photographer => (
-                      <PhotographerCard key={photographer.cas_id} photographer={photographer} />
+                      <PhotographerCard onClick={()=>goto(`/profile?casId=${photographer.cas_id}`)} key={photographer.cas_id} photographer={photographer} />
                     ))
                   ) : (
                     <div className="col-span-2 text-center py-12 bg-white rounded-xl">
@@ -425,6 +438,7 @@ export default function PhotographersPage() {
             <RankingSidebar 
               rankingByOrders={phgOrderRanking}
               rankingByRating={phgRatingRanking}
+              onClick={(photographer)=>goto(`/profile?casId=${photographer.cas_id}`)}
             />
           </div>
         </div>
