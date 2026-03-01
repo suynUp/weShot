@@ -29,9 +29,11 @@ export function Feed() {
   const { getAllPost, getPostDetail } = useGetPost();
   const useSearchSuggest = useSearchSuggestWithDebounce();
   const useGetSearchHistory = useSearchHistory()
+  const [changed,setChanged] = useState(false)
   
   const getPosts = async (pageNum, pageSize) => {
     try {
+      setChanged(false)
       const res = await getAllPost(null, pageNum, pageSize, searchValue);
       return res;
     } catch (E) {
@@ -51,7 +53,7 @@ export function Feed() {
     fetchData: getPosts,
     initialPage: 1,
     total: totalposts,
-    dependencies:[searchValue]
+    dependencies:[changed]
   });
 
   useEffect(() => {
