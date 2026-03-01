@@ -4,7 +4,8 @@ import { getFromLocalStorage, LOCAL_STORAGE_KEYS, saveToLocalStorage } from "../
 
 //把user操作集中在这里了
 
-export const UserStore = create((set, get) => ({
+export const UserStore = create(
+    (set, get) => ({
     // 当前登录用户信息
     user: {
         avatarUrl: 'www.123.com',
@@ -53,10 +54,12 @@ export const UserStore = create((set, get) => ({
     // 自己的接收订单
     myReceivedOrders: [],
     totalReceived: -1,
+    status:'all',
     setMyReceivedOrders: (orders) => set({ 
         myReceivedOrders: orders, 
     }),
     setTotalReceived:(totalReceived) => set({totalReceived}),
+    setStatus:(status)=>set({status}),
     
     // ========== 查看他人主页相关 ==========
     

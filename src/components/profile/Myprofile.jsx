@@ -18,7 +18,7 @@ import { useDeletePost, useGetPostDetail } from '../../hooks/usePost';
 
 export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum, 
   myOrdersData, totalOrdersNum, receivedOrdersData, totalReceivedNum,
-  fetchPosts, fetchMyOrders, fetchReceivedOrders }) {
+  fetchPosts, fetchMyOrders, fetchReceivedOrders,setStatus,status }) {
   
   const { goto } = useNavigation();
   const [selectedOrders, setSelectedOrders] = useState(new Set());
@@ -64,6 +64,7 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
     itemsPerPage: 9,
     initialPage: 1,
     total: totalOrdersNum,
+    dependencies:[status]
   });
 
   // 接收订单分页
@@ -77,7 +78,7 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
     itemsPerPage: 9,
     initialPage: 1,
     total: totalReceivedNum,
-    enabled: isPhotographer
+    dependencies: [isPhotographer]
   });
 
   const handlePostCheck = (id, checked) => {
@@ -158,7 +159,8 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
                   setOrderType('received');
                 }}
                 icon={<Clock className="w-4 h-4" />}
-                label="我的接收"
+                label="待处理订单"
+                toastNum={receivedOrdersData.length}
               />
             </>
           ) : (
@@ -213,6 +215,9 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
 
         {activeTab === 'myOrders' && (
           <OrdersSection
+            filter={true}
+            setStatus={setStatus}
+            selectedStatus={status}
             orders={myOrdersData}
             loading={myOrdersLoading}
             emptyMessage="暂无发起的订单"

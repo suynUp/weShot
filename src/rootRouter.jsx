@@ -122,7 +122,7 @@ export default function RootRouter() {
       path:'/postpublish',
       page:<PostPublish/>
     },{
-      path:'orderaction',
+      path:'/orderaction/:orderId',
       page:<OrderActionPage/>
     }
   ]

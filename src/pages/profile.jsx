@@ -23,6 +23,8 @@ function Profile() {
     useGetUserOrdersMutation,
     getMyAllPendings,
     casId,
+    status,
+    setStatus
   } = useProfileData();
 
   // 数据获取函数
@@ -36,14 +38,14 @@ function Profile() {
 
   const fetchMyOrders = async (pageNum, pageSize) => {
     if (isOwnProfile) {
-      useGetMyOrderMutation.mutate({ pageNum, pageSize });
+      useGetMyOrderMutation.mutate({ pageNum, pageSize,status:status==='all'?null:status });
     }
   };
 
-  const fetchReceivedOrders = async () => {
+  const fetchReceivedOrders = async (pageNum,pageSize) => {
     if (isOwnProfile && isPhotographer) {
       // 获取摄影师接收的订单
-      getMyAllPendings();
+      getMyAllPendings(pageNum,pageSize);
     }
   };
 
@@ -71,6 +73,8 @@ function Profile() {
         fetchPosts={fetchPosts}
         fetchMyOrders={fetchMyOrders}
         fetchReceivedOrders={fetchReceivedOrders}
+        setStatus={setStatus}
+        status={status}
       />
     );
   }

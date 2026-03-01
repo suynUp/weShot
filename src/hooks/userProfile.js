@@ -29,6 +29,8 @@ export const useProfileData = () => {
   // ========== 自己的主页相关数据 ==========
   // 我发起的订单列表（仅自己可见）
   const myOrdersData = UserStore(state => state.myOrders);
+  const status = UserStore(state => state.status)
+  const setStatus = UserStore(status => status.setStatus)
   // 我发起的订单总数
   const totalOrdersNum = UserStore(state => state.totalOrders);
   
@@ -45,8 +47,8 @@ export const useProfileData = () => {
   
   // 判断当前展示的用户是否是摄影师
   // 自己的主页：从store获取isVerFied；他人的主页：判断目标用户的role是否为2
-  const isPhotographer = UserStore(state => isOwnProfile ? state.isVerFied : targetUser?.role === 2 || false);
-  
+  const isPhotographer = UserStore(state => isOwnProfile ? state.user.role === 2 : targetUser?.role === 2 || false);
+
   // 当前展示的用户信息（自己的信息 或 他人的信息）
   const profileData = isOwnProfile ? UserStore(state => state.user) : targetUser;
 
@@ -93,6 +95,8 @@ export const useProfileData = () => {
     targetUser,               // 查看他人时的目标用户信息
     profileData,              // 当前展示的用户信息
     isPhotographer,           // 当前展示的用户是否是摄影师
+    status,
+    setStatus,
     
     // Store 数据
     postsData,                // 帖子列表

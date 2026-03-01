@@ -12,7 +12,7 @@ class photographerAPI {
     }
 
     static enroll = (inviteCode) => {
-        return request.get('/photographer/enroll',{inviteCode})
+        return request.post('/photographer/enroll',null,{inviteCode})
     }
 
     static searchSuggest = (keyword) => {

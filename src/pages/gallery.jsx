@@ -11,7 +11,7 @@ import { useGetCompletedOrders, useGetOrderDetail } from '../hooks/useOrder';
 
 function Gallery() {
   const { goBack } = useNavigation();
-  const [loading, setLoading] = useState(true);
+  const [loading,] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   const orders = OrderDisplayStore(state => state.orderList);

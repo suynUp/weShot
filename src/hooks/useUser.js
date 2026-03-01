@@ -97,8 +97,8 @@ export const useGetMyOrder = () =>{
     const setTotalOrders = UserStore(state=>state.setTotalOrders)
 
     return useMutation({
-        mutationFn:({pageNum,pageSize})=>{
-            return orderAPI.getMyOrderList(pageNum,pageSize)
+        mutationFn:({pageNum,pageSize,status=null})=>{
+            return orderAPI.getMyOrderList(pageNum,pageSize,status)
         },
         onSuccess:(data)=>{
             if(data.code===200){

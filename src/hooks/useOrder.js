@@ -31,8 +31,8 @@ export const useGetOrder = () => {
 
     const setMyPending = UserStore(state=>state.setMyReceivedOrders)
     const setMyTotalPendings = UserStore(state=>state.setTotalReceived)
-    const getMyAllPendings = async () =>{
-        const res = await orderAPI.getMyPendingOrders()
+    const getMyAllPendings = async (pageNum,pageSize) =>{
+        const res = await orderAPI.getMyPendingOrders(pageNum,pageSize)
         if(res.code !== 200){
             toast.error('获取失败')
         }
@@ -100,8 +100,8 @@ export const useTakeOrderMutation = () => {
 export const useManageOrderMutation = () => {
     
     return useMutation({
-        mutationFn: async ({orderAction,orderId,deliverUrl=null,}) => {
-                const res = await orderAPI.handleOrder({action:orderAction,orderId,deliverUrl})
+        mutationFn: async ({orderAction,orderId,deliverUrls=null,}) => {
+                const res = await orderAPI.handleOrder({action:orderAction,orderId,deliverUrl:deliverUrls})
                 if (res.code !== 200) {
                     throw new Error(res.message || '操作失败')
                 }

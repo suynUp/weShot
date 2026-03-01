@@ -317,6 +317,7 @@ function PhotographerSignUp() {
     }
 
     const submitData = {
+      nickname:user.nickname,
       photographer: {
         style: photographerInfo.style,
         equipment: photographerInfo.equipment,
@@ -328,7 +329,7 @@ function PhotographerSignUp() {
     
     try {
       await updateMutation.mutateAsync(submitData);
-      toast.success('入驻申请提交成功！');
+      toast.success('更新个人信息成功！');
       goto('/profile');
     } catch (error) {
       console.error('提交失败:', error);
@@ -803,7 +804,7 @@ function PhotographerSignUp() {
                   <>提交中...</>
                 ) : (
                   <>
-                    提交入驻申请
+                    更新个人信息
                     <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}

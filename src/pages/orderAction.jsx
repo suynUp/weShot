@@ -9,9 +9,11 @@ import {
   Users, Video, Loader
 } from 'lucide-react';
 import { UserStore } from '../store/userStore';
-import useActionOrder from '../hooks/useActionOrder'; // 导入 orderAction
+import useActionOrder from '../hooks/useActionOrder'; 
 import { imgUpload } from '../api/imgUpload';
 import { toast } from '../hooks/useToast';
+import { useGetOrderDetail } from '../hooks/useOrder';
+import { OrderDisplayStore } from '../store/orderDisplayStore';
 
 // 状态映射
 const statusMap = {
@@ -116,7 +118,6 @@ const ReviewCard = ({ review }) => {
 const OrderActionPage = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [userRole, setUserRole] = useState(null); // 'photographer' 或 'customer'
   const currentUserId = Number(UserStore(state=>state.user.casId)); // 当前登录用户ID
@@ -137,6 +138,9 @@ const OrderActionPage = () => {
     handleCancel,
     handleComment
   } = useActionOrder();
+
+  const getCurrentOrder = useGetOrderDetail()
+  const order = OrderDisplayStore(state => state.currentOrder)
 
   // 评价相关状态
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -161,10 +165,22 @@ const OrderActionPage = () => {
   }, []);
 
   useEffect(() => {
-    if (currentUserId) {
+    if (currentUserId&&orderId) {
       fetchOrderDetail();
     }
   }, [orderId, currentUserId]);
+
+  useEffect(()=>{
+    // 根据当前用户ID与订单中的ID比较来设置角色
+      if (currentUserId === order?.photographer_id) {
+        setUserRole('photographer');
+      } else if (currentUserId === order?.customer_id) {
+        setUserRole('customer');
+      } else {
+        setUserRole('other');
+      }
+      
+  },[order])
 
   // 监听操作结果
   useEffect(() => {
@@ -194,50 +210,8 @@ const OrderActionPage = () => {
   const fetchOrderDetail = async () => {
     setLoading(true);
     try {
-      // TODO: 替换为实际的API调用
-      // 模拟数据
-      const mockOrder = {
-        "rating_content": "很好",
-        "rating_time": "2026-02-25T11:10:09",
-        "comm_score": 5,
-        "shoot_time": "2026-09-16T14:00:32",
-        "created_at": "2026-02-14T13:29:48",
-        "remark": "无",
-        "contact_info": "15212341234",
-        "type": "艺术照",
-        "time_score": 5,
-        "photographer_id": 202300141034,
-        "photo_score": 4,
-        "duration": "3h",
-        "subject_count": 2,
-        "score": 4.7,
-        "price": 100.00,
-        "deliver_url": [
-            "https://example.com/images/sakura_1.jpg",
-            "https://example.com/images/sakura_2.jpg",
-            "https://example.com/images/sakura_3.jpg"
-        ],
-        "photographer_name": "析阳",
-        "photographer_avatar": "https://avatars.githubusercontent.com/u/68357909",
-        "customer_avatar": "https://avatars.githubusercontent.com/u/68357909",
-        "need_equipment": true,
-        "location": "山东大学软件园校区",
-        "customer_name": "析阳",
-        "customer_id": 202300300378,
-        "order_id": 7,
-        "status": 4
-      };
       
-      setOrder(mockOrder);
-      
-      // 根据当前用户ID与订单中的ID比较来设置角色
-      if (currentUserId === mockOrder.photographer_id) {
-        setUserRole('photographer');
-      } else if (currentUserId === mockOrder.customer_id) {
-        setUserRole('customer');
-      } else {
-        setUserRole('other');
-      }
+      getCurrentOrder.mutate(orderId)
       
     } catch (error) {
       console.error('获取订单详情失败:', error);
@@ -251,38 +225,42 @@ const OrderActionPage = () => {
     var deliverUrls 
     switch (action) {
       case 'pay':
-        handlePay(order.order_id);
+        handlePay(order?.order_id);
         break;
       case 'accept':
-        handleAccept(order.order_id);
+        handleAccept(order?.order_id);
         break;
       case 'reject':
-        handleReject(order.order_id);
+        handleReject(order?.order_id);
         break;
       case 'deliver':
         // 上传图片到服务器获取URL
         deliverUrls = await uploadImagesToServer();
         if (deliverUrls && deliverUrls.length > 0) {
-          handleDeliver(order.order_id, deliverUrls);
+          handleDeliver(order?.order_id, deliverUrls);
         } else {
           setActionLoading(false);
           toast.warning('请上传交付的作品')
         }
         break;
       case 'cancel':
-        handleCancel(order.order_id);
+        handleCancel(order?.order_id);
         break;
       default:
         setActionLoading(false);
     }
   };
 
-  // 模拟上传图片到服务器
   const uploadImagesToServer = async () => {
-    // TODO: 实现实际上传逻辑
-    return deliverImages.map(async (img) => {
-      return await imgUpload(img.file)
-    }); // 临时返回预览URL
+     const uploadedResults = [];
+  
+    // 使用 for...of 循环顺序执行
+    for (const img of deliverImages) {
+      const result = await imgUpload(img.file);
+      uploadedResults.push(result);
+    }
+    
+    return uploadedResults;
   };
 
   const handleSubmitReview = async () => {
@@ -293,7 +271,7 @@ const OrderActionPage = () => {
     
     setActionLoading(true);
     handleComment(
-      order.order_id,
+      order?.order_id,
       review.photoScore,
       review.timeScore,
       review.commScore,
@@ -334,7 +312,7 @@ const OrderActionPage = () => {
   const getActionButtons = () => {
     if (!order || !userRole) return null;
     
-    const status = order.status;
+    const status = order?.status;
     const isNegative = status < 0;
     const statusInfo = statusMap[status];
     
@@ -418,15 +396,15 @@ const OrderActionPage = () => {
         case 4:
           return (
             <div className="space-y-4">
-              {order.rating_content ? (
+              {order?.rating_content ? (
                 <ReviewCard review={{
-                  content: order.rating_content,
-                  photoScore: order.photo_score,
-                  timeScore: order.time_score,
-                  commScore: order.comm_score,
-                  avatar: order.customer_avatar,
-                  nickname: order.customer_name,
-                  createdAt: order.rating_time
+                  content: order?.rating_content,
+                  photoScore: order?.photo_score,
+                  timeScore: order?.time_score,
+                  commScore: order?.comm_score,
+                  avatar: order?.customer_avatar,
+                  nickname: order?.customer_name,
+                  createdAt: order?.rating_time
                 }} />
               ) : (
                 <div className={buttonClasses.warning}>
@@ -490,64 +468,91 @@ const OrderActionPage = () => {
               <p className="font-medium">等待摄影师交付</p>
             </div>
           );
-        case 3:
-        case 4:
-          return (
-            <div className="space-y-4">
-              {/* 评价按钮 */}
-              {status === 4 && !order.rating_content && (
-                <button
-                  onClick={() => setShowReviewModal(true)}
-                  disabled={actionLoading || commentLoading}
-                  className={buttonClasses.primary}
-                >
-                  {commentLoading ? (
-                    <Loader className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Star className="w-5 h-5" />
-                  )}
-                  {commentLoading ? '提交中...' : '去评价'}
-                </button>
+         case 3: // 已完成状态 - 显示评价按钮
+      return (
+        <div className="space-y-4">
+          {/* 显示评价按钮 - 当用户还未评价时 */}
+          {!order.rating_content && (
+            <button
+              onClick={() => setShowReviewModal(true)}
+              disabled={actionLoading || commentLoading}
+              className={buttonClasses.primary}
+            >
+              {commentLoading ? (
+                <Loader className="w-5 h-5 animate-spin" />
+              ) : (
+                <Star className="w-5 h-5" />
               )}
-              
-              {/* 状态 3 和 4 都显示返图 */}
-              {order.deliver_url && order.deliver_url.length > 0 && (
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                    <Download className="w-5 h-5 text-orange-500" />
-                    交付作品
-                  </h4>
-                  <div className="grid grid-cols-3 gap-2">
-                    {order.deliver_url.map((url, index) => (
-                      <a
-                        key={index}
-                        href={url}
-                        download
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="aspect-square bg-orange-100 rounded-lg overflow-hidden hover:scale-105 transition-transform"
-                      >
-                        <img src={url} alt={`作品${index + 1}`} className="w-full h-full object-cover" />
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {/* 状态 4 显示评价 */}
-              {status === 4 && order.rating_content && (
-                <ReviewCard review={{
-                  content: order.rating_content,
-                  photoScore: order.photo_score,
-                  timeScore: order.time_score,
-                  commScore: order.comm_score,
-                  avatar: order.photographer_avatar,
-                  nickname: order.photographer_name,
-                  createdAt: order.rating_time
-                }} />
-              )}
+              {commentLoading ? '提交中...' : '去评价'}
+            </button>
+          )}
+          
+          {/* 显示交付作品 */}
+          {order.deliver_url && order.deliver_url.length > 0 && (
+            <div className="bg-gray-50 rounded-xl p-4">
+              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <Download className="w-5 h-5 text-orange-500" />
+                交付作品
+              </h4>
+              <div className="grid grid-cols-3 gap-2">
+                {order.deliver_url.map((url, index) => (
+                  <a
+                    key={index}
+                    href={url}
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="aspect-square bg-orange-100 rounded-lg overflow-hidden hover:scale-105 transition-transform"
+                  >
+                    <img src={url} alt={`作品${index + 1}`} className="w-full h-full object-cover" />
+                  </a>
+                ))}
+              </div>
             </div>
-          );
+          )}
+        </div>
+      );
+    case 4: // 已评价状态 - 显示评价内容
+      return (
+        <div className="space-y-4">
+          {/* 显示交付作品 */}
+          {order.deliver_url && order.deliver_url.length > 0 && (
+            <div className="bg-gray-50 rounded-xl p-4">
+              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <Download className="w-5 h-5 text-orange-500" />
+                交付作品
+              </h4>
+              <div className="grid grid-cols-3 gap-2">
+                {order.deliver_url.map((url, index) => (
+                  <a
+                    key={index}
+                    href={url}
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="aspect-square bg-orange-100 rounded-lg overflow-hidden hover:scale-105 transition-transform"
+                  >
+                    <img src={url} alt={`作品${index + 1}`} className="w-full h-full object-cover" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* 显示评价内容 */}
+          {order.rating_content && (
+            <ReviewCard review={{
+              content: order.rating_content,
+              photoScore: order.photo_score,
+              timeScore: order.time_score,
+              commScore: order.comm_score,
+              avatar: order.photographer_avatar,
+              nickname: order.photographer_name,
+              createdAt: order.rating_time
+            }} />
+          )}
+        </div>
+      );
         default:
           return null;
       }
@@ -722,7 +727,7 @@ const OrderActionPage = () => {
                 <span className={`text-sm font-semibold ${
                   isNegative ? 'text-gray-600' : 'text-orange-600'
                 }`}>
-                  总价: ¥{order.price.toFixed(2)}
+                  总价: ¥{order?.price?.toFixed(2)||'0.00'}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-gray-600">

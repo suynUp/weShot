@@ -14,7 +14,7 @@ class orderAPI {
     /**
      * @returns 获取自己的待接取订单
      */
-    static getMyPendingOrders = () => request.get('/order/photographer/pending')
+    static getMyPendingOrders = (pageNum,pageSize) => request.get('/order/photographer/pending',{pageNum,pageSize})
 
     /**
      * @param pageNum 默认1 
