@@ -9,7 +9,7 @@ import {
   Calendar,
   Image as ImageIcon,
   ChevronLeft,
-  X
+  ChevronRight
 } from 'lucide-react';
 import { SmartTag } from '../components/tags';
 import { Pagination } from '../components/pagination';
@@ -25,8 +25,6 @@ import {
   useGetRatingRanking 
 } from '../hooks/usePhotographer';
 import { toast } from '../hooks/useToast';
-
-// 轮播图组件
 function PhotographerCarousel({ photographers }) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -34,33 +32,36 @@ function PhotographerCarousel({ photographers }) {
     return null;
   }
 
+  const goToSlide = (index) => {
+    setCurrentIndex(index);
+  };
+
   return (
-    <div className="relative w-full h-[400px] overflow-hidden rounded-2xl">
-      {/* 背景轮播 */}
+    <div className="relative w-full h-[400px] overflow-hidden rounded-2xl group">
+      {/* 轮播容器 */}
       <div 
-        className="absolute inset-0 transition-transform duration-500 ease-out"
+        className="flex h-full transition-transform duration-500 ease-out"
         style={{
-          transform: `translateX(-${currentIndex * 100}%)`,
-          display: 'flex',
-          width: `${photographers.length * 100}%`
+          transform: `translateX(-${currentIndex * 100}%)`
         }}
       >
         {photographers.map((photographer, idx) => (
           <div
             key={photographer.cas_id || idx}
             className="relative w-full h-full flex-shrink-0"
-            style={{ width: `${100 / photographers.length}%` }}
+            style={{ minWidth: '100%' }}
           >
-            {/* 如果没有coverImage，可以用avatar_url作为背景 */}
+            {/* 背景图片 */}
             <img
               src={photographer.coverImage || photographer.avatar_url}
               alt={photographer.nickname}
               className="w-full h-full object-cover"
             />
+            {/* 渐变遮罩 */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
             
-            {/* 摄影师信息浮层 */}
-            <div className="absolute bottom-8 left-8 text-white">
+            {/* 摄影师信息 */}
+            <div className="absolute bottom-8 left-8 text-white z-10">
               <div className="flex items-center gap-4">
                 <img
                   src={photographer.avatar_url}
@@ -82,14 +83,38 @@ function PhotographerCarousel({ photographers }) {
         ))}
       </div>
 
+      {/* 左侧箭头 */}
+      <button
+        onClick={() => goToSlide(currentIndex - 1)}
+        disabled={currentIndex === 0}
+        className={`absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-all z-20 ${
+          currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : 'opacity-0 group-hover:opacity-100'
+        }`}
+      >
+        <ChevronLeft className="w-6 h-6" />
+      </button>
+
+      {/* 右侧箭头 */}
+      <button
+        onClick={() => goToSlide(currentIndex + 1)}
+        disabled={currentIndex === photographers.length - 1}
+        className={`absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-all z-20 ${
+          currentIndex === photographers.length - 1 ? 'opacity-50 cursor-not-allowed' : 'opacity-0 group-hover:opacity-100'
+        }`}
+      >
+        <ChevronRight className="w-6 h-6" />
+      </button>
+
       {/* 轮播指示器 */}
-      <div className="absolute bottom-4 right-4 flex gap-2">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
         {photographers.map((_, idx) => (
           <button
             key={idx}
-            onClick={() => setCurrentIndex(idx)}
-            className={`w-2 h-2 rounded-full transition-all ${
-              idx === currentIndex ? 'w-6 bg-white' : 'bg-white/50'
+            onClick={() => goToSlide(idx)}
+            className={`h-2 rounded-full transition-all cursor-pointer hover:scale-125 ${
+              idx === currentIndex 
+                ? 'w-8 bg-white' 
+                : 'w-2 bg-white/50 hover:bg-white/80'
             }`}
           />
         ))}
@@ -276,6 +301,7 @@ function RankingSidebar({ rankingByOrders, rankingByRating, onClick }) {
 export default function PhotographersPage() {
   const { goto } = useNavigation();
   const [searchValue, setSearchValue] = useState('');
+  const [changed,setChange] = useState(true)
 
   // 从store获取状态
   const { 
@@ -300,7 +326,7 @@ export default function PhotographersPage() {
     return await getPhgList.mutateAsync({
       pageNum,
       pageSize,
-      keyword: searchValue
+      keyword:searchValue
     });
   };
 
@@ -314,7 +340,8 @@ export default function PhotographersPage() {
     itemsPerPage: 12,
     fetchData: fetchPhotographers,
     initialPage: 1,
-    total: phgTotal
+    total: phgTotal,
+    dependencies:[changed]
   });
 
   // 初始化数据
@@ -341,11 +368,11 @@ export default function PhotographersPage() {
   }, [searchValue]);
 
   // 处理搜索
-  const handleSearch = async () => {
-    if (searchValue.trim()) {
+  const handleSearch = async (pageNum,pageSize) => {
+      setChange(!changed)
       setCurrentPage(1);
-      await fetchPhotographers(1, 12);
-    }
+      getHistory.mutate()
+      await fetchPhotographers(pageNum, pageSize ,searchValue);
   };
 
   // 处理清空所有历史记录

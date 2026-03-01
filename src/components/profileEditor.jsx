@@ -24,17 +24,17 @@ const presetTypes = [
 ];
 
 function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
-  // 直接用profile初始化state
+  // 直接用profile初始化state，适配传入的数据结构
   const [formData, setFormData] = useState({
     nickname: profile?.nickname || '',
     sex: profile?.sex || 0,
     phone: profile?.phone || '',
     detail: profile?.detail || '',
-    photographer: {
-      style: Array.isArray(profile?.photographer?.style) ? profile.photographer.style : [],
-      equipment: Array.isArray(profile?.photographer?.equipment) ? profile.photographer.equipment : [],
-      type: Array.isArray(profile?.photographer?.type) ? profile.photographer.type : []
-    }
+    // 注意：profile中可能直接有style, equipment, type字段，而不是在photographer对象下
+    // 根据你提供的user数据结构，style, equipment, type是直接挂在user下的
+    style: Array.isArray(profile?.style) ? profile.style : [],
+    equipment: Array.isArray(profile?.equipment) ? profile.equipment : [],
+    photographerType: Array.isArray(profile?.photographerType) ? profile.photographerType : []
   });
 
   // 自定义输入状态
@@ -61,10 +61,26 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
   
   const fileInputRef = useRef(null);
 
+  // 当profile变化时更新formData
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        nickname: profile.nickname || '',
+        sex: profile.sex || 0,
+        phone: profile.phone || '',
+        detail: profile.detail || '',
+        style: Array.isArray(profile.style) ? profile.style : [],
+        equipment: Array.isArray(profile.equipment) ? profile.equipment : [],
+        photographerType: Array.isArray(profile.photographerType) ? profile.photographerType : []
+      });
+      setAvatarPreview(profile.avatarUrl || '');
+    }
+  }, [profile]);
+
   // 多选处理函数
   const handleMultiSelect = (field, value) => {
     setFormData(prev => {
-      const currentValues = [...(prev.photographer[field] || [])];
+      const currentValues = [...(prev[field] || [])];
       const index = currentValues.indexOf(value);
       
       if (index === -1) {
@@ -77,10 +93,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
       
       return {
         ...prev,
-        photographer: {
-          ...prev.photographer,
-          [field]: currentValues
-        }
+        [field]: currentValues
       };
     });
   };
@@ -91,10 +104,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
     
     setFormData(prev => ({
       ...prev,
-      photographer: {
-        ...prev.photographer,
-        [field]: [...(prev.photographer[field] || []), value.trim()]
-      }
+      [field]: [...(prev[field] || []), value.trim()]
     }));
     
     setCustom('');
@@ -105,10 +115,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
   const removeItem = (field, value) => {
     setFormData(prev => ({
       ...prev,
-      photographer: {
-        ...prev.photographer,
-        [field]: prev.photographer[field].filter(item => item !== value)
-      }
+      [field]: prev[field].filter(item => item !== value)
     }));
   };
 
@@ -120,9 +127,9 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
       </label>
       
       {/* 已选中的项 */}
-      {formData.photographer[field].length > 0 && (
+      {formData[field]?.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-3">
-          {formData.photographer[field].map((item) => (
+          {formData[field].map((item) => (
             <span
               key={item}
               className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm rounded-full"
@@ -143,7 +150,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
       {/* 预设选项 */}
       <div className="grid grid-cols-2 gap-2">
         {presetOptions.map((option) => {
-          const isSelected = formData.photographer[field]?.includes(option.label);
+          const isSelected = formData[field]?.includes(option.label);
           return (
             <button
               key={option.id}
@@ -220,9 +227,9 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
       </label>
 
       {/* 已添加的设备 */}
-      {formData.photographer.equipment.length > 0 && (
+      {formData.equipment?.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-3">
-          {formData.photographer.equipment.map((item) => (
+          {formData.equipment.map((item) => (
             <span
               key={item}
               className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm rounded-full"
@@ -412,7 +419,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
         }
       }
 
-      // 构建请求体
+      // 构建请求体 - 适配你提供的数据结构
       const submitData = {
         nickname: formData.nickname,
         avatarUrl: finalAvatarUrl,
@@ -420,9 +427,9 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
         phone: formData.phone,
         detail: formData.detail,
         photographer: {
-          style: formData.photographer.style,
-          equipment: formData.photographer.equipment,
-          type: formData.photographer.type
+          style: formData.style,
+          equipment: formData.equipment,
+          type: formData.photographerType  // 注意这里从 photographerType 映射到 type
         }
       };
 
@@ -448,21 +455,10 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
       return;
     }
     
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value
-        }
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   if (!isOpen) return null;
@@ -693,9 +689,9 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
                   setShowCustomStyle
                 )}
 
-                {/* 摄影类型多选 */}
+                {/* 摄影类型多选 - 注意字段名是 photographerType */}
                 {renderMultiSelect(
-                  'type',
+                  'photographerType',
                   '摄影类型',
                   presetTypes,
                   customType,

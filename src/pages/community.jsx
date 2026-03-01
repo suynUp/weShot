@@ -36,6 +36,8 @@ export function Feed() {
       return res;
     } catch (E) {
       toast.error(E.message || '获取帖子列表失败');
+    }finally{
+      useGetSearchHistory.mutate()
     }
   };
 
@@ -49,6 +51,7 @@ export function Feed() {
     fetchData: getPosts,
     initialPage: 1,
     total: totalposts,
+    dependencies:[searchValue]
   });
 
   useEffect(() => {

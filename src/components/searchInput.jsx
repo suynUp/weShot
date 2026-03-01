@@ -35,8 +35,11 @@ const SearchInput = ({
         setValue(newValue);
     };
 
-    const handleSearch = async () => await searchFn(initialPageNum, initialPageSize);
-
+    const handleSearch = async (item) =>{
+        setValue(item)
+        setIsFocused(false)
+        await searchFn(initialPageNum, initialPageSize,item);
+    } 
 
     const removeHistoryItem = (item, e) => {
         e.stopPropagation();
