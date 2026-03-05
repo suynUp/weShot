@@ -25,6 +25,10 @@ class UserAPI{
     static getOtherUserById = (casId) => {
         return request.get(`/user/info/${casId}`)
     }
+
+    static getAnouncements = () => {
+        return request.get('/user/announcements')
+    }
 }
 
 export default UserAPI

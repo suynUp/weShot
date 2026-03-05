@@ -9,17 +9,29 @@ import SearchInput from "../components/searchInput";
 import request from "../utils/request";
 import { UserStore } from "../store/userStore";
 import useHomePageData from "../hooks/useHomePage";
+import { useGetSuggestions as useGetPhotographerSuggestions } from "../hooks/usePhotographer";
+import { useSearchSuggestWithDebounce } from "../hooks/usePost";
+import photographerStore from "../store/photographerStore";
+import postStore from "../store/postStore";
+
 const Home = () => {
     const {goto} = useNavigation()
     const loginSuccessMutation = useUserLoginSuccess();
     const [searchParams] = useSearchParams();
     const [searchHistory, setSearchHistory] = useState(['人像摄影', '毕业季', '婚礼跟拍', '商业摄影']);
     const [showOverlay, setShowOverlay] = useState(false);
-    const [inputValue, setInputValue] = useState('')
+    const [inputValue, setInputValue] = useState('');
+
+    const photographerSuggestions = photographerStore(state => state.phgSuggestions)
+    const postSuggestions = postStore(state => state.suggestions)
+    const [mergedSuggestions, setMergedSuggestions] = useState([]);
 
     const isLoggedIn = request.hasToken();
-
     const isVerified = UserStore(state=>state.isVerFied)
+
+    // 获取搜索建议hooks
+    const getPhotographerSuggestions = useGetPhotographerSuggestions();
+    const getPostSuggestions = useSearchSuggestWithDebounce();
 
     const {
         displayPending, 
@@ -53,6 +65,41 @@ const Home = () => {
             console.warn('URL 中没有找到 token');
         }
     }, []);
+
+    // 合并搜索建议
+    useEffect(() => {
+        // 合并摄影师和帖子的建议，去重
+        const allSuggestions = [...photographerSuggestions, ...postSuggestions];
+        const uniqueSuggestions = [...new Set(allSuggestions)];
+        setMergedSuggestions(uniqueSuggestions.slice(0, 8)); // 最多显示8条
+    }, [photographerSuggestions, postSuggestions]);
+
+    // 处理摄影师搜索建议 - 防抖
+    useEffect(() => {
+        const fetchPhotographerSuggestions = async () => {
+            if (inputValue.trim()) getPhotographerSuggestions.mutateAsync(inputValue);
+        };
+
+        const debounceTimer = setTimeout(fetchPhotographerSuggestions, 300);
+        return () => clearTimeout(debounceTimer);
+    }, [inputValue]);
+
+    // 处理帖子搜索建议 - 防抖
+    useEffect(() => {
+        const fetchPostSuggestions = async () => {
+            if (inputValue.trim())
+                    getPostSuggestions.mutateAsync(inputValue);
+        };
+
+        fetchPostSuggestions()
+    }, [inputValue]);
+
+    // 处理搜索
+    const handleSearch = (keyword) => {
+        if (keyword.trim()) {
+            goto(`/search?q=${encodeURIComponent(keyword)}`);
+        }
+    };
 
     return (
         <>
@@ -112,10 +159,13 @@ const Home = () => {
                 
                 <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
                    <SearchInput
-                   searchHistory={searchHistory}
-                   setSearchHistory={setSearchHistory}
-                   value={inputValue}
-                   setValue={setInputValue}
+                        searchHistory={searchHistory}
+                        setSearchHistory={setSearchHistory}
+                        value={inputValue}
+                        setValue={setInputValue}
+                        onSearch={handleSearch}
+                        suggest={mergedSuggestions} // 传入合并后的搜索建议
+                        suggestTitle="搜索摄影师或作品" // 可选：自定义建议标题
                    />
 
                     {/* 中部卡片区域 */}

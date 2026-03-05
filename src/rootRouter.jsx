@@ -14,6 +14,7 @@ import PhotographersPage from './pages/photographers'
 import PhotographerOrderSquare from './pages/pendingOrder'
 import PostPublish from './pages/postPblish'
 import OrderActionPage from './pages/orderAction'
+import SearchResults from './pages/searchResult'
 
 const usePathStore = create(
   persist(
@@ -124,6 +125,9 @@ export default function RootRouter() {
     },{
       path:'/orderaction/:orderId',
       page:<OrderActionPage/>
+    },{
+      path:'/searchresults',
+      page:<SearchResults/>
     }
   ]
 

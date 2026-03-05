@@ -25,6 +25,7 @@ import {
   useGetRatingRanking 
 } from '../hooks/usePhotographer';
 import { toast } from '../hooks/useToast';
+
 function PhotographerCarousel({ photographers }) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -123,7 +124,7 @@ function PhotographerCarousel({ photographers }) {
   );
 }
 // 摄影师卡片组件
-function PhotographerCard({ photographer, onClick }) {
+export function PhotographerCard({ photographer, onClick }) {
   return (
     <div onClick={onClick} className="cursor-pointer bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4">
       <div className="flex gap-4">
