@@ -1,0 +1,61 @@
+/* 问候语 */
+.greeting {
+  line-height: 1.2;
+  color: #000;
+  font-size: 36px;
+  font-family: PingFangSC-regular;
+  margin-top: 15px;
+  margin-left: 60px;
+  margin-bottom: 60px; 
+}
+
+/* 卡片网格布局 */
+.statsGrid { 
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  margin-left: 60px;
+  font-family: Inter-regular;
+  gap: 30px 40px; 
+  max-width: 900px; 
+}
+
+/* 卡片核心 水平布局 */
+.statCard {
+  background-color: #F9F2EF; 
+  border: 1px solid #000; 
+  padding: 30px 25px; 
+  min-height: 140px; 
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content:space-around;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* 卡片左侧 */
+.cardLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* 图标和标题之间的间距 */
+}
+
+.taskImg {
+  margin-right: 40px;
+}
+
+/* 卡片标题 */
+.cardTitle {
+  font-size: 28px;
+  line-height: 1.2;
+  color: #000;
+  font-family: PingFangSC-regular;
+}
+
+/* 卡片数字 */
+.cardValue {
+  font-size: 28px;
+  font-weight: bold;
+  color: #000;
+  font-family: PingFangSC-regular;
+}
