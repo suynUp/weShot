@@ -5,6 +5,10 @@ import { Users, PenSquare, Trophy, MessageCircle, Star, Camera } from "lucide-re
 const CenterCard = ({RatingRanking,OrderRanking}) => {
     const { goto } = useNavigation();
 
+    const getNum = (num) => {
+        return Number(num).toFixed(1);
+    }
+
     return (
         <div className="grid grid-cols-2 gap-4 w-full h-full">
             {/* 合并后的摄影师列表+排行榜卡片 */}
@@ -62,7 +66,7 @@ const CenterCard = ({RatingRanking,OrderRanking}) => {
                                     <span className="text-[10px] text-gray-600 truncate flex-1">
                                         {i.nickname}
                                     </span>
-                                    <span className="text-[10px] font-medium text-gray-700">{i.ratingCount}分</span>
+                                    <span className="text-[10px] font-medium text-gray-700">{getNum(i.avgScore)}分</span>
                                 </div>
                             ))}
                         </div>

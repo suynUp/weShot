@@ -259,3 +259,15 @@ export const useLogOut = () => {
     
     return logout  // 返回函数，而不是执行结果
 }
+
+
+export const useGetAnnouncements = () => useMutation({
+    mutationFn:async () =>{
+        const res = await UserAPI.getAnouncements()
+        if(res.code === 200){
+            return res
+        }else{
+            throw new Error(res.msg)
+        }
+    }
+})

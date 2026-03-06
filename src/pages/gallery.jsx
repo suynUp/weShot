@@ -8,9 +8,13 @@ import { OrderDisplayStore } from '../store/orderDisplayStore';
 import { useNavigation } from '../hooks/navigation';
 import { usePagination } from '../hooks/usePagination';
 import { useGetCompletedOrders, useGetOrderDetail } from '../hooks/useOrder';
+import { useSearchParams } from 'react-router-dom';
 
 function Gallery() {
+
   const { goBack } = useNavigation();
+  const [searchParams] = useSearchParams();
+
   const [loading,] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
@@ -21,6 +25,11 @@ function Gallery() {
   const getCompletedOrders = useGetCompletedOrders();
   const useGetOrderDetailMutation = useGetOrderDetail();
 
+  useEffect(()=>{
+    const order_id = searchParams.get('order_id')
+    setSelectedOrder({order_id})
+  },[])
+  
   useEffect(() => {
     if (selectedOrder?.order_id) {
       useGetOrderDetailMutation.mutate(selectedOrder?.order_id);
