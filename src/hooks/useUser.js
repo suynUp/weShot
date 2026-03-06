@@ -169,8 +169,13 @@ export const useUserUpdate = () => {
             toast.error(e.message||'修改失败')
         },
         
-        onSuccess:(data)=>{
-            update(data.data)//更新UI以及localstorage
+        onSuccess:(res,data)=>{
+            update({
+                equipment:data.photographer.equipment,
+                photographerType:data.photographer.type,
+                style:data.photographer.style,
+                ...data
+            })//更新UI以及localstorage
         }
     })
 }

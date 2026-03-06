@@ -484,7 +484,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
           </div>
 
           {/* 表单 */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <form className="p-6 space-y-6">
             {/* 头像上传区域 */}
             <div className="flex flex-col items-center">
               <div className="relative">
@@ -717,6 +717,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
                 type="submit"
                 disabled={isUploading}
                 className="flex-1 px-4 py-3 bg-orange-400 text-white rounded-xl hover:bg-orange-600 transition-all shadow-md hover:shadow-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                onClick={handleSubmit}
               >
                 {isUploading ? (
                   <>

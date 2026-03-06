@@ -97,12 +97,14 @@ export const UserStore = create(
     
     // 更新当前用户信息
     update: (partialUser) => {
-        set((state) => ({
-            user: {
-                ...state.user,
-                ...partialUser,
-            },
-            isVerFied: partialUser.role === 2
+        const currentUser = {
+            ...get().user,
+            ...partialUser,
+        };
+        console.log('Updating user info:', currentUser);
+        set(() => ({
+            user:currentUser,
+            isVerFied: currentUser.role === 2
         }));
 
         setTimeout(() => {

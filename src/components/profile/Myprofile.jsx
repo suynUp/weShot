@@ -11,7 +11,7 @@ import ProfileEditModal from '../profileEditor';
 import { FileText, Image, Clock } from 'lucide-react';
 import { useNavigation } from '../../hooks/navigation';
 import { usePagination } from '../../hooks/usePagination';
-import { useLogOut } from '../../hooks/useUser';
+import { useLogOut, useUserUpdate } from '../../hooks/useUser';
 import { PostDetail } from '../postDetail';
 import postStore from '../../store/postStore';
 import { useDeletePost, useGetPostDetail } from '../../hooks/usePost';
@@ -31,6 +31,7 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
   const [showPostDetail,setShowPostDetail] = useState(false)
   const currentPost = postStore(state => state.currentPost)
   const useGetPostDetailMutation = useGetPostDetail()
+  const updateprofile = useUserUpdate()
 
   const LogOut = useLogOut()
   const useDeletePostMutation = useDeletePost()
@@ -277,7 +278,10 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         profile={profileData}
-        onSave={() => {}}
+        onSave={async (data) => {
+          updateprofile.mutate(data)
+          setIsEditModalOpen(false)
+        }}
       />
     </div>
   );
