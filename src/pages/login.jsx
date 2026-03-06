@@ -100,16 +100,11 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-100 via-pink-100 to-blue-100 relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       {/* 添加动画样式 */}
       <style>
         {slideInKeyframes}
       </style>
-
-      {/* 装饰性背景元素 - 与Launch保持一致 */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-200 rounded-full filter blur-3xl opacity-40 -translate-y-1/2 translate-x-1/3" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-pink-200 rounded-full filter blur-3xl opacity-40 translate-y-1/2 -translate-x-1/3" />
-      <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-orange-200 rounded-full filter blur-3xl opacity-30" />
 
       {/* 登录卡片 - 透明背景 */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-6">

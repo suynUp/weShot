@@ -1,10 +1,12 @@
 // store/userStore.js
 import { create } from "zustand";
 import { getFromLocalStorage, LOCAL_STORAGE_KEYS, saveToLocalStorage } from "../utils/localStorage";
+import { persist } from "zustand/middleware";
 
 //把user操作集中在这里了
 
 export const UserStore = create(
+    persist(
     (set, get) => ({
     // 当前登录用户信息
     user: {
@@ -95,12 +97,14 @@ export const UserStore = create(
     
     // 更新当前用户信息
     update: (partialUser) => {
-        set((state) => ({
-            user: {
-                ...state.user,
-                ...partialUser,
-            },
-            isVerFied: partialUser.role === 2
+        const currentUser = {
+            ...get().user,
+            ...partialUser,
+        };
+        console.log('Updating user info:', currentUser);
+        set(() => ({
+            user:currentUser,
+            isVerFied: currentUser.role === 2
         }));
 
         setTimeout(() => {
@@ -156,4 +160,4 @@ export const UserStore = create(
         userCompletedOrders: [],
         totalCompletedOrders: -1
     })
-}));
+})));

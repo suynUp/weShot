@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { 
   Camera, AlertCircle, Package, Grid3X3, List, 
   Clock, TrendingUp, Star, ChevronLeft
 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 
 import OrderCard from '../components/orderSquareCard';
 import { Pagination } from '../components/pagination';
@@ -11,6 +12,7 @@ import { useNavigation } from '../hooks/navigation';
 import { UserStore } from '../store/userStore';
 import { useGetOrder, useTakeOrderMutation } from '../hooks/useOrder';
 import { OrderStore } from '../store/orderStore';
+import ConfirmModal from '../components/confirmModel';
 
 function PhotographerOrderSquare() {
   // 状态
@@ -18,6 +20,12 @@ function PhotographerOrderSquare() {
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('newest');
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [postId, setPostId] = useState(null);
+  
+  // URL 参数和卡片 refs
+  const [searchParams] = useSearchParams();
+  const cardRefs = useRef({});
 
   const isVerFied = UserStore(state => state.isVerFied);
   
@@ -33,7 +41,7 @@ function PhotographerOrderSquare() {
     await getAllLobbys(pageNum, pageSize);
   };
 
-  // 使用分页 Hook - 类似Feed页面的用法
+  // 使用分页 Hook
   const {
     currentPage,
     totalPages,
@@ -41,32 +49,63 @@ function PhotographerOrderSquare() {
     setCurrentPage,
   } = usePagination({
     itemsPerPage: 12,
-    fetchData: fetchOrders, // 使用fetchData方式而不是直接传入data
+    fetchData: fetchOrders,
     initialPage: 1,
-    total: totalPendingOrderNum, // 使用store中的总数
+    total: totalPendingOrderNum,
+    dependencies: [takeOrder.isError, takeOrder.isSuccess], 
   });
 
   // 初始加载和搜索/排序变化时重新获取数据
   useEffect(() => {
-    // 当searchTerm或sortBy变化时，重置到第一页并重新获取
     setCurrentPage(1);
   }, [searchTerm, sortBy]);
 
+  // 根据 URL 参数定位到订单卡片
+  useEffect(() => {
+    const orderId = searchParams.get('order_id');
+    if (!orderId || !allPendingOrders?.length) return;
+
+    // 查找对应的订单
+    const targetOrder = allPendingOrders.find(order => order.orderId === parseInt(orderId));
+    
+    if (targetOrder) {
+      // 延迟一点确保 DOM 已渲染
+      setTimeout(() => {
+        const cardElement = cardRefs.current[orderId];
+        if (cardElement) {
+          // 滚动到卡片位置
+          cardElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+          
+          // 添加高亮类
+          cardElement.classList.add('highlight-card');
+          
+          // 3秒后移除高亮
+          setTimeout(() => {
+            cardElement.classList.remove('highlight-card');
+          }, 3000);
+        }
+      }, 100);
+    }
+  }, [searchParams, allPendingOrders]);
+
   const handleTakeOrder = (postId) => {
+    console.log('准备接单，postId:', postId);
+    setShowConfirm(true);
+    setPostId(postId);
+  };
+
+  const handleConfirm = () => {
+    setShowConfirm(false);
     takeOrder.mutate(postId);
   };
 
-  // 加载状态
   const isLoading = paginationLoading;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
-      {/* 装饰性背景元素 */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
-      </div>
-
+    <div className="min-h-screen">
       {/* 头部导航 */}
       <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-orange-100 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -220,19 +259,24 @@ function PhotographerOrderSquare() {
                 : 'space-y-4'
             }>
               {allPendingOrders.map((order) => (
-                <OrderCard 
-                  key={order.orderId} 
-                  order={order}
-                  takeOrder={handleTakeOrder} 
-                  viewMode={viewMode}
-                  isVerfied={isVerFied}
-                />
+                <div
+                  key={order.orderId}
+                  ref={el => cardRefs.current[order.orderId] = el}
+                  className="order-card-wrapper"
+                >
+                  <OrderCard 
+                    order={order}
+                    takeOrder={handleTakeOrder} 
+                    viewMode={viewMode}
+                    isVerfied={isVerFied}
+                  />
+                </div>
               ))}
             </div>
 
             {/* 分页组件 */}
             {totalPages > 1 && (
-              <div className=" mt-12 flex justify-center">
+              <div className="mt-12 flex justify-center">
                 <div className="px-10 bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg p-2">
                   <Pagination
                     currentPage={currentPage}
@@ -243,7 +287,7 @@ function PhotographerOrderSquare() {
               </div>
             )}
 
-            {/* 统计信息 - 类似Feed页面 */}
+            {/* 统计信息 */}
             <div className="mt-8 flex justify-center items-center gap-2 text-sm text-gray-400">
               <span className="w-2 h-2 bg-orange-400 rounded-full" />
               <span>共 {allPendingOrders.length} 个订单</span>
@@ -263,9 +307,7 @@ function PhotographerOrderSquare() {
             <p className="text-gray-500 mb-6">试试其他搜索词，或稍后再来看看</p>
             {searchTerm && (
               <button 
-                onClick={() => {
-                  setSearchTerm('');
-                }}
+                onClick={() => setSearchTerm('')}
                 className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl text-sm font-medium hover:from-orange-600 hover:to-amber-600 transition-all transform hover:scale-105 shadow-lg"
               >
                 清除搜索
@@ -283,7 +325,43 @@ function PhotographerOrderSquare() {
             <ChevronLeft className="w-5 h-5 rotate-90" />
           </button>
         )}
+         
+        <ConfirmModal
+          title="确认接单"
+          isOpen={showConfirm}
+          content="您确定要接下这个订单吗？"
+          onClose={() => setShowConfirm(false)}
+          onConfirm={handleConfirm}
+        />
       </main>
+
+      {/* 添加高亮样式 */}
+      <style jsx>{`
+        .order-card-wrapper {
+          transition: all 0.3s ease;
+          border-radius: 1rem;
+        }
+        
+        .order-card-wrapper.highlight-card {
+          ring: 4px solid #f97316;
+          box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.5);
+          transform: scale(1.02);
+          z-index: 10;
+          animation: highlightPulse 2s ease-out;
+        }
+        
+        @keyframes highlightPulse {
+          0% {
+            box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7);
+          }
+          70% {
+            box-shadow: 0 0 0 10px rgba(249, 115, 22, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

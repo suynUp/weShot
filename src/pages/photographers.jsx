@@ -382,7 +382,7 @@ export default function PhotographersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-5">
+    <div className="min-h-screen pt-5">
       <div className='flex items-center mb-4'>
         <ChevronLeft 
           onClick={() => goto('/')} 

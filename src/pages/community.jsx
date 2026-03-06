@@ -96,7 +96,7 @@ export function Feed() {
             >
               <ChevronLeft className="w-5 h-5 text-gray-600 group-hover:text-gray-900" />
             </button>
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-amber-700 via-orange-600 to-emerald-700 bg-clip-text text-transparent">
+            <h1 className="text-2xl md:text-3xl font-bold bg-orange-400/90 bg-clip-text text-transparent">
               灵感画廊 · 社区
             </h1>
           </div>

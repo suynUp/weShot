@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { X, ChevronRight, Users, Camera, Image as ImageIcon, Sparkles, Bell, MessageCircle } from "lucide-react"; // 添加 Bell, MessageCircle
 import CenterCard from "../components/homepageCard";
-import { useUserLoginSuccess } from "../hooks/useUser";
+import { useUserLoginSuccess, useUserMutation } from "../hooks/useUser";
 import { useSearchParams } from "react-router-dom";
 import { useNavigation } from "../hooks/navigation";
 import SearchInput from "../components/searchInput";
@@ -16,6 +16,7 @@ import photographerStore from "../store/photographerStore";
 import postStore from "../store/postStore";
 import { useGetAnnouncements } from "../hooks/useUser"; // 导入公告hooks
 import FeedbackModal from "../components/feedBackModel";
+import UserAPI from "../api/userAPI";
 
 const Home = () => {
     const {goto} = useNavigation()
@@ -36,6 +37,9 @@ const Home = () => {
 
     const isLoggedIn = request.hasToken();
     const isVerified = UserStore(state=>state.isVerFied)
+    const user = UserStore(state => state.user)
+
+    const getUser = useUserMutation()
 
     // 获取公告hooks
     const getAnnouncements = useGetAnnouncements();
@@ -91,6 +95,7 @@ const Home = () => {
         displayComplete()
         displayRR() 
         displayOR()
+        getUser.mutate()
     },[])
 
     const closeOverlay = () => {
@@ -152,7 +157,10 @@ const Home = () => {
     // 处理反馈提交
     const handleFeedbackSubmit = async (data) => {
         // 调用API提交反馈
-        console.log('提交的反馈数据:', data);
+        const res = await UserAPI.feedback(data);
+        if(res.code !== 200){
+            throw new Error(res.msg || '提交反馈失败');
+        }
         // const res = await request.post('/feedback', data);
     };
 
@@ -164,7 +172,7 @@ const Home = () => {
             {/* 版权说明遮罩层 */}
             {showOverlay && (
                 <div 
-                    className="fixed inset-0 z-50 bg-gradient-to-br from-orange-500/40 via-pink-500/40 to-amber-500/40 backdrop-blur-md transition-opacity duration-300 flex items-center justify-center p-4"
+                    className="fixed inset-0 z-50 backdrop-blur-md transition-opacity duration-300 flex items-center justify-center p-4"
                     onClick={closeOverlay}
                 >
                     <div 
@@ -209,7 +217,7 @@ const Home = () => {
             )}
 
             {/* 主内容区域 */}
-            <div className="min-h-screen bg-gradient-to-br from-orange-100 via-pink-100 to-blue-100 relative overflow-hidden">
+            <div className="min-h-screen relative overflow-hidden">
                 {/* 装饰性背景元素 */}
                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-200 rounded-full filter blur-3xl opacity-40 -translate-y-1/2 translate-x-1/3" />
                 <div className="absolute bottom-0 left-0 w-96 h-96 bg-pink-200 rounded-full filter blur-3xl opacity-40 translate-y-1/2 -translate-x-1/3" />
@@ -226,22 +234,23 @@ const Home = () => {
                         suggestTitle="搜索摄影师或作品" // 可选：自定义建议标题
                    />
 
-                    {/* 中部卡片区域 - 三列等高布局 */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        {/* 邀请入驻卡片 - 保持不变 */}
-                        <div className="group bg-gradient-to-br from-orange-400 to-amber-500 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 h-64">
+                   {/* 中部卡片区域 - 三列等高布局 */}
+                    {/* 中部卡片区域 - 三列等高布局，公告加宽 */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        {/* 邀请入驻卡片 - 宽度1份，淡粉色偏橙色 */}
+                        <div className="md:col-span-1 group bg-gradient-to-br from-pink-300 to-orange-300 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 h-64">
                             <div className="h-full flex flex-col justify-between">
                                 {!isVerified ? (
                                     // 未入驻状态
                                     <>
                                         <div>
                                             <Users className="w-12 h-12 text-white mb-4" />
-                                            <h3 className="text-2xl font-bold text-white mb-2">摄影师入驻</h3>
-                                            <p className="text-orange-100 text-base">分享你的摄影作品，获得更多曝光机会</p>
+                                            <h3 className="text-2xl font-bold text-gray-800/80 mb-2">摄影师入驻</h3>
+                                            <p className="text-gray-500 text-base">分享你的摄影作品，获得更多曝光机会</p>
                                         </div>
                                         <button
                                             onClick={() => goto('/signup')}
-                                            className="mt-4 px-5 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all flex items-center justify-between group text-base"
+                                            className="mt-4 px-5 py-3 bg-white/20 backdrop-blur-sm text-gray-800/80 rounded-xl hover:bg-white/30 transition-all flex items-center justify-between group text-base"
                                         >
                                             <span>立即入驻</span>
                                             <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -252,10 +261,10 @@ const Home = () => {
                                     <>
                                         <div>
                                             <Users className="w-12 h-12 text-white mb-4" />
-                                            <h3 className="text-2xl font-bold text-white mb-2">欢迎摄影师</h3>
-                                            <p className="text-orange-100 text-base">你已经成功入驻，开始分享你的作品吧</p>
+                                            <h3 className="text-2xl font-bold text-gray-800/80 mb-2">欢迎摄影师</h3>
+                                            <p className="text-gray-500 text-base">你已经成功入驻</p>
                                         </div>
-                                        <div className="mt-4 px-5 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl flex items-center justify-center text-base">
+                                        <div className="mt-4 px-5 py-3 bg-white/20 backdrop-blur-sm text-gray-800/80 rounded-xl flex items-center justify-center text-base">
                                             <span>✓ 已入驻</span>
                                         </div>
                                     </>
@@ -263,137 +272,187 @@ const Home = () => {
                             </div>
                         </div>
                         
-                        {/* 公告&反馈轮播区域 - 改为公告+反馈轮播 */}
-<div className="bg-gradient-to-br from-pink-400 to-orange-400 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 h-64 overflow-hidden">
-    <div className="h-full flex flex-col">
-        <div className="flex justify-between items-center mb-3">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                {isFeedback ? (
-                    <>
-                        <MessageCircle className="w-5 h-5" />
-                        意见反馈
-                    </>
-                ) : (
-                    <>
-                        <Bell className="w-5 h-5" />
-                        平台公告
-                    </>
-                )}
-            </h3>
-            <Sparkles className="w-5 h-5 text-yellow-200" />
-        </div>
-        
-        <div className="flex-1 relative">
-            {/* 反馈入口 - 优化排版，确保内容不超出 */}
-            {isFeedback ? (
-                <div 
-                    className="absolute inset-0 flex flex-col animate-fadeIn cursor-pointer"
-                    onClick={() => setShowFeedback(true)}
-                >
-                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 h-full flex flex-col">
-                        <div className="flex-1 flex flex-col items-center justify-center">
-                            <div className="w-16 h-16 bg-white/30 rounded-2xl flex items-center justify-center mb-2">
-                                <MessageCircle className="w-8 h-8 text-white" />
-                            </div>
-                            <h4 className="text-white font-semibold text-base mb-1 text-center">
-                                告诉我们你的想法
-                            </h4>
-                        </div>
-                        <button className="mt-1 w-full py-2 bg-white/30 text-white rounded-lg hover:bg-white/40 transition-colors text-sm font-medium">
-                            立即反馈
-                        </button>
-                    </div>
-                </div>
-            ) : (
-                // 公告内容 - 中文排版优化：首行缩进2字符，左对齐
-                announcements.length > 0 && announcements[currentIndex] ? (
-                    <div className="absolute inset-0 flex flex-col animate-fadeIn">
-                        <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 h-full flex flex-col">
-                            <h4 className="text-white font-semibold text-base mb-2 leading-relaxed pl-0">
-                                {announcements[currentIndex]?.title}
-                            </h4>
-                            <div className="flex-1 overflow-y-auto mb-2 pr-1" style={{
-                                scrollbarWidth: 'thin',
-                                scrollbarColor: 'rgba(255,255,255,0.5) transparent'
-                            }}>
-                                <p className="text-white/90 text-xs leading-relaxed break-words whitespace-pre-wrap"
-                                   style={{
-                                       textIndent: '2em', // 首行缩进2字符
-                                       textAlign: 'left'
-                                   }}>
-                                    {announcements[currentIndex]?.content}
-                                </p>
-                            </div>
-                            {/* 日期放在右下角 */}
-                            <div className="flex justify-end mt-auto">
-                                <span className="text-white/60 text-[10px] bg-white/10 px-2 py-1 rounded-full">
-                                    {formatDate(announcements[currentIndex]?.created_at)}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="h-full flex items-center justify-center">
-                        <p className="text-white/80 text-sm text-center">暂无公告</p>
-                    </div>
-                )
-            )}
-
-            {/* 分页指示器 - 显示所有公告+反馈的总数 */}
-            {announcements.length > 0 && (
-                <div className="absolute -bottom-3 left-0 right-0 flex justify-center space-x-1.5">
-                    {[...Array(announcements.length + 1)].map((_, index) => (
-                        <button
-                            key={index}
-                            onClick={() => setCurrentIndex(index)}
-                            className={`transition-all rounded-full ${
-                                index === currentIndex 
-                                    ? 'w-3 h-1.5 bg-white' 
-                                    : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/60'
-                            }`}
-                        />
-                    ))}
-                </div>
-            )}
-        </div>
-    </div>
-</div>
-
-{/* 添加自定义滚动条样式 */}
-<style>{`
-    .overflow-y-auto::-webkit-scrollbar {
-        width: 2px;
-    }
-    .overflow-y-auto::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .overflow-y-auto::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 10px;
-    }
-    .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.5);
-    }
-`}</style>
-
-                        {/* 个人主页卡片 - 完全保留原样 */}
-                        <div className="group bg-gradient-to-br from-blue-400 to-pink-400 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 h-64">
-                            <div className="h-full flex flex-col justify-between">
-                                <div>
-                                    <Camera className="w-12 h-12 text-white mb-4" />
-                                    <h3 className="text-2xl font-bold text-white mb-2">个人主页</h3>
-                                    <p className="text-blue-100 text-base">管理你的作品集和个人信息</p>
+                        {/* 公告&反馈轮播区域 - 宽度2份，加宽处理 */}
+                        <div className="md:col-span-2 bg-gradient-to-br from-pink-400 to-orange-400 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 h-64 overflow-hidden">
+                            <div className="h-full flex flex-col">
+                                <div className="flex justify-between items-center mb-3">
+                                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                        {isFeedback ? (
+                                            <>
+                                                <MessageCircle className="w-5 h-5" />
+                                                意见反馈
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Bell className="w-5 h-5" />
+                                                平台公告
+                                            </>
+                                        )}
+                                    </h3>
+                                    <Sparkles className="w-5 h-5 text-yellow-200" />
                                 </div>
+                                
+                                <div className="flex-1 relative">
+                                    {/* 反馈入口 - 优化排版，确保内容不超出 */}
+                                    {isFeedback ? (
+                                        <div 
+                                            className="absolute inset-0 flex flex-col animate-fadeIn cursor-pointer"
+                                            onClick={() => setShowFeedback(true)}
+                                        >
+                                            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 h-full flex justify-center items-center flex-col">
+                                                <div className="flex-1 flex flex-col items-center justify-center">
+                                                    <div className="w-16 h-16 bg-white/30 rounded-2xl flex items-center justify-center mb-2">
+                                                        <MessageCircle className="w-8 h-8 text-white" />
+                                                    </div>
+                                                    <h4 className="text-white text-base mb-1 text-center">
+                                                        告诉我们你的想法
+                                                    </h4>
+                                                </div>
+                                                <button className="mt-1 w-[50%] py-2 bg-white/30 text-white rounded-lg hover:bg-white/40 transition-colors text-sm font-medium">
+                                                    立即反馈
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        // 公告内容
+                                        announcements.length > 0 && announcements[currentIndex] ? (
+                                            <div className="absolute inset-0 flex flex-col animate-fadeIn">
+                                                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 h-full flex flex-col">
+                                                    <h4 className="text-white font-semibold text-base mb-2 leading-relaxed pl-0">
+                                                        {announcements[currentIndex]?.title}
+                                                    </h4>
+                                                    <div className="flex-1 overflow-y-auto mb-2 pr-1" style={{
+                                                        scrollbarWidth: 'thin',
+                                                        scrollbarColor: 'rgba(255,255,255,0.5) transparent'
+                                                    }}>
+                                                        <p className="text-white/90 text-sm leading-relaxed break-words whitespace-pre-wrap"
+                                                        style={{
+                                                            textIndent: '2em',
+                                                            textAlign: 'left'
+                                                        }}>
+                                                            {announcements[currentIndex]?.content}
+                                                        </p>
+                                                    </div>
+                                                    {/* 日期放在右下角 */}
+                                                    <div className="flex justify-end mt-auto">
+                                                        <span className="text-white/60 text-[10px] bg-white/10 px-2 py-1 rounded-full">
+                                                            {formatDate(announcements[currentIndex]?.created_at)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="h-full flex items-center justify-center">
+                                                <p className="text-white/80 text-sm text-center">暂无公告</p>
+                                            </div>
+                                        )
+                                    )}
+
+                                    {/* 分页指示器 */}
+                                    {announcements.length > 0 && (
+                                        <div className="absolute -bottom-3 left-0 right-0 flex justify-center space-x-1.5">
+                                            {[...Array(announcements.length + 1)].map((_, index) => (
+                                                <button
+                                                    key={index}
+                                                    onClick={() => setCurrentIndex(index)}
+                                                    className={`transition-all rounded-full ${
+                                                        index === currentIndex 
+                                                            ? 'w-3 h-1.5 bg-white' 
+                                                            : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/60'
+                                                    }`}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 添加自定义滚动条样式 */}
+                        <style>{`
+                            .overflow-y-auto::-webkit-scrollbar {
+                                width: 2px;
+                            }
+                            .overflow-y-auto::-webkit-scrollbar-track {
+                                background: transparent;
+                            }
+                            .overflow-y-auto::-webkit-scrollbar-thumb {
+                                background: rgba(255, 255, 255, 0.3);
+                                border-radius: 10px;
+                            }
+                            .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+                                background: rgba(255, 255, 255, 0.5);
+                            }
+                        `}</style>
+
+                        {/* 个人主页卡片 - 宽度1份，淡粉色偏橙色，头像增大 */}
+                        <div className="md:col-span-1 group bg-rose-100/90 border border-rose-200 border-[5px] rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 h-64 relative overflow-hidden">
+                            {/* 装饰性背景元素 */}
+                            
+                            <div className="relative h-full flex flex-col items-center justify-between z-10">
+                                {/* 头像 - 增大 */}
+                                <div className="relative w-24 h-24 flex-shrink-0">
+                                    <div className="w-full h-full rounded-full overflow-hidden ring-4 ring-white/40 shadow-xl">
+                                        {user?.avatarUrl ? (
+                                            <img 
+                                                src={user?.avatarUrl} 
+                                                alt="avatar" 
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full bg-gradient-to-br from-pink-200 to-orange-200 flex items-center justify-center">
+                                                <Camera className="w-12 h-12 text-white/90" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    {/* 在线状态指示器 */}
+                                    <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-400 rounded-full border-2 border-white shadow-lg"></div>
+                                </div>
+                                
+                                {/* 昵称和ID */}
+                                <div className="flex-1 flex flex-col items-center justify-center w-full px-2 mt-2">
+                                    <div className="w-full text-start space-y-1">
+                                        {/* nickname */}
+                                        <div className="text-gray-800/80 font-bold text-lg truncate">
+                                            <img src="/src/assets/userImg/相机图标.png" alt="相机" className="w-5 h-5 inline mr-1" />
+                                            {user?.nickname || '摄影爱好者'}
+                                        </div>
+                                        
+                                        {/* id */}
+                                        <div className="text-gray-500 text-sm truncate">
+                                            ID: {user?.casId || '********'}
+                                        </div>
+                                        
+                                        {/* 摄影师标识 */}
+                                        {user?.isVerified && (
+                                            <div className="mt-1">
+                                                <span className="inline-block bg-pink-400/40 px-2 py-0.5 rounded-full text-xs text-white/90">
+                                                    <Camera className="w-3 h-3 inline mr-1" />
+                                                    认证摄影师
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                
+                                {/* 操作按钮 */}
                                 {isLoggedIn ? (
-                                    <button onClick={()=>goto('/profile')} className="mt-4 px-5 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all flex items-center justify-between group text-base">
-                                        <span>查看主页</span>
-                                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    <button 
+                                        onClick={() => goto('/profile')} 
+                                        className="w-full px-4 py-2.5 mt-2 bg-white/30 backdrop-blur-sm text-gray-800 rounded-xl hover:bg-white/40 transition-all flex items-center justify-center gap-2 text-sm font-medium border border-white/20 mb-2"
+                                    >
+                                        <span>查看个人主页</span>
+                                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                     </button>
-                                ):(
-                                    <button onClick={()=>goto('/login')} className="mt-4 px-5 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all flex items-center justify-between group text-base">
+                                ) : (
+                                    <button 
+                                        onClick={() => goto('/login')} 
+                                        className="w-full px-4 py-2.5 bg-white/30 backdrop-blur-sm text-white rounded-xl hover:bg-white/40 transition-all flex items-center justify-center gap-2 text-sm font-medium border border-white/20 mb-2"
+                                    >
                                         <span>立即登录</span>
-                                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                    </button>)}
+                                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -420,7 +479,9 @@ const Home = () => {
                                                     <p className="text-xs text-gray-500 truncate">发起人：{order.customerName}</p>
                                                 </div>
                                             </div>
-                                            <button className="text-xs px-2 py-1 text-orange-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors flex-shrink-0">
+                                            <button
+                                            onClick={()=>goto(`/pendingorders?order_id=${order.orderId}`)} 
+                                            className="text-xs px-2 py-1 text-orange-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors flex-shrink-0">
                                                 查看
                                             </button>
                                         </div>

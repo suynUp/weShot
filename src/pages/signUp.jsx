@@ -353,11 +353,9 @@ function PhotographerSignUp() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-pink-50 py-5 px-4">
+    <div className="min-h-screen py-5 px-4">
       {/* 装饰性背景 */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-orange-200/30 to-pink-200/30 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-amber-200/30 to-orange-200/30 rounded-full blur-3xl" />
         <Camera className="absolute top-20 right-20 w-16 h-16 text-orange-200/20 rotate-12" />
         <Camera className="absolute bottom-20 left-20 w-20 h-20 text-pink-200/20 -rotate-12" />
       </div>

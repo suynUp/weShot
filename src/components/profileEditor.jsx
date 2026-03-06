@@ -30,8 +30,6 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
     sex: profile?.sex || 0,
     phone: profile?.phone || '',
     detail: profile?.detail || '',
-    // 注意：profile中可能直接有style, equipment, type字段，而不是在photographer对象下
-    // 根据你提供的user数据结构，style, equipment, type是直接挂在user下的
     style: Array.isArray(profile?.style) ? profile.style : [],
     equipment: Array.isArray(profile?.equipment) ? profile.equipment : [],
     photographerType: Array.isArray(profile?.photographerType) ? profile.photographerType : []
@@ -132,13 +130,13 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
           {formData[field].map((item) => (
             <span
               key={item}
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm rounded-full"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-100 text-orange-700 text-sm rounded-full"
             >
               {item}
               <button
                 type="button"
                 onClick={() => removeItem(field, item)}
-                className="ml-1 hover:text-white/80"
+                className="ml-1 hover:text-orange-500"
               >
                 <XMarkIcon className="w-4 h-4" />
               </button>
@@ -157,10 +155,10 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
               type="button"
               onClick={() => handleMultiSelect(field, option.label)}
               className={`
-                flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition-all
+                flex items-center gap-2 px-3 py-2 rounded-xl border transition-all
                 ${isSelected 
                   ? 'border-orange-500 bg-orange-50 text-orange-700' 
-                  : 'border-orange-200 hover:border-orange-300 text-gray-600 hover:bg-orange-50/50'
+                  : 'border-orange-200 hover:border-orange-300 text-gray-600 hover:bg-orange-50'
                 }
               `}
             >
@@ -195,14 +193,14 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
           <button
             type="button"
             onClick={() => addCustomItem(field, customValue, setCustomValue, setShowCustom)}
-            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600"
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
           >
             添加
           </button>
           <button
             type="button"
             onClick={() => setShowCustom(false)}
-            className="px-4 py-2 border border-orange-300 rounded-lg text-orange-700 hover:bg-orange-100"
+            className="px-4 py-2 border border-orange-300 rounded-lg text-orange-700 hover:bg-orange-50"
           >
             取消
           </button>
@@ -232,13 +230,13 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
           {formData.equipment.map((item) => (
             <span
               key={item}
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm rounded-full"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-100 text-orange-700 text-sm rounded-full"
             >
               {item}
               <button
                 type="button"
                 onClick={() => removeItem('equipment', item)}
-                className="ml-1 hover:text-white/80"
+                className="ml-1 hover:text-orange-500"
               >
                 <XMarkIcon className="w-4 h-4" />
               </button>
@@ -266,14 +264,14 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
           <button
             type="button"
             onClick={() => addCustomItem('equipment', customEquipment, setCustomEquipment, setShowCustomEquipment)}
-            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600"
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
           >
             添加
           </button>
           <button
             type="button"
             onClick={() => setShowCustomEquipment(false)}
-            className="px-4 py-2 border border-orange-300 rounded-lg text-orange-700 hover:bg-orange-100"
+            className="px-4 py-2 border border-orange-300 rounded-lg text-orange-700 hover:bg-orange-50"
           >
             取消
           </button>
@@ -429,7 +427,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
         photographer: {
           style: formData.style,
           equipment: formData.equipment,
-          type: formData.photographerType  // 注意这里从 photographerType 映射到 type
+          type: formData.photographerType
         }
       };
 
@@ -465,32 +463,32 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* 遮罩层 */}
+      {/* 遮罩层 - 改为淡橙色半透明 */}
       <div 
-        className="fixed inset-0 bg-gradient-to-br from-orange-500/30 via-pink-500/30 to-amber-500/30 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-orange-50/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
-      {/* 弹窗内容 */}
+      {/* 弹窗内容 - 统一为淡橙色 */}
       <div className="relative min-h-screen flex items-center justify-center p-4">
-        <div className="relative bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-orange-200/50">
-          {/* 头部 */}
-          <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-4 flex justify-between items-center rounded-t-2xl text-white">
+        <div className="relative bg-orange-50 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-orange-200">
+          {/* 头部 - 改为纯橙色背景 */}
+          <div className="sticky top-0 bg-orange-400 px-6 py-4 flex justify-between items-center rounded-t-2xl text-white">
             <h2 className="text-xl font-semibold">编辑个人信息</h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-full transition-colors"
+              className="p-2 hover:bg-orange-400 rounded-full transition-colors"
             >
               <XMarkIcon className="w-5 h-5" />
             </button>
           </div>
 
           {/* 表单 */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <form className="p-6 space-y-6">
             {/* 头像上传区域 */}
             <div className="flex flex-col items-center">
               <div className="relative">
-                <div className="w-28 h-28 rounded-full overflow-hidden bg-gradient-to-br from-orange-200 to-amber-200 border-4 border-white shadow-lg ring-2 ring-orange-300/50">
+                <div className="w-28 h-28 rounded-full overflow-hidden bg-orange-100 border-4 border-white shadow-lg ring-2 ring-orange-200">
                   {avatarPreview ? (
                     <img 
                       src={avatarPreview} 
@@ -498,7 +496,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-orange-400 bg-gradient-to-br from-orange-100 to-amber-100">
+                    <div className="w-full h-full flex items-center justify-center text-orange-400 bg-orange-100">
                       <CameraIcon className="w-8 h-8" />
                     </div>
                   )}
@@ -506,7 +504,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="absolute bottom-0 right-0 p-2.5 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full text-white hover:from-orange-600 hover:to-amber-600 shadow-lg transition-all transform hover:scale-110"
+                  className="absolute bottom-0 right-0 p-2.5 bg-orange-400 rounded-full text-white hover:bg-orange-600 shadow-lg transition-all transform hover:scale-110"
                   disabled={isUploading}
                 >
                   <CameraIcon className="w-4 h-4" />
@@ -524,8 +522,8 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
 
             {/* 头像裁剪弹窗 */}
             {isCropping && avatarFile && (
-              <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6 max-w-lg w-full border border-orange-200">
+              <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-orange-400/80 backdrop-blur-sm">
+                <div className="bg-orange-50 rounded-2xl p-6 max-w-lg w-full border border-orange-200">
                   <h3 className="text-lg font-semibold text-orange-800 mb-4">裁剪头像</h3>
                   <div className="relative h-80 w-full bg-gray-900 rounded-lg overflow-hidden">
                     <Cropper
@@ -563,7 +561,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
                     <button
                       type="button"
                       onClick={handleCropConfirm}
-                      className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all shadow-md"
+                      className="flex-1 px-4 py-2 bg-orange-400 text-white rounded-lg hover:bg-orange-600 transition-all shadow-md"
                     >
                       确认
                     </button>
@@ -574,7 +572,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
 
             {/* 错误提示 */}
             {uploadError && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+              <div className="bg-orange-100 border border-orange-200 text-orange-600 px-4 py-3 rounded-lg">
                 {uploadError}
               </div>
             )}
@@ -592,7 +590,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
                   name="nickname"
                   value={formData.nickname}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-white/80 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                   placeholder="请输入昵称"
                   disabled={isUploading}
                 />
@@ -651,7 +649,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-white/80 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
                   placeholder="请输入手机号"
                   disabled={isUploading}
                 />
@@ -666,7 +664,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
                   value={formData.detail}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-4 py-2.5 bg-white/80 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none"
+                  className="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none"
                   placeholder="介绍一下自己..."
                   disabled={isUploading}
                 />
@@ -689,7 +687,7 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
                   setShowCustomStyle
                 )}
 
-                {/* 摄影类型多选 - 注意字段名是 photographerType */}
+                {/* 摄影类型多选 */}
                 {renderMultiSelect(
                   'photographerType',
                   '摄影类型',
@@ -718,7 +716,8 @@ function ProfileEditModal({ isOpen, onClose, profile, onSave }) {
               <button
                 type="submit"
                 disabled={isUploading}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all shadow-md hover:shadow-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="flex-1 px-4 py-3 bg-orange-400 text-white rounded-xl hover:bg-orange-600 transition-all shadow-md hover:shadow-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                onClick={handleSubmit}
               >
                 {isUploading ? (
                   <>

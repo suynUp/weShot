@@ -79,8 +79,7 @@ export const useProfileData = () => {
   // 组件加载时获取数据
   useEffect(() => {
     if (isOwnProfile) {
-      // 自己的主页：获取自己的用户信息
-      getUserMutation.mutate();
+      //不用调用了
     } else if (casId) {
       // 他人的主页：获取目标用户信息
       fetchTargetUserInfo(casId);
