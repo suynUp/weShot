@@ -214,6 +214,12 @@ export const useGetOtherOrdersMutation = () => {
     })
 }
 
+export const useGetAnnocement = () => {
+    return useMutation(()=>{
+        
+    })
+} 
+
 export const useLogOut = () => {
     const resetUser = UserStore(state=>state.reset)
     const resetDraft = DraftStore(state => state.reset)

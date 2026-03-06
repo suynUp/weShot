@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import request from '../utils/request.js'
 import { usePagination } from '../hooks/usePagination.js'
-import { Pagination } from '../components/Pagination.jsx'
+import { Pagination } from '../components/pagination.jsx'
 import styles from './UserManage.module.css'
 
 const USER_STATUS = {

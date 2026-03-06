@@ -147,7 +147,7 @@ export function PhotographerCard({ photographer, onClick }) {
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                 <span className="font-semibold">{photographer.avgScore?.toFixed(1) || '5.0'}</span>
               </div>
-              <p className="text-xs text-gray-500">{photographer.orderCount || 0}单</p>
+              <p className="text-xs text-gray-500">{photographer.order_count || 0}单</p>
             </div>
           </div>
 

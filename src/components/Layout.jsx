@@ -2,10 +2,16 @@ import { Outlet, Link } from 'react-router-dom'
 import logo from '../assets/img/logo.png'
 import ring from '../assets/img/ring.png'
 import './Layout.css'
+import { PrivateRoute } from './AuthGuard';
+import { clearLocalStorage } from '../utils/localStorage';
 
 function Layout() {
+
+
+
   return (
-    <div className="app-container">
+    <PrivateRoute
+    comp={<div className="app-container">
       {/* 顶部头部栏 */}
       <div className='header-bar'>
         <div className='header-left'>
@@ -27,12 +33,16 @@ function Layout() {
         {/* 左侧导航栏 */}
         <div className='aside-bar'>
           <ul>
-            <Link to="/" end><li>仪表盘</li></Link>
-            <Link to="/content-audit"><li>内容审核</li></Link>
-            <Link to="/user-manage"><li>用户管理</li></Link>
-            <Link to="/feedback-manage"><li>公告与意见反馈管理</li></Link>
+            <Link to="/manager" end><li>仪表盘</li></Link>
+            <Link to="/manager/content-audit"><li>内容审核</li></Link>
+            <Link to="/manager/user-manage"><li>用户管理</li></Link>
+            <Link to="/manager/feedback-manage"><li>公告与意见反馈管理</li></Link>
           </ul>
-          <div className='logout'>
+          <div className='logout'
+          onClick={()=>{
+            clearLocalStorage()
+          }}
+          >
             退出登录
           </div>
         </div>
@@ -41,7 +51,8 @@ function Layout() {
           <Outlet />
         </main>
       </div>
-    </div>
+    </div>}
+    />
   );
 }
 

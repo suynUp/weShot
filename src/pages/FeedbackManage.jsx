@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Pagination } from '../components/Pagination.jsx'
+import { useState } from 'react'
+import { Pagination } from '../components/pagination.jsx'
 import { usePagination } from '../hooks/usePagination.js'
 import request from '../utils/request.js'
 import styles from './FeedbackManage.module.css'

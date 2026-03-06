@@ -15,6 +15,11 @@ import PhotographerOrderSquare from './pages/pendingOrder'
 import PostPublish from './pages/postPblish'
 import OrderActionPage from './pages/orderAction'
 import SearchResults from './pages/searchResult'
+import Layout from './components/Layout.jsx'
+import Dashboard from './pages/Dashboard.jsx'
+import ContentAudit from './pages/ContentAudit.jsx'
+import UserManage from './pages/UserManage.jsx'
+import FeedbackManage from './pages/FeedbackManage.jsx'
 
 const usePathStore = create(
   persist(
@@ -128,15 +133,50 @@ export default function RootRouter() {
     },{
       path:'/searchresults',
       page:<SearchResults/>
+    }, {
+      path: "/manager",
+      page: <Layout/>,
+      innerPage: [
+        {
+          index: true,  // 标记为 index 路由
+          page: <Dashboard/>
+        },
+        {
+          path: "content-audit",  // 去掉开头的斜杠，变成相对路径
+          page: <ContentAudit/>
+        },
+        {
+          path: "user-manage",
+          page: <UserManage/>
+        },
+        {
+          path: "feedback-manage", 
+          page: <FeedbackManage/>
+        }
+      ]
     }
   ]
 
-  return (
+   return (
     <BrowserRouter>
       <RouteHandler />
       <Routes>
         {RouteList.map((r, index) => (
-          <Route key={index} path={r.path} element={r.page} />
+          r.innerPage ? (
+            <Route key={index} path={r.path} element={r.page}>
+              {r.innerPage.map((ir, i) => {
+                if (ir.index) {
+                  // index 路由
+                  return <Route key={i} index element={ir.page} />
+                } else {
+                  // 普通子路由
+                  return <Route key={i} path={ir.path} element={ir.page} />
+                }
+              })}
+            </Route>
+          ) : (
+            <Route key={index} path={r.path} element={r.page} />
+          )
         ))}
       </Routes>
     </BrowserRouter>

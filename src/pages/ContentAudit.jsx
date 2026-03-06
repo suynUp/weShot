@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { usePagination } from '../hooks/usePagination.js'
-import { Pagination } from '../components/Pagination.jsx'
+import { Pagination } from '../components/pagination.jsx'
 import request from '../utils/request.js'
 import styles from './ContentAudit.module.css'
 

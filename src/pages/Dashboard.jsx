@@ -1,8 +1,6 @@
-import { Routes, Route, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import Layout from '../components/Layout.jsx' 
 import ContentAudit from './ContentAudit.jsx'
-import UserManage from './UserManage.jsx'
-import FeedbackManage from './FeedbackManage.jsx'
 import styles from './Dashboard.module.css'
 import task1 from '../assets/img/task1.png'
 import task2 from '../assets/img/task2.png'
@@ -16,10 +14,10 @@ function Dashboard() {
     { goto: ContentAudit, label: '内容审核' }
   ];
   const stats = [
-    { icon: task1, title: ['待审核', '内容'], value: 1, goto: "/content-audit" },
-    { icon: task2, title: ['今日', '新增用户'], value: 3 ,goto: "/user-manage"},
-    { icon: task3, title: ['未处理', '反馈'], value: 1, goto: "/feedback-manage"},
-    { icon: task4, title: ['今日', '新增订单'], value: 2, goto: "/content-audit"},
+    { icon: task1, title: ['待审核', '内容'], value: 1, goto: "/manager/content-audit" },
+    { icon: task2, title: ['今日', '新增用户'], value: 3 ,goto: "/manager/user-manage"},
+    { icon: task3, title: ['未处理', '反馈'], value: 1, goto: "/manager/feedback-manage"},
+    { icon: task4, title: ['今日', '新增订单'], value: 2, goto: "/manager/content-audit"},
   ];
 
   // 问候语
