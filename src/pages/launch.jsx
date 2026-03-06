@@ -309,7 +309,7 @@ const Launch = () => {
    
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-100 via-pink-100 to-blue-100 relative overflow-hidden">
+        <div className="min-h-screen relative overflow-hidden">
             {/* 添加动画样式 - 使用内联style标签 */}
             <style>
                 {slideInKeyframes}

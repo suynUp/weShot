@@ -150,7 +150,7 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
                   setOrderType('my');
                 }}
                 icon={<FileText className="w-4 h-4" />}
-                label="我的发起"
+                label="我的订单"
               />
               <TabButton
                 active={activeTab === 'receivedOrders' && orderType === 'received'}
@@ -220,7 +220,7 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
             selectedStatus={status}
             orders={myOrdersData}
             loading={myOrdersLoading}
-            emptyMessage="暂无发起的订单"
+            emptyMessage="暂无订单"
             emptyAction={
               <button 
                 onClick={() => goto('/launch')}

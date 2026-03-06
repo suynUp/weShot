@@ -11,6 +11,7 @@ import { useNavigation } from '../hooks/navigation';
 import { UserStore } from '../store/userStore';
 import { useGetOrder, useTakeOrderMutation } from '../hooks/useOrder';
 import { OrderStore } from '../store/orderStore';
+import ConfirmModal from '../components/confirmModel';
 
 function PhotographerOrderSquare() {
   // 状态
@@ -18,6 +19,8 @@ function PhotographerOrderSquare() {
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('newest');
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [postId, setPostId] = useState(null);
 
   const isVerFied = UserStore(state => state.isVerFied);
   
@@ -44,6 +47,7 @@ function PhotographerOrderSquare() {
     fetchData: fetchOrders, // 使用fetchData方式而不是直接传入data
     initialPage: 1,
     total: totalPendingOrderNum, // 使用store中的总数
+    dependencies: [takeOrder.isError,takeOrder.isSuccess], 
   });
 
   // 初始加载和搜索/排序变化时重新获取数据
@@ -53,6 +57,15 @@ function PhotographerOrderSquare() {
   }, [searchTerm, sortBy]);
 
   const handleTakeOrder = (postId) => {
+    console.log('准备接单，postId:', postId);
+    setShowConfirm(true)
+    setPostId(postId)
+  };
+
+  const handleConfirm = () => {
+    // 这里可以添加一些额外的逻辑，比如显示加载状态等
+    setShowConfirm(false);
+    // 触发接单操作
     takeOrder.mutate(postId);
   };
 
@@ -60,12 +73,7 @@ function PhotographerOrderSquare() {
   const isLoading = paginationLoading;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
-      {/* 装饰性背景元素 */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-orange-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
-      </div>
+    <div className="min-h-screen">
 
       {/* 头部导航 */}
       <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-orange-100 sticky top-0 z-10">
@@ -283,6 +291,14 @@ function PhotographerOrderSquare() {
             <ChevronLeft className="w-5 h-5 rotate-90" />
           </button>
         )}
+         
+        <ConfirmModal
+          title="确认接单"
+          isOpen={showConfirm}
+          content="您确定要接下这个订单吗？"
+          onClose={() => setShowConfirm(false)}
+          onConfirm={handleConfirm}
+        />
       </main>
     </div>
   );

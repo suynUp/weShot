@@ -27,7 +27,9 @@ function Gallery() {
 
   useEffect(()=>{
     const order_id = searchParams.get('order_id')
-    setSelectedOrder({order_id})
+    if(order_id){
+          setSelectedOrder({order_id})
+    }
   },[])
   
   useEffect(() => {
@@ -63,7 +65,7 @@ function Gallery() {
   // 加载状态骨架屏 - 与 OrderDisplayCard 完全一致
   if (isLoading && !orders.length) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-pink-50">
+      <div className="min-h-screen">
         {/* 装饰性背景元素保持不变 */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-orange-200/30 to-pink-200/30 rounded-full blur-3xl" />
@@ -199,7 +201,7 @@ function Gallery() {
 
   // 正常渲染
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-pink-50">
+    <div className="min-h-screen">
       {/* 装饰性背景元素 - 保持不变 */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-orange-200/30 to-pink-200/30 rounded-full blur-3xl" />
@@ -212,23 +214,18 @@ function Gallery() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 页面标题和返回按钮 */}
         <div className="mb-10">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-28 w-full">
+          <div className="flex flex-col md:flex-row md:items-center ">
+            <div className="flex items-center w-full gap-4">
               <button
                 onClick={handleGoBack}
-                className="flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full shadow-sm border border-orange-100 text-gray-600 hover:text-orange-500 hover:border-orange-200 transition-all duration-300 group"
+                className="flex items-center p-2 bg-white/70 backdrop-blur-sm rounded-full shadow-sm border border-orange-100 text-gray-600 hover:text-orange-500 hover:border-orange-200 transition-all duration-300 group"
                 aria-label="返回"
               >
                 <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                <span className="text-sm font-medium">返回</span>
               </button>
-              <div className='ml-[20px]'>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent inline-flex items-center gap-2">
+                <h1 className="text-2xl font-bold bg-orange-400/90 bg-clip-text text-transparent inline-flex items-center">
                   作品广场
-                  <Sparkles className="w-8 h-8 text-orange-400" />
                 </h1>
-                <p className="text-gray-600 mt-2 text-lg">发现优秀的摄影作品，灵感从这里开始</p>
-              </div>
             </div>
           </div>
         </div>

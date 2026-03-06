@@ -9,7 +9,7 @@ class orderAPI {
      * @param orderId 
      * @returns 
      */
-    static SnatchOrders = (orderId) => request.get(`/order/take/${orderId}`)
+    static SnatchOrders = (orderId) => request.post(`/order/take/${orderId}`)
     
     /**
      * @returns 获取自己的待接取订单

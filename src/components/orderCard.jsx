@@ -1,7 +1,6 @@
 import { MoreHorizontal, MessageCircle, Calendar, MapPin, Users, Clock, DollarSign } from 'lucide-react';
 import { useNavigation } from '../hooks/navigation';
 import { UserStore } from '../store/userStore';
-import { useEffect } from 'react';
 
 export function OrderCard({ order, onCheck, checked = false, readOnly = true }) {
   
@@ -28,11 +27,22 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
   };
 
   const getStatusStyle = (status) => {
+    // 负数状态统一使用灰色系
+    if (status < 0) {
+      return {
+        bg: 'bg-gray-50',
+        text: 'text-gray-700',
+        badge: 'bg-gray-200 text-gray-700',
+        dot: 'bg-gray-400',
+        label: getOrderStatus(status)
+      };
+    }
+
     switch (status) {
       case 3: // 已完成
       case 4: // 已评价
         return {
-          bg: 'bg-gradient-to-r from-green-100 to-emerald-100',
+          bg: 'bg-green-50',
           text: 'text-green-700',
           badge: 'bg-green-200 text-green-800',
           dot: 'bg-green-500',
@@ -41,7 +51,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
       case 1: // 已接单
       case 2: // 支付中
         return {
-          bg: 'bg-gradient-to-r from-blue-100 to-cyan-100',
+          bg: 'bg-blue-50',
           text: 'text-blue-700',
           badge: 'bg-blue-200 text-blue-800',
           dot: 'bg-blue-500',
@@ -49,39 +59,15 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
         };
       case 0: // 待接单
         return {
-          bg: 'bg-gradient-to-r from-orange-100 to-amber-100',
+          bg: 'bg-orange-50',
           text: 'text-orange-700',
           badge: 'bg-orange-200 text-orange-800',
           dot: 'bg-orange-500',
           label: '待接单'
         };
-      case -1: // 已取消
-        return {
-          bg: 'bg-gradient-to-r from-gray-100 to-slate-100',
-          text: 'text-gray-700',
-          badge: 'bg-gray-200 text-gray-800',
-          dot: 'bg-gray-500',
-          label: '已取消'
-        };
-      case -2: // 已拒绝
-        return {
-          bg: 'bg-gradient-to-r from-red-50 to-pink-50',
-          text: 'text-red-700',
-          badge: 'bg-red-200 text-red-800',
-          dot: 'bg-red-500',
-          label: '已拒绝'
-        };
-      case -3: // 草稿
-        return {
-          bg: 'bg-gradient-to-r from-purple-50 to-indigo-50',
-          text: 'text-purple-700',
-          badge: 'bg-purple-200 text-purple-800',
-          dot: 'bg-purple-500',
-          label: '草稿'
-        };
       default:
         return {
-          bg: 'bg-gradient-to-r from-gray-100 to-slate-100',
+          bg: 'bg-gray-50',
           text: 'text-gray-700',
           badge: 'bg-gray-200 text-gray-800',
           dot: 'bg-gray-500',
@@ -107,37 +93,37 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
 
   // 统一的状态按钮渲染函数
   const renderStatusButton = () => {
-    // 已取消状态（-1）- 统一显示
+    // 已取消状态（-1）- 灰色系
     if (order.status === -1) {
       return (
         <button 
           onClick={(e) => e.stopPropagation()}
-          className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 cursor-not-allowed opacity-60"
+          className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-200 text-gray-700 cursor-default"
         >
           已取消
         </button>
       );
     }
     
-    // 已拒绝状态（-2）- 统一显示
+    // 已拒绝状态（-2）- 灰色系
     if (order.status === -2) {
       return (
         <button 
           onClick={(e) => e.stopPropagation()}
-          className="px-4 py-1.5 rounded-lg text-sm font-medium bg-red-100 text-red-600 cursor-not-allowed opacity-60 border border-red-200"
+          className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-200 text-gray-700 cursor-default"
         >
           已拒绝
         </button>
       );
     }
     
-    // 草稿状态（-3）- 统一逻辑：只有下单用户才能编辑，其他人只能查看
+    // 草稿状态（-3）- 灰色系
     if (order.status === -3) {
       if (isCustomer) {
         return (
           <button
             onClick={statusMinus3Fn}
-            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-1"
+            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all duration-200 flex items-center gap-1"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -149,7 +135,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
       return (
         <button 
           onClick={(e) => e.stopPropagation()}
-          className="px-4 py-1.5 rounded-lg text-sm font-medium bg-purple-100 text-purple-600 cursor-default"
+          className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-200 text-gray-700 cursor-default"
         >
           草稿
         </button>
@@ -174,10 +160,10 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
     if (isPhotographer) {
       switch (order.status) {
         case 3: // 已完成
-        return (
+          return (
             <button 
               onClick={(e) => e.stopPropagation()}
-              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-orange-50 to-amber-50 text-orange-600 hover:from-orange-100 hover:to-amber-100 transition-all duration-200 flex items-center gap-1"
+              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-all duration-200 flex items-center gap-1"
             >
               <MessageCircle className="w-3.5 h-3.5" />
               等待评价
@@ -187,7 +173,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
           return (
             <button 
               onClick={(e) => e.stopPropagation()}
-              className="px-4 py-1.5 rounded-lg text-sm font-medium  bg-green-100 text-green-600 flex items-center gap-1"
+              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-green-200 text-green-800 flex items-center gap-1"
             >
               已完成
             </button>
@@ -196,11 +182,8 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
           return (
             <button 
               onClick={(e) => e.stopPropagation()}
-              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-600 hover:from-blue-200 hover:to-cyan-200 transition-all duration-200 flex items-center gap-1 shadow-sm border border-blue-200"
+              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-all duration-200 flex items-center gap-1 border border-blue-200"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
               去交付
             </button>
           );
@@ -208,7 +191,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
           return (
             <button
               onClick={(e) => e.stopPropagation()}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 border border-yellow-300`}
+              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition-all duration-200 flex items-center gap-1 border border-yellow-200"
             >
               <Clock className="w-3.5 h-3.5" />
               等待支付
@@ -218,7 +201,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
           return (
             <button
               onClick={(e) => e.stopPropagation()}
-              className="px-6 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-orange-500 to-amber-500 text-white transition-all duration-200 shadow-md hover:shadow-lg"
+              className="px-6 py-1.5 rounded-lg text-sm font-medium bg-orange-500 text-white hover:bg-orange-600 transition-all duration-200 shadow-md hover:shadow-lg"
             >
               立即接单
             </button>
@@ -244,7 +227,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
         return (
           <button 
             onClick={(e) => e.stopPropagation()}
-            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-orange-50 to-amber-50 text-orange-600 hover:from-orange-100 hover:to-amber-100 transition-all duration-200 flex items-center gap-1"
+            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-all duration-200 flex items-center gap-1"
           >
             <MessageCircle className="w-3.5 h-3.5" />
             去评价
@@ -254,7 +237,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
         return (
           <button 
             onClick={(e) => e.stopPropagation()}
-            className="px-6 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-xl font-medium shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300 flex items-center gap-2 border border-green-200"
+            className="px-6 py-1.5 bg-green-200 text-green-800 rounded-xl font-medium shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-300 flex items-center gap-2 border border-green-200"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -266,7 +249,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
         return (
           <button
             onClick={(e) => e.stopPropagation()}
-            className="px-6 py-1.5 disabled:opacity-50 rounded-lg text-sm font-medium bg-gradient-to-r from-orange-500 to-amber-500 text-white transition-all duration-200 shadow-md hover:shadow-lg"
+            className="px-6 py-1.5 disabled:opacity-50 rounded-lg text-sm font-medium bg-gray-200 text-gray-700 cursor-default"
           >
             等待接单
           </button>
@@ -275,7 +258,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
         return (
           <button
             onClick={(e) => e.stopPropagation()}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1 ${statusStyle.bg} ${statusStyle.text} hover:shadow-md`}
+            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition-all duration-200 flex items-center gap-1"
           >
             去支付
           </button>
@@ -284,7 +267,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
         return (
           <button 
             onClick={(e) => e.stopPropagation()}
-            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-600 hover:from-blue-200 hover:to-cyan-200 transition-all duration-200 flex items-center gap-1 shadow-sm border border-blue-200"
+            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-all duration-200 flex items-center gap-1 border border-blue-200"
           >
             <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -305,7 +288,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
         return (
           <button
             onClick={(e) => e.stopPropagation()}
-            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600"
+            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700"
           >
             待接单
           </button>
@@ -314,7 +297,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
         return (
           <button
             onClick={(e) => e.stopPropagation()}
-            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-600"
+            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-700"
           >
             已接单
           </button>
@@ -323,7 +306,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
         return (
           <button
             onClick={(e) => e.stopPropagation()}
-            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-600"
+            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-700"
           >
             已支付
           </button>
@@ -333,7 +316,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
         return (
           <button
             onClick={(e) => e.stopPropagation()}
-            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-green-100 text-green-600"
+            className="px-4 py-1.5 rounded-lg text-sm font-medium bg-green-100 text-green-700"
           >
             {order.status === 3 ? '已完成' : '已评价'}
           </button>
@@ -348,7 +331,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
     return (
       <button 
         onClick={(e) => e.stopPropagation()}
-        className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600"
+        className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700"
       >
         {orderStatus}
       </button>
@@ -376,8 +359,10 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
     }}
     className="cursor-pointer group bg-white rounded-2xl p-5 border border-gray-100 hover:border-orange-200 hover:shadow-xl transition-all duration-300 relative overflow-hidden h-full flex flex-col"
   >
-    {/* 装饰性背景 */}
-    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-50 to-pink-50 rounded-full blur-2xl -mr-10 -mt-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    {/* 装饰性背景 - 简化，不用于负数状态 */}
+    {order.status >= 0 && (
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-50 to-pink-50 rounded-full blur-2xl -mr-10 -mt-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    )}
     
     <div className="relative flex-1 flex flex-col h-full">
       {/* 顶部：复选框和用户信息 - 这部分会保持在顶部 */}
@@ -391,7 +376,7 @@ export function OrderCard({ order, onCheck, checked = false, readOnly = true }) 
               }}
               className={`w-5 h-5 rounded-lg border-2 cursor-pointer flex items-center justify-center transition-all duration-200 ${
                 checked 
-                  ? 'bg-gradient-to-r from-orange-400 to-orange-500 border-orange-400 shadow-md' 
+                  ? 'bg-orange-500 border-orange-500 shadow-md' 
                   : 'border-gray-300 hover:border-orange-400 bg-white'
               }`}
             >

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { X, ChevronRight, Users, Camera, Image as ImageIcon, Sparkles, Bell, MessageCircle } from "lucide-react"; // 添加 Bell, MessageCircle
 import CenterCard from "../components/homepageCard";
-import { useUserLoginSuccess } from "../hooks/useUser";
+import { useUserLoginSuccess, useUserMutation } from "../hooks/useUser";
 import { useSearchParams } from "react-router-dom";
 import { useNavigation } from "../hooks/navigation";
 import SearchInput from "../components/searchInput";
@@ -36,6 +36,8 @@ const Home = () => {
 
     const isLoggedIn = request.hasToken();
     const isVerified = UserStore(state=>state.isVerFied)
+
+    const getUser = useUserMutation()
 
     // 获取公告hooks
     const getAnnouncements = useGetAnnouncements();
@@ -91,6 +93,7 @@ const Home = () => {
         displayComplete()
         displayRR() 
         displayOR()
+        getUser.mutate()
     },[])
 
     const closeOverlay = () => {
@@ -164,7 +167,7 @@ const Home = () => {
             {/* 版权说明遮罩层 */}
             {showOverlay && (
                 <div 
-                    className="fixed inset-0 z-50 bg-gradient-to-br from-orange-500/40 via-pink-500/40 to-amber-500/40 backdrop-blur-md transition-opacity duration-300 flex items-center justify-center p-4"
+                    className="fixed inset-0 z-50 backdrop-blur-md transition-opacity duration-300 flex items-center justify-center p-4"
                     onClick={closeOverlay}
                 >
                     <div 
@@ -209,7 +212,7 @@ const Home = () => {
             )}
 
             {/* 主内容区域 */}
-            <div className="min-h-screen bg-gradient-to-br from-orange-100 via-pink-100 to-blue-100 relative overflow-hidden">
+            <div className="min-h-screen relative overflow-hidden">
                 {/* 装饰性背景元素 */}
                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-200 rounded-full filter blur-3xl opacity-40 -translate-y-1/2 translate-x-1/3" />
                 <div className="absolute bottom-0 left-0 w-96 h-96 bg-pink-200 rounded-full filter blur-3xl opacity-40 translate-y-1/2 -translate-x-1/3" />
@@ -290,16 +293,16 @@ const Home = () => {
                     className="absolute inset-0 flex flex-col animate-fadeIn cursor-pointer"
                     onClick={() => setShowFeedback(true)}
                 >
-                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 h-full flex flex-col">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 h-full flex justify-center items-center flex-col">
                         <div className="flex-1 flex flex-col items-center justify-center">
                             <div className="w-16 h-16 bg-white/30 rounded-2xl flex items-center justify-center mb-2">
                                 <MessageCircle className="w-8 h-8 text-white" />
                             </div>
-                            <h4 className="text-white font-semibold text-base mb-1 text-center">
+                            <h4 className="text-white text-base mb-1 text-center">
                                 告诉我们你的想法
                             </h4>
                         </div>
-                        <button className="mt-1 w-full py-2 bg-white/30 text-white rounded-lg hover:bg-white/40 transition-colors text-sm font-medium">
+                        <button className="mt-1 w-[50%] py-2 bg-white/30 text-white rounded-lg hover:bg-white/40 transition-colors text-sm font-medium">
                             立即反馈
                         </button>
                     </div>
@@ -316,7 +319,7 @@ const Home = () => {
                                 scrollbarWidth: 'thin',
                                 scrollbarColor: 'rgba(255,255,255,0.5) transparent'
                             }}>
-                                <p className="text-white/90 text-xs leading-relaxed break-words whitespace-pre-wrap"
+                                <p className="text-white/90 text-sm leading-relaxed break-words whitespace-pre-wrap"
                                    style={{
                                        textIndent: '2em', // 首行缩进2字符
                                        textAlign: 'left'
