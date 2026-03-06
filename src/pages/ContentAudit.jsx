@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { usePagination } from '../hooks/usePagination.js'
 import { Pagination } from '../components/pagination.jsx'
+import { toast } from '../hooks/useToast.jsx'
 import request from '../utils/request.js'
 import styles from './ContentAudit.module.css'
 
@@ -16,6 +17,30 @@ const parseImages = (imagesStr) => {
   }
 }
 
+// 时间范围判断函数
+const isTimeInRange = (timeStr, days) => {
+  if (!timeStr) return false
+  const targetTime = new Date(timeStr).getTime()
+  const now = Date.now()
+  const range = days * 24 * 60 * 60 * 1000
+  return now - targetTime <= range
+}
+
+// 辅助显示函数
+const getDisplayNickname = (user) => {
+  if (user.nickname === 'Admin' || user.cas_id === 'Admin' || user.user_id === 'Admin') return 'Admin'
+  if (!user.nickname) return `用户${user.cas_id || user.user_id || '未知'}`
+  return user.nickname
+}
+
+// 辅助显示函数
+const getDisplayCustomer = (order) => {
+  if (!order) return '未知用户'
+  if (order.customerName) return order.customerName
+  if (order.customer_id) return `用户${order.customer_id}`
+  return '未知用户'
+}
+
 const CONTENT_TYPE_CONFIG = {
   作品: {
     api: '/admin/posts',
@@ -29,7 +54,7 @@ const CONTENT_TYPE_CONFIG = {
         type: '作品',
         thumbnail: images[0] || '',
         publisherId: item.user_id,
-        publisherName: item.nickname,
+        publisherName: getDisplayNickname(item),
         publishTime: item.created_at ? item.created_at.split('T')[0].replace(/-/g, '/') : '',
         fullPublishTime: item.created_at,
         rawData: { ...item, images: images },
@@ -47,8 +72,8 @@ const CONTENT_TYPE_CONFIG = {
       id: item.order_id,
       type: '客单',
       thumbnail: '',
-      publisherId: item.customerName,
-      publisherName: item.customerName,
+      publisherId: item.customer_id,
+      publisherName: getDisplayCustomer(item),
       publishTime: item.created_at ? item.created_at.split('T')[0].replace(/-/g, '/') : '',
       fullPublishTime: item.created_at,
       rawData: JSON.parse(JSON.stringify(item)),
@@ -65,8 +90,8 @@ const CONTENT_TYPE_CONFIG = {
       id: item.commentId,
       type: '评论',
       thumbnail: item.userAvatar || '',
-      publisherId: item.userName,
-      publisherName: item.userName,
+      publisherId: item.userId || item.userName,
+      publisherName: item.userName || `用户${item.userId || '未知'}`,
       publishTime: item.createdAt ? item.createdAt.split('T')[0].replace(/-/g, '/') : '',
       fullPublishTime: item.createdAt,
       rawData: JSON.parse(JSON.stringify(item)),
@@ -76,21 +101,12 @@ const CONTENT_TYPE_CONFIG = {
   }
 }
 
-// 时间范围判断函数
-const isTimeInRange = (timeStr, days) => {
-  if (!timeStr) return false
-  const targetTime = new Date(timeStr).getTime()
-  const now = Date.now()
-  const range = days * 24 * 60 * 60 * 1000
-  return now - targetTime <= range
-}
-
 export default function ContentAudit() {
   // 筛选条件状态
   const [filter, setFilter] = useState({
-    contentType: '作品',
+    contentType: '作品', 
     auditStatus: '全部',
-    timeRange: '最近7天'
+    timeRange: '全部' 
   })
 
   // 核心数据状态
@@ -208,7 +224,7 @@ export default function ContentAudit() {
 
   const handleDeleteSubmit = async () => {
     if (!deleteForm.reason) {
-      alert('请选择删除原因')
+      toast.error('请选择删除原因')
       return
     }
     if (!currentDeleteItem) return
@@ -230,7 +246,7 @@ export default function ContentAudit() {
           return item
         }))
 
-        alert(res.msg || `${type}删除成功`)
+        toast.success(res.msg || `${type}删除成功`)
         handleDeleteModalClose()
         reloadCurrentPage() // 重新加载当前页数据
       } else {
@@ -238,7 +254,7 @@ export default function ContentAudit() {
       }
     } catch (err) {
       console.error('❌ 删除失败：', err)
-      alert(err.message || '删除失败，请检查网络后重试')
+      toast.error(err.message || '删除失败，请检查网络后重试')
     } finally {
       setDeleteLoading(false)
     }
@@ -308,9 +324,9 @@ export default function ContentAudit() {
             value={filter.timeRange}
             onChange={(e) => handleFilterChange('timeRange', e.target.value)}
           >
+            <option value="全部">全部</option>
             <option value="最近7天">最近7天</option>
             <option value="最近30天">最近30天</option>
-            <option value="全部">全部</option>
           </select>
         </div>
       </div>
@@ -325,7 +341,7 @@ export default function ContentAudit() {
           <thead>
             <tr>
               <th>缩略图/预览</th>
-              <th>发布者ID</th>
+              <th>发布者</th>
               <th>发布时间</th>
               <th>内容状态</th>
               <th>操作</th>
@@ -346,7 +362,7 @@ export default function ContentAudit() {
                     {item.content.split('\n')[0]}
                   </div>
                 </td>
-                <td>{item.publisherId}</td>
+                <td>{item.publisherName}（ID：{item.publisherId}）</td>
                 <td>{item.publishTime}</td>
                 <td>
                   <span style={{
@@ -487,7 +503,19 @@ export default function ContentAudit() {
                   </div>
                   <div className={styles['detail-row']}>
                     <span className={styles['detail-label']}>客户姓名：</span>
-                    <span className={styles['detail-value']}>{currentDetailItem.rawData?.customerName || '无'}</span>
+                    <span className={styles['detail-value']}>{getDisplayCustomer(currentDetailItem.rawData)}</span>
+                  </div>
+                  <div className={styles['detail-row']}>
+                    <span className={styles['detail-label']}>拍摄时长：</span>
+                    <span className={styles['detail-value']}>{currentDetailItem.rawData?.duration || '无'}</span>
+                  </div>
+                  <div className={styles['detail-row']}>
+                    <span className={styles['detail-label']}>拍摄地点：</span>
+                    <span className={styles['detail-value']}>{currentDetailItem.rawData?.location || '无'}</span>
+                  </div>
+                  <div className={styles['detail-row']}>
+                    <span className={styles['detail-label']}>订单备注：</span>
+                    <span className={styles['detail-value']}>{currentDetailItem.rawData?.remark || '无'}</span>
                   </div>
                 </>
               )}
