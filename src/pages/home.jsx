@@ -16,6 +16,7 @@ import photographerStore from "../store/photographerStore";
 import postStore from "../store/postStore";
 import { useGetAnnouncements } from "../hooks/useUser"; // 导入公告hooks
 import FeedbackModal from "../components/feedBackModel";
+import UserAPI from "../api/userAPI";
 
 const Home = () => {
     const {goto} = useNavigation()
@@ -156,7 +157,10 @@ const Home = () => {
     // 处理反馈提交
     const handleFeedbackSubmit = async (data) => {
         // 调用API提交反馈
-        console.log('提交的反馈数据:', data);
+        const res = await UserAPI.feedback(data);
+        if(res.code !== 200){
+            throw new Error(res.msg || '提交反馈失败');
+        }
         // const res = await request.post('/feedback', data);
     };
 

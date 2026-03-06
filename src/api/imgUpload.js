@@ -14,7 +14,9 @@ export const imgUpload = async (file) => {
                 }
             }
         )
-        
+        if(response.data.status === false){
+            throw new Error(response.data.message || '上传失败')
+        }
         return response.data.data.links.url
     } catch (error) {
         console.error('上传失败:', error)

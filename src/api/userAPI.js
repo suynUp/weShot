@@ -29,6 +29,10 @@ class UserAPI{
     static getAnouncements = () => {
         return request.get('/user/announcements')
     }
+
+    static feedback = (feedbackData) => {
+        return request.post('/user/feedback',feedbackData)
+    }
 }
 
 export default UserAPI
