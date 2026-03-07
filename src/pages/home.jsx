@@ -142,9 +142,9 @@ const Home = () => {
     }, [inputValue]);
 
     // 处理搜索
-    const handleSearch = (keyword) => {
+    const handleSearch = (pageSize,pageNum,keyword) => {
         if (keyword.trim()) {
-            goto(`/search?q=${encodeURIComponent(keyword)}`);
+            goto(`/searchresults?q=${encodeURIComponent(keyword)}`);
         }
     };
 
@@ -232,7 +232,7 @@ const Home = () => {
                         setSearchHistory={setSearchHistory}
                         value={inputValue}
                         setValue={setInputValue}
-                        onSearch={handleSearch}
+                        searchFn={handleSearch}
                         suggest={mergedSuggestions} // 传入合并后的搜索建议
                         suggestTitle="搜索摄影师或作品" // 可选：自定义建议标题
                    />
@@ -249,12 +249,13 @@ const Home = () => {
             {!isVerified ? (
                 // 未入驻状态
                 <>
-                    <div>
+                    <div className="flex flex-col">
                         <div className="w-12 h-12 bg-[#FDE7DA] rounded-xl flex items-center justify-center mb-4">
                             <Users className="w-6 h-6 text-gray-700" />
                         </div>
-                        <h3 className="text-2xl font-bold text-gray-800 mb-2">摄影师入驻</h3>
-                        <p className="text-gray-500 text-base">分享你的摄影作品</p>
+                        <div className="w-[150px] flex text-center" >
+                        <img src="/src/assets/userImg/填写专属邀请码，解锁新身份！.png" className="ml-[30px]" alt="" />
+                        </div>
                     </div>
                     <button
                         onClick={() => goto('/signup')}
