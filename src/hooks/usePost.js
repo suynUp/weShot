@@ -88,10 +88,13 @@ export const useComment = () => {
 }
 
 export const useDeletePost = () => useMutation({
-    mutationFn:(postId)=>{
-        const res = postAPI.deletePost(postId)
+    mutationFn:async (postId)=>{
+        const res = await postAPI.deletePost(postId)
+        console.log(res)
         if(res.code !== 200){
             throw Error
+        }else{
+            toast.success('删除成功')
         }
     },
     onError:()=>toast.error('删除失败，请稍后再试')

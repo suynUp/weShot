@@ -29,6 +29,8 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
 
   const [loadId,setLoadId] = useState(-1)
   const [showPostDetail,setShowPostDetail] = useState(false)
+  const [trigger,setTrigger] = useState(false)
+
   const currentPost = postStore(state => state.currentPost)
   const useGetPostDetailMutation = useGetPostDetail()
   const updateprofile = useUserUpdate()
@@ -51,7 +53,8 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
     fetchData: fetchPosts,
     itemsPerPage: 6,
     initialPage: 1,
-    total: totalPostNum
+    total: totalPostNum,
+    dependencies: [trigger]
   });
 
   // 发起订单分页
@@ -97,8 +100,9 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
     setShowPostDetail(true)
   };
 
-  const handlePostDelete = (postId) => {
-    useDeletePostMutation.mutate(postId)
+  const handlePostDelete = async (postId) => {
+    await useDeletePostMutation.mutateAsync(postId)
+    setTrigger(prev => !prev)
   }
 
   const showLoading = () => {

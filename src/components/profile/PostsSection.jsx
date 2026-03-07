@@ -82,8 +82,6 @@ export function PostsSection({
       await onDeletePost(postToDelete);
     } catch (error) {
       console.error('删除失败:', error);
-      // 这里可以添加错误提示，比如使用 toast
-      // toast.error('删除失败，请重试');
     } finally {
       setIsDeleting(false);
       setPostToDelete(null);
