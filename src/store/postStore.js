@@ -7,6 +7,16 @@ const postStore = create(
     suggestions: [],
     postList:[],
     currentPost:{},
+    like:(postId) => {
+        set((state) => ({
+            postList: state.postList.map(post => {
+                if (post.post_id === postId) {
+                    return { ...post, likeCount: post.likeCount + 1 };
+                }
+                return post;
+            })
+        }));
+    },
 
     draftList:[],
     currentDraft:{},

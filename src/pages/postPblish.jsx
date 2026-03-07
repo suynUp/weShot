@@ -138,7 +138,6 @@ const PostPublish = () => {
             setIsPublishing(false);
         }
         if (postPublishMutation.isSuccess) {
-            toast.success('发布成功！');
             setIsPublishing(false);
             handleResetForm(); // 清空表单
         }
@@ -292,7 +291,6 @@ const PostPublish = () => {
             
             // 如果有新图片需要上传
             if (imageFiles.length > 0) {
-                toast.info('正在上传图片...');
                 const newImageUrls = await uploadAllImages();
                 finalImageUrls = [...existingImageUrls, ...newImageUrls];
             } else {
@@ -358,7 +356,6 @@ const PostPublish = () => {
             
             // 如果有新图片需要上传
             if (imageFiles.length > 0) {
-                toast.info('正在上传图片...');
                 const newImageUrls = await uploadAllImages();
                 finalImageUrls = [...existingImageUrls, ...newImageUrls];
             } else {

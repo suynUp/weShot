@@ -45,8 +45,16 @@ export const useGetPost = () => {
 }
 
 export const usePostAction = () => {
+
+    const likepost = postStore(state => state.like)
+
     const like = async (postId) => {
-        postAPI.likePost(postId)
+        const res = await postAPI.likePost(postId)
+        if (res.code === 200) {
+            likepost(postId)
+        } else {
+            throw new Error(res.message || '点赞失败')
+        }
     }
     
     const dislike = async (postId) => {

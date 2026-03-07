@@ -238,7 +238,6 @@ export const useLogOut = () => {
             resetPost()
             resetPostDraft()
             
-            // 可选：显示成功提示
             toast.success('退出登录成功')
         }catch(e){
             toast.error('退出登录失败')

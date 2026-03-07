@@ -15,6 +15,7 @@ import { useLogOut, useUserUpdate } from '../../hooks/useUser';
 import { PostDetail } from '../postDetail';
 import postStore from '../../store/postStore';
 import { useDeletePost, useGetPostDetail } from '../../hooks/usePost';
+import { toast } from '../../hooks/useToast';
 
 export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum, 
   myOrdersData, totalOrdersNum, receivedOrdersData, totalReceivedNum,
@@ -132,7 +133,10 @@ export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum
         profile={profileData}
         onBack={() => goto('/')}
         onEdit={() => setIsEditModalOpen(true)}
-        logOut={() => LogOut()}
+        logOut={() => {
+          LogOut()
+          goto('/')
+        }}
         isOwnProfile={true}
       />
 
