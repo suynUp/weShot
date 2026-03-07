@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Pagination } from '../components/pagination.jsx'
 import { usePagination } from '../hooks/usePagination.js'
+import { toast } from '../hooks/useToast.jsx'
 import request from '../utils/request.js'
 import styles from './FeedbackManage.module.css'
 
@@ -143,7 +144,7 @@ export default function FeedbackManage() {
             : item
         )
       )
-      alert(err.message || '标记已读失败，已本地记录查看状态')
+      toast.error(err.message || '标记已读失败，已本地记录查看状态')
       return true // 即使接口报错 也允许打开弹窗
     } finally {
       setActionLoadingId(null)
@@ -153,11 +154,11 @@ export default function FeedbackManage() {
   // 发布公告逻辑
   const handlePublishNotice = async () => {
     if (!noticeForm.title.trim()) {
-      alert('请填写公告标题')
+      toast.error('请填写公告标题')
       return
     }
     if (!noticeForm.content.trim()) {
-      alert('请填写公告内容')
+      toast.error('请填写公告内容')
       return
     }
 
@@ -169,14 +170,14 @@ export default function FeedbackManage() {
 
       const SUCCESS_CODE = 200
       if (res.code === SUCCESS_CODE) {
-        alert(res.msg || '公告发布成功')
+        toast.success(res.msg || '公告发布成功')
         setNoticeForm({ title: '', content: '', type: '1' })
       } else {
         throw new Error(res.msg || '公告发布失败')
       }
     } catch (err) {
-      console.error('❌ 发布公告失败：', err)
-      alert(err.message || '公告发布失败')
+      console.error(' 发布公告失败：', err)
+      toast.error(err.message || '公告发布失败')
     } finally {
       setPublishLoading(false)
     }

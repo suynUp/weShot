@@ -34,7 +34,6 @@
   font-size: 15px;
   line-height: 100%;
   letter-spacing: 5%;
-
 }
 
 /* 搜索按钮 */
@@ -84,7 +83,6 @@
 /* 表格 */
 .table-wrapper {
   width: 100%;
-  /* border: 1px solid #000; */
   background-color: transparent;
   padding-bottom: 50px;
 }
@@ -134,7 +132,6 @@
   font-size: 15px;
   line-height: 100%;
   letter-spacing: 5%;
-
 }
 
 /* 角色标签样式 */
@@ -206,4 +203,216 @@
   color: #6b7280;
   background-color: transparent;
   border: #000 1px solid;
+}
+
+/* 加载/错误提示 */
+.loading-tip, .error-tip {
+  text-align: center;
+  padding: 20px;
+  font-size: 16px;
+}
+.error-tip {
+  color: #ef4444;
+}
+
+/* 状态标签 */
+.status-tag {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 2px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.status-0 {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+.status-1 {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+/* 角色标签颜色 */
+.role-0 {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+.role-1 {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+.role-2 {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+/* 取消身份弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background-color: #F9F2EF;
+  border-radius: 8px;
+  width: 520px;
+  max-width: 90%;
+  max-height: 85vh;
+  overflow: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #D4B8A8;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: bold;
+  color: #000;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.modal-close-btn:hover:not(:disabled) {
+  color: #333;
+}
+
+.modal-close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-label {
+  font-weight: bold;
+  color: #000;
+  flex-shrink: 0;
+}
+
+.modal-value {
+  color: #333;
+  word-break: break-all;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 16px;
+  font-weight: bold;
+  color: #000;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.reason-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #D4B8A8;
+  border-radius: 6px;
+  background-color: #fff;
+  font-size: 14px;
+  line-height: 1.5;
+  outline: none;
+  resize: none;
+  transition: border-color 0.2s;
+}
+
+.reason-textarea:hover:not(:disabled) {
+  border-color: #EAB497;
+}
+
+.reason-textarea:focus:not(:disabled) {
+  border-color: #EAB497;
+  box-shadow: 0 0 0 3px rgba(234, 180, 151, 0.15);
+}
+
+.reason-textarea:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: #f5f5f5;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #D4B8A8;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-confirm-btn, .modal-cancel-btn {
+  padding: 8px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.modal-confirm-btn {
+  background-color: #ef4444;
+  color: #fff;
+}
+
+.modal-confirm-btn:hover:not(:disabled) {
+  background-color: #dc2626;
+}
+
+.modal-confirm-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.modal-cancel-btn {
+  background-color: #C4C4C4;
+  color: #333;
+}
+
+.modal-cancel-btn:hover:not(:disabled) {
+  background-color: #a3a3a3;
+}
+
+.modal-cancel-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }

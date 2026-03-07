@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import request from '../utils/request.js'
 import { usePagination } from '../hooks/usePagination.js'
 import { Pagination } from '../components/pagination.jsx'
+import { toast } from '../hooks/useToast.jsx'
 import styles from './UserManage.module.css'
 
 const USER_STATUS = {
@@ -27,15 +28,18 @@ export default function UserManage() {
   const [userList, setUserList] = useState([])
   const [actionLoadingId, setActionLoadingId] = useState(null)
 
-  // 获取用户列表
+  // 取消摄影师身份弹窗状态
+  const [showRevokeModal, setShowRevokeModal] = useState(false)
+  const [currentRevokeUser, setCurrentRevokeUser] = useState(null)
+  const [revokeForm, setRevokeForm] = useState({ reason: '' })
+
+  // 获取用户列表 
   const fetchUserList = async (page, pageSize) => {
     try {
-      console.log(' 发送用户列表请求，参数：', { pageNum: page, pageSize: pageSize })
+      console.log('📤 发送用户列表请求，参数：', { pageNum: page, pageSize: pageSize })
       const res = await request.get('/admin/users', {
-        params: {
-          pageNum: page,
-          pageSize: pageSize
-        }
+        pageNum: page,
+        pageSize: pageSize
       })
       console.log('用户列表接口返回：', res)
 
@@ -48,7 +52,7 @@ export default function UserManage() {
         throw new Error(res.msg || '获取用户列表失败')
       }
     } catch (error) {
-      console.error('eee❌ 获取用户列表失败：', error)
+      console.error('❌ 获取用户列表失败：', error)
       throw error
     }
   }
@@ -69,7 +73,7 @@ export default function UserManage() {
   // 冻结/解冻功能 
   const handleToggleStatus = async (userId, currentStatus) => {
     if (actionLoadingId || !userId || currentStatus === undefined || currentStatus === null) {
-      console.warn('警告🤯 参数无效，终止请求', { userId, currentStatus, actionLoadingId })
+      console.warn('参数无效，终止请求', { userId, currentStatus, actionLoadingId })
       return
     }
 
@@ -89,7 +93,7 @@ export default function UserManage() {
       const url = new URL(`${API_BASE_URL}/admin/users/${userId}/status`)
       url.searchParams.append('status', targetStatus)
 
-      console.log(`发送${actionText}请求，完整URL：`, url.toString())
+      console.log(`发送${actionText}请求 完整URL：`, url.toString())
 
       const response = await fetch(url.toString(), {
         method: 'PUT',
@@ -110,17 +114,17 @@ export default function UserManage() {
         throw new Error(`服务器错误 (${response.status})`)
       }
 
-      console.log(`${actionText}接口返回：`, res)
+      console.log(` ${actionText}接口返回：`, res)
 
       const SUCCESS_CODE = 200
       if (res.code === SUCCESS_CODE) {
-        alert(`${actionText}成功`)
+        toast.success(`${actionText}成功`)
 
         // 立即更新列表状态
         setUserList(prevList => 
           prevList.map(user => 
             user.cas_id === userId 
-              ? { ...user, status: targetStatus } // 更新对应用户的状态
+              ? { ...user, status: targetStatus }
               : user
           )
         )
@@ -136,22 +140,90 @@ export default function UserManage() {
     } catch (error) {
       console.error(`❌ ${actionText}失败：`, error)
       const errorMsg = error.message || '系统异常，请稍后重试'
-      alert(`${actionText}失败：${errorMsg}`)
+      toast.error(`${actionText}失败：${errorMsg}`)
     } finally {
       setActionLoadingId(null)
     }
   }
 
-  // 取消身份功能
-  const handleCancelRole = (userId) => {
-    if (!userId) return
-    if (window.confirm('确定要取消该用户的身份吗？')) {
-      alert('取消身份成功')
-      refresh ? refresh() : setCurrentPage(currentPage)
+  // 打开取消身份弹窗
+  const handleCancelRole = (user) => {
+    // 仅摄影师账号可取消身份
+    if (!user || user.role !== 2) {
+      toast.error('仅摄影师账号可执行取消身份操作');
+      return
+    }
+    if (actionLoadingId === user.cas_id) return
+
+    setCurrentRevokeUser(user)
+    setRevokeForm({ reason: '' })
+    setShowRevokeModal(true)
+  }
+
+  // 取消摄影师身份提交 
+  const handleRevokeSubmit = async () => {
+    const { reason } = revokeForm
+    if (!reason.trim()) {
+      toast.warning('请填写取消身份的原因')
+      return
+    }
+    if (!currentRevokeUser?.cas_id || actionLoadingId) return
+
+    const userId = currentRevokeUser.cas_id
+    try {
+      setActionLoadingId(userId)
+      console.log('发送取消摄影师身份请求，参数：', { casId: userId, reason: reason.trim() })
+      
+      const res = await request.post(
+        '/admin/photographers/revoke',
+        {}, 
+        {
+          casId: userId,
+          reason: reason.trim()
+        }
+      )
+      console.log('✅ 取消摄影师身份接口返回：', res)
+
+      const SUCCESS_CODE = 200
+      if (res.code === SUCCESS_CODE) {
+        toast.success('取消摄影师身份成功')
+        // 本地立即更新
+        setUserList(prevList => 
+          prevList.map(user => 
+            user.cas_id === userId 
+              ? { ...user, role: 0 } // 取消后变为普通客户角色
+              : user
+          )
+        )
+        handleRevokeModalClose()
+        // 刷新列表保证数据同步
+        refresh?.()
+      } else {
+        throw new Error(res.msg || '取消身份失败')
+      }
+    } catch (error) {
+      console.error('❌ 取消摄影师身份失败：', error)
+      toast.error(error.message || '取消身份失败，请稍后重试')
+    } finally {
+      setActionLoadingId(null)
     }
   }
 
-  // 辅助显示函数 根据用户数据返回显示的昵称和角色标签
+  // 取消身份弹窗关闭
+  const handleRevokeModalClose = () => {
+    // 加载中禁止关闭
+    if (actionLoadingId) return
+    setShowRevokeModal(false)
+    setCurrentRevokeUser(null)
+    setRevokeForm({ reason: '' })
+  }
+
+  // 表单输入同步
+  const handleRevokeFormChange = (value) => {
+    setRevokeForm(prev => ({ ...prev, reason: value }))
+  }
+
+  // 辅助显示函数
   const getDisplayNickname = (user) => {
     if (user.nickname === 'Admin' || user.cas_id === 'Admin') return 'Admin'
     if (!user.nickname) return `用户${user.cas_id}`
@@ -262,9 +334,11 @@ export default function UserManage() {
                     </button>
                     <button
                       className={styles['cancel-role-btn']}
-                      onClick={() => handleCancelRole(user.cas_id)}
+                      onClick={() => handleCancelRole(user)}
+                      disabled={actionLoadingId === user.cas_id || user.role !== 2}
+                      style={{ opacity: (actionLoadingId === user.cas_id || user.role !== 2) ? 0.5 : 1 }}
                     >
-                      取消身份
+                      {actionLoadingId === user.cas_id ? '操作中...' : '取消身份'}
                     </button>
                   </div>
                 </td>
@@ -289,6 +363,57 @@ export default function UserManage() {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
         />
+      )}
+
+      {/* 取消摄影师身份弹窗 */}
+      {showRevokeModal && currentRevokeUser && (
+        <div className={styles['modal-overlay']} onClick={handleRevokeModalClose}>
+          <div className={styles['modal-content']} onClick={(e) => e.stopPropagation()}>
+            <div className={styles['modal-header']}>
+              <h2 className={styles['modal-title']}>取消摄影师身份</h2>
+              <button 
+                className={styles['modal-close-btn']} 
+                onClick={handleRevokeModalClose}
+                disabled={actionLoadingId}
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles['modal-body']}>
+              <div className={styles['modal-info-row']}>
+                <span className={styles['modal-label']}>操作用户：</span>
+                <span className={styles['modal-value']}>{getDisplayNickname(currentRevokeUser)}（ID：{currentRevokeUser.cas_id}）</span>
+              </div>
+              <div className={styles['form-item']}>
+                <label className={styles['form-label']}>取消原因 <span className={styles['required']}>*</span></label>
+                <textarea
+                  className={styles['reason-textarea']}
+                  value={revokeForm.reason}
+                  onChange={(e) => handleRevokeFormChange(e.target.value)}
+                  placeholder="请填写取消该用户摄影师身份的原因"
+                  disabled={actionLoadingId}
+                  rows={4}
+                />
+              </div>
+            </div>
+            <div className={styles['modal-footer']}>
+              <button 
+                className={styles['modal-confirm-btn']} 
+                onClick={handleRevokeSubmit}
+                disabled={actionLoadingId}
+              >
+                {actionLoadingId ? '提交中...' : '确认取消'}
+              </button>
+              <button 
+                className={styles['modal-cancel-btn']} 
+                onClick={handleRevokeModalClose}
+                disabled={actionLoadingId}
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -131,7 +131,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999; /* 强制最高层级 */
+  /* z-index: 9999;  */
+  /* 强制最高层级 */
 }
 
 /* 驳回弹窗主体 */
