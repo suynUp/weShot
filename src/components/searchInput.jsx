@@ -88,7 +88,7 @@ const SearchInput = ({
                     )}
                     {/* 搜索按钮 */}
                     <button
-                        onClick={() => handleSearch()}
+                        onClick={() => handleSearch(value)}
                         className="ml-2 px-4 w-[70px] py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition-colors"
                     >
                         搜索
@@ -137,9 +137,9 @@ const SearchInput = ({
                                 </div>
                                 {searchHistory.length > 0 ? (
                                     <div className="space-y-1">
-                                        {searchHistory.map((history) => (
+                                        {searchHistory.map((history,index) => (
                                             <div 
-                                                key={history} 
+                                                key={index} 
                                                 className="flex justify-between items-center px-3 py-2.5 hover:bg-orange-50 rounded-lg transition-colors group cursor-pointer"
                                                 onClick={() => handleSearch(history)}
                                             >
