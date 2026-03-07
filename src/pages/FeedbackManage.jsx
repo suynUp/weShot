@@ -5,10 +5,10 @@ import { toast } from '../hooks/useToast.jsx'
 import request from '../utils/request.js'
 import styles from './FeedbackManage.module.css'
 
-// 接口返回：false=未读/未处理，true=已读/已处理
+// 接口返回：0=未读/未处理，1=已读/已处理
 const FEEDBACK_STATUS = {
-  UNREAD: false,
-  READ: true
+  UNREAD: 0,
+  READ: 1
 }
 // 状态显示文本
 const STATUS_LABEL = {
@@ -43,27 +43,28 @@ export default function FeedbackManage() {
   const [detailModalVisible, setDetailModalVisible] = useState(false)
   const [currentFeedback, setCurrentFeedback] = useState(null)
 
-  // 获取反馈列表
+  // 获取反馈列表 
   const fetchFeedbackList = async (page, itemsPerPage) => {
     try {
-      console.log('发送获取反馈列表请求，参数：', { pageNum: page, pageSize: itemsPerPage })
+      console.log('📤 发送获取反馈列表请求，参数：', { pageNum: page, pageSize: itemsPerPage })
       const res = await request.get('/admin/feedbacks', {
         pageNum: page,
         pageSize: itemsPerPage
       })
-      console.log('√√√反馈列表接口返回：', res)
+      console.log('✅ 反馈列表接口返回：', res)
 
       const SUCCESS_CODE = 200
       if (res.code === SUCCESS_CODE) {
         const { list = [], total = list.length } = res.data || {}
         
         const formattedList = list.map(item => {
-          const finalStatus = item.status ?? viewedFeedbackIds.includes(item.id)
+          const apiStatus = item.status ?? FEEDBACK_STATUS.UNREAD
+          const finalStatus = viewedFeedbackIds.includes(item.id) ? FEEDBACK_STATUS.READ : apiStatus
           return {
             id: item.id,
-            userId: item.user_id,
+            userId: item.userId || item.user_id, // 兼容两种字段
             contact: item.contact || '-',
-            submitTime: item.created_at ? item.created_at.split('T')[0].replace(/-/g, '/') : '',
+            submitTime: item.createdAt ? item.createdAt.split('T')[0].replace(/-/g, '/') : '',
             submitter: item.nickname || '匿名用户',
             problemType: '其他反馈',
             description: item.content || '',
@@ -100,7 +101,7 @@ export default function FeedbackManage() {
     if (!feedbackId || actionLoadingId === feedbackId) return
     try {
       setActionLoadingId(feedbackId)
-      console.log(` 发送标记反馈已读请求，feedbackId: ${feedbackId}`)
+      console.log(`📤 发送标记反馈已读请求，feedbackId: ${feedbackId}`)
 
       // request.post(url, data, params, options)
       // 空请求体 feedbackId放在Query参数
@@ -110,7 +111,7 @@ export default function FeedbackManage() {
         { feedbackId: feedbackId } // params：放在Query参数里
       )
 
-      console.log(`hhh 标记反馈已读接口返回：`, res)
+      console.log(`✅ 标记反馈已读接口返回：`, res)
       const SUCCESS_CODE = 200
       if (res.code === SUCCESS_CODE) {
         // 本地立即更新列表状态
@@ -132,7 +133,7 @@ export default function FeedbackManage() {
         throw new Error(res.msg || '标记已读失败')
       }
     } catch (err) {
-      console.error('❌ 咕咕嘎嘎 标记反馈已读失败：', err)
+      console.error('❌ 标记反馈已读失败：', err)
       // 接口报错时，仍做本地标记兜底
       const newViewedIds = [...new Set([...viewedFeedbackIds, feedbackId])]
       setViewedFeedbackIds(newViewedIds)
@@ -164,9 +165,9 @@ export default function FeedbackManage() {
 
     setPublishLoading(true)
     try {
-      console.log('发送发布公告请求，参数：', noticeForm)
+      console.log('📤 发送发布公告请求，参数：', noticeForm)
       const res = await request.post('/admin/announcements', noticeForm)
-      console.log('hey 发布公告接口返回：', res)
+      console.log('✅ 发布公告接口返回：', res)
 
       const SUCCESS_CODE = 200
       if (res.code === SUCCESS_CODE) {
@@ -176,7 +177,7 @@ export default function FeedbackManage() {
         throw new Error(res.msg || '公告发布失败')
       }
     } catch (err) {
-      console.error(' 发布公告失败：', err)
+      console.error('❌ 发布公告失败：', err)
       toast.error(err.message || '公告发布失败')
     } finally {
       setPublishLoading(false)
@@ -249,8 +250,8 @@ export default function FeedbackManage() {
         <h1 className={styles['section-title']}>意见反馈管理</h1>
 
         {/* 加载/错误提示 */}
-        {loading && <div style={{ textAlign: 'center', padding: '20px', fontSize: '16px' }}>正在加载反馈数据...</div>}
-        {error && <div style={{ textAlign: 'center', padding: '20px', color: 'red', fontSize: '16px' }}>{error}</div>}
+        {loading && <div className={styles['loading-tip']}>正在加载反馈数据...</div>}
+        {error && <div className={styles['error-tip']}>{error}</div>}
 
         <div className={styles['table-wrapper']}>
           <table className={styles['feedback-table']}>
@@ -274,13 +275,13 @@ export default function FeedbackManage() {
                   <td>{item.problemType}</td>
                   <td>{item.description}</td>
                   <td>
-                    <span className={`${styles['status-tag']} ${styles[`status-${item.status ? 'read' : 'unread'}`]}`}>
+                    <span className={`${styles['status-tag']} ${styles[`status-${item.status === FEEDBACK_STATUS.READ ? 'read' : 'unread'}`]}`}>
                       {STATUS_LABEL[item.status]}
                     </span>
                   </td>
                   <td>
                     <button
-                      className={`${styles['view-btn']} ${item.status ? styles['btn-read'] : ''}`}
+                      className={`${styles['view-btn']} ${item.status === FEEDBACK_STATUS.READ ? styles['btn-read'] : ''}`}
                       onClick={() => handleViewFeedback(item)}
                       disabled={actionLoadingId === item.id}
                     >
