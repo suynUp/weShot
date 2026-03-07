@@ -87,18 +87,23 @@ export const useComment = () => {
     })
 }
 
-export const useDeletePost = () => useMutation({
+export const useDeletePost = () => {
+    const deletePost = postStore(state => state.deletePost)
+
+    return useMutation({
     mutationFn:async (postId)=>{
+
         const res = await postAPI.deletePost(postId)
         console.log(res)
         if(res.code !== 200){
             throw Error
         }else{
             toast.success('删除成功')
+            deletePost(postId)
         }
     },
     onError:()=>toast.error('删除失败，请稍后再试')
-})
+})}
 
 export const usePostPublish = () =>{ //记得加一下本地缓存清除，另一个发布也是
 

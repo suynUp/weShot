@@ -15,13 +15,13 @@ export const PostDraftStore = create(
             set({ currentDraft: draft });
         },
 
-        saveDraft: (draft, orderId, createdAt) => {
+        saveDraft: (draft, postId, createdAt) => {
             const oldDraftList = getFromLocalStorage(LOCAL_STORAGE_KEYS.POST_DRAFTLIST) || [];
             
             // 创建完整的草稿对象，包含所有信息
             const newDraft = {
                 ...draft,  // 包含 location 和其他所有草稿信息
-                orderId,
+                postId,
                 createdAt
             };
             
@@ -42,12 +42,12 @@ export const PostDraftStore = create(
 
         deleteDraft: (draftId) => {
             const oldDraftList = getFromLocalStorage(LOCAL_STORAGE_KEYS.POST_DRAFTLIST) || [];
-            const newDraftList = oldDraftList.filter(d => d.orderId !== draftId);
+            const newDraftList = oldDraftList.filter(d => d.postId !== draftId);
 
             set({ draftList: newDraftList });
             saveToLocalStorage(LOCAL_STORAGE_KEYS.POST_DRAFTLIST, newDraftList);
 
-            if (get().currentDraft.orderId === draftId) {
+            if (get().currentDraft.postId === draftId) {
                 set({ currentDraft: {} });
             }
         },

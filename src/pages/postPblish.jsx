@@ -27,6 +27,7 @@ const PostPublish = () => {
     // hooks
     const deleteMutation = useDeleteDraftMutation();
     const saveDraftMutation = useSaveDraftMutation();
+    const postPublishMutation = usePostPublish();
     const { getDetail, getList } = useGetDraft();
 
     // 表单数据
@@ -129,7 +130,6 @@ const PostPublish = () => {
         '婚礼摄影', '纪实摄影', '宠物摄影', '美食摄影', '其他'
     ];
 
-    const postPublishMutation = usePostPublish();
 
     // 监听发布结果
     useEffect(() => {
@@ -299,13 +299,21 @@ const PostPublish = () => {
                 finalImageUrls = existingImageUrls;
             }
             
+  
             // 构建符合API要求的数据结构
-            const publishData = {
+            var publishData = {
                 title: title,
                 content: content,
                 type: category,
                 images: finalImageUrls
             };
+
+            if(currentDraft?.postId){
+                publishData={
+                    ...publishData,
+                    postId: currentDraft.postId
+                }
+            }
             console.log('准备发布，最终数据:', publishData);
             
             // 发布作品
@@ -379,7 +387,6 @@ const PostPublish = () => {
         setImagePreviews([]);
         setImageFiles([]);
         setCategory('人像摄影');
-        toast.info('表单已重置');
     };
 
     // 删除草稿

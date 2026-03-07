@@ -31,6 +31,7 @@ export const useGetDraft = () => {
     const getDetail = useCallback(async (id) => {
         try{
             const data = await PostDraftAPI.getDetailById(id)
+            console.log('draft detail:', data)
             if(data.code === 200){
                 setDraft(data.data)
             }else{
@@ -59,7 +60,8 @@ export const useSaveDraftMutation = () => {
             return res
         },
         onSuccess:(data,draft)=>{
-            saveDraft(draft,data.data.orderId,data.data.savedAt)
+            console.log('save draft response:', data)
+            saveDraft(draft,data.data.postId,data.data.savedAt)
             toast.success('保存草稿成功')
         },
         onError:(e)=>{

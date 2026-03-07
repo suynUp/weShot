@@ -11,6 +11,12 @@ const postStore = create(
     draftList:[],
     currentDraft:{},
 
+    deletePost:(postId)=>{
+        set((state) => ({
+            postList: state.postList.filter(post => post.id !== postId),
+        }))
+    },
+
     commentList:[],
     totalComments:0,
     setTotalComments:(total) => set({totalComments:total}),
