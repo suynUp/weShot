@@ -2,6 +2,7 @@
 import { Image, Trash2 } from 'lucide-react';
 import PhotoCard from '../photoCard';
 import { useState } from 'react';
+import { useNavigation } from '../../hooks/navigation';
 
 // 删除确认弹窗组件
 const DeleteConfirmDialog = ({ isOpen, onClose, onConfirm, postCount = 1 }) => {
@@ -63,6 +64,7 @@ export function PostsSection({
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const {goto} = useNavigation()
 
   // 处理删除点击
   const handleDeleteClick = (postId, e) => {
@@ -173,7 +175,7 @@ export function PostsSection({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {posts.map((post) => (
             <div key={post.post_id} className="relative group">
-              <PhotoCard photo={post} onSelect={(post_id) => onPostClick(post_id)} />
+              <PhotoCard photo={post} onSelect={() => onPostClick(post.post_id)} onEditDraft={()=>{goto(`/postpublish/?draft_id=${post.post_id}`)}} />
               
               {isOwnProfile && (
                 <>

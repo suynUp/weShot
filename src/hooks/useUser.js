@@ -71,7 +71,6 @@ export const useGetMyPost = () => {
         mutationFn: async ({pageNum,pageSize})=>{
 
             const res = await postAPI.getMyPosts(pageNum,pageSize)
-            console.log('让我看看',res)
             if(res.code===200){
                 console.log('进来了',res)
                 return res.data
@@ -81,7 +80,6 @@ export const useGetMyPost = () => {
             }
         },
         onSuccess:(data) => {
-            console.log('222222222',data)
             setMyPosts(data.list)
             setPostNum(data.total)
         },
@@ -244,7 +242,6 @@ export const useLogOut = () => {
             toast.success('退出登录成功')
         }catch(e){
             toast.error('退出登录失败')
-            console.error('Logout error:', e)
         }
     }, [
         resetUser,
