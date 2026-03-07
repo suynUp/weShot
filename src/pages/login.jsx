@@ -73,7 +73,7 @@ export default function Login() {
         request.saveToken(res.data.token)
         
         toast.success('登录成功！')
-        navigate('/home')
+        navigate('/manager')
       } else {
         toast.error(res.msg || '登录失败，请检查账号密码')
       }

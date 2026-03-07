@@ -33,6 +33,10 @@ class UserAPI{
     static feedback = (feedbackData) => {
         return request.post('/user/feedback',feedbackData)
     }
+
+    static getUserStatus = () => {
+        return request.get('/user/checkStatus')
+    }
 }
 
 export default UserAPI

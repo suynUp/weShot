@@ -270,3 +270,14 @@ export const useGetAnnouncements = () => useMutation({
         }
     }
 })
+
+export const useGetUserStatus = () => useMutation({
+    mutationFn:async () =>{
+        const res = await UserAPI.getUserStatus()
+        if(res.code === 200){
+            return res.data
+        }else{
+            throw new Error(res.msg)
+        }
+    }
+})   

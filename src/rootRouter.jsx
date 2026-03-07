@@ -1,7 +1,7 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Home from './pages/home'
 import Login from './pages/login'
 import Launch from './pages/launch'
@@ -20,19 +20,17 @@ import Dashboard from './pages/Dashboard.jsx'
 import ContentAudit from './pages/ContentAudit.jsx'
 import UserManage from './pages/UserManage.jsx'
 import FeedbackManage from './pages/FeedbackManage.jsx'
+import { useGetUserStatus, useLogOut } from './hooks/useUser.js'
+import { AlertCircle } from 'lucide-react'
+import { UserStore } from './store/userStore.js'
 
 const usePathStore = create(
   persist(
     (set) => ({
-      // 保存上一次访问的非首页路径
       lastVisitedPath: null,
-      
-      // 设置上一次访问的路径
       setLastVisitedPath: (path) => {
         set({ lastVisitedPath: path })
       },
-      
-      // 清除保存的路径（回到首页时调用）
       clearLastVisitedPath: () => {
         set({ lastVisitedPath: null })
       }
@@ -50,38 +48,28 @@ function RouteHandler() {
   const isFirstRender = useRef(true)
   const hasRedirected = useRef(false)
 
-  // 监听路由变化
   useEffect(() => {
-    // 如果是首页，清除保存的路径
     if (location.pathname === '/') {
       clearLastVisitedPath()
     } 
-    // 如果不是首页，且不是刷新触发的重定向，则保存路径
     else if (!hasRedirected.current) {
       setLastVisitedPath(location.pathname)
     }
     
-    // 重置重定向标志
     hasRedirected.current = false
   }, [location.pathname, setLastVisitedPath, clearLastVisitedPath])
 
-  // 处理页面刷新
   useEffect(() => {
-    // 检测是否是页面刷新
     const isPageRefresh = 
       window.performance?.navigation?.type === 1 ||
       performance.getEntriesByType('navigation').some(nav => nav.type === 'reload')
 
     if (isPageRefresh && isFirstRender.current) {
-      // 如果有保存的路径，且当前路径不是首页，且当前路径与保存的路径不同
       if (lastVisitedPath && 
           lastVisitedPath !== '/' && 
           window.location.pathname !== lastVisitedPath) {
         
-        // 标记为重定向
         hasRedirected.current = true
-        
-        // 使用 replace 进行重定向
         window.location.replace(lastVisitedPath)
       }
     }
@@ -92,7 +80,120 @@ function RouteHandler() {
   return null
 }
 
+// 封禁弹窗组件
+function BanModal({ isOpen, onClose }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
+      
+      <div className="relative min-h-screen flex items-center justify-center p-4">
+        <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+          <div className="h-2 bg-red-500" />
+          
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-red-500" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">账号已被封禁</h3>
+                <p className="text-sm text-gray-500">您的账号因违反社区规定已被封禁</p>
+              </div>
+            </div>
+            
+            <div className="bg-red-50 rounded-xl p-4 mb-6">
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">封禁状态：</span>
+                  <span className="font-medium text-red-600">永久封禁</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">封禁原因：</span>
+                  <span className="font-medium text-gray-900">违反社区准则</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">封禁时间：</span>
+                  <span className="font-medium text-gray-900">{new Date().toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+            
+            <p className="text-sm text-gray-500 mb-6">
+              如有疑问，请联系管理员进行申诉。
+              <br />
+            </p>
+            
+            <button
+              onClick={onClose}
+              className="w-full px-4 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors font-medium"
+            >
+              我知道了
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 创建一个内部组件来处理封禁逻辑和导航
+function BanHandler({ showBanModal, setShowBanModal }) {
+  const navigate = useNavigate();
+  const location = useLocation(); // 获取当前路径
+  const logOut = useLogOut();
+  const getUserStatus = useGetUserStatus();
+  const [hasCheckedBanStatus, setHasCheckedBanStatus] = useState(false);
+  const update = UserStore((state) => state.update);
+
+  useEffect(() => {
+    // 如果在登录页，不检查封禁状态
+    if (location.pathname === '/login') {
+      return;
+    }
+
+    if(hasCheckedBanStatus) {
+      return;
+    }
+
+    const getUserStatusData = async () => {
+      try {
+        const result = await getUserStatus.mutateAsync();
+        setShowBanModal(result.status === 1);
+        update(result)
+        setHasCheckedBanStatus(true);
+      } catch (error) {
+        console.error('Error fetching user status:', error);
+      }
+    };
+    getUserStatusData();
+  }, [location.pathname]); // 添加 location.pathname 作为依赖
+
+  const handleBanModalClose = () => {
+    logOut();
+    navigate('/login');
+  };
+
+  // 如果在登录页，永远不显示弹窗
+  if (location.pathname === '/login') {
+    return null;
+  }
+
+  return (
+    <BanModal 
+      isOpen={showBanModal} 
+      onClose={handleBanModalClose}
+    />
+  );
+}
+
 export default function RootRouter() {
+  const [showBanModal, setShowBanModal] = useState(false);
+
   const RouteList = [
     {
       path: "/",
@@ -138,11 +239,11 @@ export default function RootRouter() {
       page: <Layout/>,
       innerPage: [
         {
-          index: true,  // 标记为 index 路由
+          index: true,
           page: <Dashboard/>
         },
         {
-          path: "content-audit",  // 去掉开头的斜杠，变成相对路径
+          path: "content-audit",
           page: <ContentAudit/>
         },
         {
@@ -157,7 +258,7 @@ export default function RootRouter() {
     }
   ]
 
-   return (
+  return (
     <BrowserRouter>
       <RouteHandler />
       <Routes>
@@ -166,10 +267,8 @@ export default function RootRouter() {
             <Route key={index} path={r.path} element={r.page}>
               {r.innerPage.map((ir, i) => {
                 if (ir.index) {
-                  // index 路由
                   return <Route key={i} index element={ir.page} />
                 } else {
-                  // 普通子路由
                   return <Route key={i} path={ir.path} element={ir.page} />
                 }
               })}
@@ -179,6 +278,12 @@ export default function RootRouter() {
           )
         ))}
       </Routes>
+      
+      {/* 使用 BanHandler 组件来处理封禁逻辑 */}
+      <BanHandler 
+        showBanModal={showBanModal} 
+        setShowBanModal={setShowBanModal}
+      />
     </BrowserRouter>
   )
 }
