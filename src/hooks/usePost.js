@@ -125,7 +125,7 @@ export const usePostPublish = () =>{ //记得加一下本地缓存清除，另�
 
         },
         onError:(error)=>{
-            toast.error(error)
+            toast.error(error.message || '发布失败')
         },
         onSuccess:(data,formData)=>{
             if(data.code === 200){

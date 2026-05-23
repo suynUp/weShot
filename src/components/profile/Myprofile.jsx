@@ -15,7 +15,6 @@ import { useLogOut, useUserUpdate } from '../../hooks/useUser';
 import { PostDetail } from '../postDetail';
 import postStore from '../../store/postStore';
 import { useDeletePost, useGetPostDetail } from '../../hooks/usePost';
-import { toast } from '../../hooks/useToast';
 
 export function MyProfile({ profileData, isPhotographer, postsData, totalPostNum, 
   myOrdersData, totalOrdersNum, receivedOrdersData, totalReceivedNum,

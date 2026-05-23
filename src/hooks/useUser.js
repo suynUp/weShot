@@ -38,7 +38,6 @@ export const useUserMutation=()=>{
                         console.log(error)
                     }    
                 }
-                toast.error('请重新登录')
             }
            
         },

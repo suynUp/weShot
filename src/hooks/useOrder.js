@@ -73,7 +73,7 @@ export const useCreateOrders = () => {
             goBack()
         },
         onError: (error) => {
-            toast.error(error.message || '创建订单失败')
+            toast.error('创建订单失败')
         }
     })
 }

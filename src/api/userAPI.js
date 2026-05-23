@@ -2,6 +2,11 @@ import request from "../utils/request";
 
 //专门用来调用API
 class UserAPI{
+
+    static login = (code) => {
+        return request.post('/user/login',{code})
+    }
+
     static getUser = () => {
         return request.get('/user/getProfile')
     }
